@@ -1,0 +1,1625 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Easy Online GAMOT Support - Deficiency Tracking System</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700;800&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ph-blue: #0054a6;
+    --ph-blue-dark: #1e3a8a;
+    --gold: #fdb913;
+    --navy: #1e3a8a;
+    --navy-light: #3b82f6;
+    --teal: #0054a6;
+    --paper: #f5f7fa;
+    --ink: #1c2530;
+    --muted: #64748b;
+    --line: #e2e8f0;
+    --amber: #b8590a;
+    --ok: #1e7e4d;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: 'Roboto Mono', monospace;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    color: var(--ink);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow-x: hidden;
+  }
+  h1, h2, .brand-title { font-family: 'Fredoka', sans-serif; }
+  .watermark-wrap {
+    position: fixed;
+    top: -30%;
+    left: -30%;
+    width: 170%;
+    height: 170%;
+    transform: rotate(-12deg);
+    z-index: 0;
+    pointer-events: none;
+    user-select: none;
+    display: flex;
+    flex-wrap: wrap;
+    align-content: flex-start;
+    gap: 40px 80px;
+    overflow: hidden;
+  }
+  .wm-item {
+    font-family: 'Fredoka', sans-serif;
+    font-weight: 800;
+    font-size: 4.2vw;
+    letter-spacing: 0.15vw;
+    white-space: nowrap;
+    line-height: 1.2;
+  }
+  .wm-item .wm-blue { color: rgba(30, 58, 138, 0.06); }
+  .wm-item .wm-gold { color: rgba(253, 185, 19, 0.10); display: block; }
+  header, main, footer { position: relative; z-index: 1; }
+
+  /* --- HEADER BANNER --- */
+  header {
+    background: linear-gradient(90deg, #1e3a8a 0%, #3b82f6 50%, #4f46e5 100%);
+    color: #fff;
+    padding: 18px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-radius: 0 0 24px 24px;
+    box-shadow: 0 10px 25px rgba(30, 58, 138, 0.2);
+    margin-bottom: 24px;
+  }
+  header h1 {
+    font-size: 1.4rem;
+    margin: 0;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    font-weight: 700;
+  }
+  header .tag { font-size: 10px; color: #cfe0f0; letter-spacing: 1.5px; text-transform: uppercase; margin-top: 2px; }
+  header .session {
+    font-size: 12px; text-align: right; color: #fff;
+    background: rgba(255,255,255,0.15);
+    backdrop-filter: blur(12px);
+    border: 1.5px solid rgba(255,255,255,0.4);
+    border-radius: 16px;
+    padding: 8px 16px;
+    display: flex; align-items: center; gap: 12px;
+  }
+
+  main { max-width: 780px; margin: 0 auto; padding: 8px 20px 60px; flex: 1; width: 100%; }
+  main.wide { max-width: 1080px; }
+
+  .dashboard-layout { display: flex; gap: 24px; align-items: flex-start; }
+  .sidebar {
+    width: 190px;
+    flex-shrink: 0;
+    background: rgba(255,255,255,0.85);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.6);
+    border-radius: 16px;
+    padding: 12px;
+    position: sticky;
+    top: 20px;
+    box-shadow: 0 8px 24px rgba(31,38,135,0.06);
+  }
+  .sidebar button {
+    display: block; width: 100%; text-align: left; background: none;
+    color: var(--ink); border: none; padding: 11px 14px; margin: 2px 0;
+    border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer;
+  }
+  .sidebar button:hover { background: #eef2f6; }
+  .sidebar button.active { background: var(--ph-blue); color: #fff; }
+  .dashboard-content { flex: 1; min-width: 0; }
+
+  table.data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  table.data-table th {
+    text-align: left; background: #f0f3f6; padding: 9px 10px; font-size: 11px;
+    text-transform: uppercase; letter-spacing: .3px; color: var(--muted);
+    border-bottom: 1px solid var(--line);
+  }
+  table.data-table td { padding: 9px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+
+  .status-pill { display: inline-block; padding: 3px 9px; border-radius: 20px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
+  .status-pill.RTF { background: #fde8e0; color: var(--amber); }
+  .status-pill.REFILED { background: #fff6da; color: #8a6d00; }
+  .status-pill.RESOLVED { background: #e8f5ee; color: var(--ok); }
+  .status-pill.PENDING { background: #e7ecf2; color: var(--muted); }
+  .urgency-row { border-left: 4px solid transparent; padding-left: 10px !important; }
+  .urgency-row.OVERDUE { border-left-color: #dc2626; background: #fef2f2; }
+  .urgency-row.DUE_SOON { border-left-color: #f59e0b; background: #fffbeb; }
+  .urgency-row.ON_TRACK { border-left-color: #10b981; }
+  .urgency-badge { font-size: 10px; font-weight: 700; text-transform: uppercase; padding: 2px 8px; border-radius: 10px; }
+  .urgency-badge.OVERDUE { background: #dc2626; color: #fff; }
+  .urgency-badge.DUE_SOON { background: #f59e0b; color: #fff; }
+  .urgency-badge.ON_TRACK { background: #10b981; color: #fff; }
+  .urgency-legend {
+    background: #f8fafc; border: 1px solid var(--line); border-radius: 10px;
+    padding: 12px 16px; margin-bottom: 18px; display: flex; flex-direction: column; gap: 8px;
+  }
+  .urgency-legend-item { display: flex; align-items: center; gap: 10px; }
+  .urgency-legend-item .urgency-badge { flex-shrink: 0; min-width: 90px; text-align: center; }
+  .urgency-legend-text { font-size: 12px; color: var(--muted); }
+
+  /* --- GLASS CARD (main content cards) --- */
+  .card {
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.08);
+    border-radius: 20px;
+    padding: 28px;
+    margin-bottom: 20px;
+  }
+  .card h2 {
+    font-size: 1.1rem; margin: 0 0 18px; color: var(--ph-blue-dark);
+    border-bottom: 3px solid var(--gold); padding-bottom: 8px; display: inline-block;
+    font-weight: 700;
+  }
+
+  /* --- LOGIN / REGISTER: BRANDED CENTERED CARD --- */
+  #loginSection, #registerSection {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 30px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+    max-width: 440px;
+    margin: 40px auto;
+    padding: 44px 40px;
+    text-align: center;
+    border: none;
+  }
+  .brand-container { display: flex; flex-direction: column; align-items: center; margin-bottom: 28px; }
+  .logo-text-group { display: flex; align-items: center; gap: 5px; font-family: 'Fredoka', sans-serif; font-size: 2.6rem; line-height: 1; letter-spacing: -1px; }
+  .text-philhealth { color: var(--ph-blue); font-weight: 700; }
+  .text-gamot { color: var(--gold); font-weight: 700; }
+  .gamot-tagline {
+    background-color: var(--gold); color: white; font-family: 'Fredoka', sans-serif; font-weight: 700;
+    font-size: 0.95rem; padding: 5px 28px; border-radius: 50px; text-transform: uppercase;
+    letter-spacing: 1px; margin-top: 6px;
+  }
+  #loginSection h2, #registerSection h2 {
+    font-family: 'Fredoka', sans-serif; color: var(--ph-blue-dark); font-size: 1.6rem; font-weight: 700;
+    border: none; padding: 0; margin-bottom: 8px; display: block;
+  }
+
+  label {
+    display: block; font-size: 11px; font-weight: 700; color: var(--muted);
+    margin: 14px 0 5px; text-transform: uppercase; letter-spacing: .4px; text-align: left;
+  }
+  input, select, textarea {
+    width: 100%; padding: 12px 14px; border: 2px solid var(--line); border-radius: 10px;
+    font-size: 14px; font-family: inherit; background: #f8fafc; outline: none;
+  }
+  input:focus, select:focus, textarea:focus { border-color: var(--ph-blue); background: #fff; }
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+  button {
+    margin-top: 22px; background: var(--ph-blue); color: #fff; border: none;
+    padding: 13px 20px; border-radius: 10px; font-size: 14px; font-weight: 700;
+    cursor: pointer; width: 100%; text-transform: uppercase; letter-spacing: .5px;
+    transition: all .2s;
+  }
+  button:hover { background: var(--ph-blue-dark); transform: translateY(-1px); box-shadow: 0 6px 14px rgba(0,84,166,0.25); }
+  button:disabled { background: #9db3ba; cursor: not-allowed; transform: none; box-shadow: none; }
+
+  .msg { font-size: 13px; margin-top: 12px; padding: 10px 12px; border-radius: 8px; display: none; }
+  .msg.error { background: #fdecea; color: #a02b1f; display: block; }
+  .msg.ok { background: #e8f5ee; color: var(--ok); display: block; }
+
+  .resolution-box {
+    margin-top: 14px; padding: 12px 14px; background: #eef6fb; border-left: 4px solid var(--gold);
+    border-radius: 8px; font-size: 13px; color: var(--ph-blue-dark); display: none;
+  }
+
+  #mainSection { display: none; }
+  .logout {
+    background: #ef4444; border: 1px solid rgba(255,255,255,0.3); color: #fff;
+    width: auto; padding: 7px 14px; border-radius: 10px; font-size: 10px;
+    font-weight: 800; text-transform: uppercase; margin-top: 0; letter-spacing: .5px;
+  }
+  .logout:hover { background: #dc2626; }
+
+  /* --- FOOTER --- */
+  .footer-gamot {
+    background: #ffffff; padding: 14px 40px; border-top: 1px solid var(--line);
+    display: flex; justify-content: space-between; align-items: center; margin-top: auto;
+  }
+  .footer-left { display: flex; align-items: center; }
+  .footer-logo-main { height: 48px; width: auto; }
+  .footer-right { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
+  .footer-brand { display: flex; align-items: center; gap: 5px; font-family: 'Fredoka', sans-serif; font-size: 1.3rem; line-height: 1; }
+  .footer-brand .text-philhealth { font-size: 1.3rem; }
+  .footer-brand .text-gamot { font-size: 1.3rem; }
+  .footer-tag { font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-top: 2px; }
+</style>
+</head>
+<body>
+
+<div class="watermark-wrap" id="watermarkWrap"></div>
+
+<header>
+  <div>
+    <h1>EASY ONLINE GAMOT SUPPORT - DEFICIENCY TRACKING SYSTEM</h1>
+    <div class="tag">Interim RTF Workflow — CM 2026-0030</div>
+  </div>
+  <div class="session" id="sessionInfo">
+    <div id="sessionText"></div>
+    <button class="logout" id="logoutBtn" style="display:none;">Log Out</button>
+  </div>
+</header>
+
+<main>
+
+  <!-- LOGIN SECTION -->
+  <div class="card" id="loginSection">
+    <div class="brand-container">
+      <div class="logo-text-group">
+        <span class="text-philhealth">PhilHealth</span><span class="text-gamot">GAMOT</span>
+      </div>
+      <div class="gamot-tagline">Online Support</div>
+    </div>
+    <h2>Staff Sign In</h2>
+    <form id="loginForm">
+      <label for="loginUser">Username</label>
+      <input type="text" id="loginUser" required>
+      <label for="loginPass">Password</label>
+      <input type="password" id="loginPass" required>
+      <button type="submit" id="loginBtn">Sign In</button>
+      <div class="msg" id="loginMsg"></div>
+    </form>
+    <p style="text-align:center; margin-top:16px; font-size:13px;">
+      No account yet? <a href="#" id="showRegisterLink" style="color:var(--teal); font-weight:600;">Register here</a>
+    </p>
+  </div>
+
+  <!-- REGISTRATION SECTION -->
+  <div class="card" id="registerSection" style="display:none;">
+    <h2>Create an Account</h2>
+    <form id="registerForm">
+      <label for="regUsername">Username</label>
+      <input type="text" id="regUsername" required>
+      <label for="regPassword">Password</label>
+      <input type="password" id="regPassword" required>
+      <label for="regAccountType">Account Type</label>
+      <select id="regAccountType" required>
+        <option value="">-- Select type --</option>
+        <option value="PHARMACY">GAMOT Facility / Pharmacy</option>
+        <option value="STAFF">PhilHealth Internal Staff</option>
+      </select>
+      <div class="row2">
+        <div>
+          <label for="regFacility" id="regFacilityLabel">Facility Name</label>
+          <input type="text" id="regFacility" required>
+        </div>
+        <div>
+          <label for="regBranch">Branch / PRO Region</label>
+          <select id="regBranch" required>
+            <option value="">-- Select branch --</option>
+            <option value="PRONCR CENTRAL">PRONCR CENTRAL</option>
+            <option value="PRONCR SOUTH">PRONCR SOUTH</option>
+            <option value="PRONCR NORTH">PRONCR NORTH</option>
+          </select>
+        </div>
+      </div>
+      <div id="regAccreditationWrap" style="display:none;">
+        <label for="regAccreditationNo">Facility Accreditation No.</label>
+        <input type="text" id="regAccreditationNo" placeholder="e.g. P91034561">
+      </div>
+      <button type="submit" id="registerBtn">Submit Registration</button>
+      <div class="msg" id="registerMsg"></div>
+    </form>
+    <p style="text-align:center; margin-top:16px; font-size:13px;">
+      Already have an account? <a href="#" id="showLoginLink" style="color:var(--teal); font-weight:600;">Back to Sign In</a>
+    </p>
+  </div>
+
+  <!-- ADMIN: PENDING ACCOUNTS APPROVAL -->
+  <div class="card" id="adminApprovalSection" style="display:none;">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <h2 style="margin:0;">Pending Account Approvals</h2>
+      <button type="button" id="refreshPendingBtn" style="width:auto; margin:0; padding:6px 14px; font-size:12px;">🔄 Refresh</button>
+    </div>
+    <div id="pendingNotice"></div>
+    <div id="pendingUsersList" style="display:none; margin-top:14px;"></div>
+  </div>
+
+  <!-- MAIN SYSTEM (after login) -->
+  <div id="mainSection">
+    <div class="dashboard-layout">
+
+      <!-- LEFT SIDEBAR (visible for PHARMACY accounts) -->
+      <div class="sidebar" id="pharmacySidebar" style="display:none;">
+        <button type="button" class="active" id="tabRefileBtn">📤 Refile Deficiency</button>
+        <button type="button" id="tabMonitorBtn">📋 My Deficiencies</button>
+        <button type="button" id="tabHistoryBtn">🕘 History</button>
+      </div>
+
+      <!-- LEFT SIDEBAR (visible for ADMIN / Benefits Administration Section) -->
+      <div class="sidebar" id="adminSidebar" style="display:none;">
+        <button type="button" class="active" id="tabAdminHomeBtn">🏠 Home</button>
+        <button type="button" id="tabAdminHistoryBtn">🕘 History</button>
+        <button type="button" id="tabReviewBtn">📥 Review Refiled Submissions</button>
+        <button type="button" id="tabComplianceBtn">📊 Compliance Monitoring</button>
+      </div>
+
+      <div class="dashboard-content">
+
+    <div class="card" id="encodeCard">
+      <h2>Encode Deficiency (RTF)</h2>
+      <form id="encodeForm">
+        <div class="row2">
+          <div>
+            <label for="proRegion">PRO Region</label>
+            <select id="proRegion" required>
+              <option value="">-- Select PRO Region --</option>
+              <option value="PRONCR CENTRAL">PRONCR CENTRAL</option>
+              <option value="PRONCR SOUTH">PRONCR SOUTH</option>
+              <option value="PRONCR NORTH">PRONCR NORTH</option>
+            </select>
+          </div>
+          <div>
+            <label for="facility">Facility</label>
+            <input type="text" id="facility" required>
+          </div>
+        </div>
+
+        <div class="row2">
+          <div>
+            <label for="gacnNo">GACN No.</label>
+            <input type="text" id="gacnNo" required>
+          </div>
+          <div>
+            <label for="gatnNo">GATN No. (unique)</label>
+            <input type="text" id="gatnNo" required>
+          </div>
+        </div>
+
+        <label for="issueCategory">Issue Category</label>
+        <select id="issueCategory" required>
+          <option value="">-- Select category --</option>
+        </select>
+
+        <label for="specificIssue">Specific Issue</label>
+        <select id="specificIssue" required>
+          <option value="">-- Select category first --</option>
+        </select>
+
+        <div class="resolution-box" id="resolutionBox"></div>
+
+        <div class="row2">
+          <div>
+            <label for="claimantLast">Claimant Last Name</label>
+            <input type="text" id="claimantLast" required>
+          </div>
+          <div>
+            <label for="claimantFirst">Claimant First Name</label>
+            <input type="text" id="claimantFirst" required>
+          </div>
+        </div>
+
+        <div class="row2">
+          <div>
+            <label for="facilityAccreditationNo">Facility Accreditation No.</label>
+            <input type="text" id="facilityAccreditationNo" placeholder="e.g. P91034561" required>
+          </div>
+          <div>
+            <label for="claimantContact">Claimant Contact No.</label>
+            <input type="text" id="claimantContact">
+          </div>
+        </div>
+
+        <button type="submit" id="encodeBtn">Encode & Save</button>
+        <div class="msg" id="encodeMsg"></div>
+      </form>
+    </div>
+
+    <!-- REFILE SECTION (for GAMOT Facilities / Pharmacies) -->
+    <div class="card" id="refileCard" style="display:none;">
+      <h2>Refile a Deficiency</h2>
+
+      <label for="searchGatn">Enter your GATN Number</label>
+      <div style="display:flex; gap:8px;">
+        <input type="text" id="searchGatn" placeholder="e.g. GATN-000123" style="flex:1;">
+        <button type="button" id="searchGatnBtn" style="width:auto; margin-top:0; padding:10px 18px;">Search</button>
+      </div>
+      <div class="msg" id="searchMsg"></div>
+
+      <div id="refileDetails" style="display:none; margin-top:18px;">
+        <div class="resolution-box" id="refileInfoBox" style="display:block;"></div>
+
+        <form id="refileForm" style="margin-top:14px;">
+          <label for="refileFile">Upload Corrected Document</label>
+          <input type="file" id="refileFile" required>
+
+          <label for="refileNotes">Notes (optional)</label>
+          <textarea id="refileNotes" rows="3" placeholder="Any remarks about the correction you made..."></textarea>
+
+          <button type="submit" id="refileBtn">Submit Refile</button>
+          <div class="msg" id="refileMsg"></div>
+        </form>
+      </div>
+    </div>
+
+    <!-- MONITORING: PHARMACY'S OWN DEFICIENCY LIST -->
+    <div class="card" id="monitorCard" style="display:none;">
+      <h2>My Deficiencies</h2>
+      <div class="urgency-legend">
+        <div class="urgency-legend-item">
+          <span class="urgency-badge OVERDUE">⚠ Overdue</span>
+          <span class="urgency-legend-text">Past the 60-day deadline — resolve immediately to avoid payment delay</span>
+        </div>
+        <div class="urgency-legend-item">
+          <span class="urgency-badge DUE_SOON">⏰ Due Soon</span>
+          <span class="urgency-legend-text">5 days or less remaining — prioritize this</span>
+        </div>
+        <div class="urgency-legend-item">
+          <span class="urgency-badge ON_TRACK">✓ On Track</span>
+          <span class="urgency-legend-text">More than 5 days remaining — still within the compliance window</span>
+        </div>
+      </div>
+      <div id="monitorList"><p style="font-size:13px; color:var(--muted);">Loading...</p></div>
+    </div>
+
+    <!-- HISTORY: SEARCH BY DATE + FILTER BY STATUS -->
+    <div class="card" id="historyCard" style="display:none;">
+      <h2>History</h2>
+      <div class="row2">
+        <div>
+          <label for="historyDateFrom">From Date</label>
+          <input type="date" id="historyDateFrom">
+        </div>
+        <div>
+          <label for="historyDateTo">To Date</label>
+          <input type="date" id="historyDateTo">
+        </div>
+      </div>
+      <label for="historyStatusFilter">Status</label>
+      <select id="historyStatusFilter">
+        <option value="ALL">ALL</option>
+        <option value="RTF">RTF</option>
+        <option value="REFILED">REFILED</option>
+        <option value="RESOLVED">RESOLVED</option>
+      </select>
+      <div style="display:flex; gap:10px;">
+        <button type="button" id="historySearchBtn" style="margin-top:22px; flex:1;">Search</button>
+        <button type="button" id="historyDownloadBtn" style="margin-top:22px; flex:1; background:var(--ok);">⬇ Download CSV</button>
+      </div>
+      <div id="historyList" style="margin-top:18px;"></div>
+    </div>
+
+    <!-- ADMIN: SYSTEM-WIDE HISTORY (ALL FACILITIES) -->
+    <div class="card" id="adminHistoryCard" style="display:none;">
+      <h2>History (All Facilities)</h2>
+      <div class="row2">
+        <div>
+          <label for="adminHistDateFrom">From Date</label>
+          <input type="date" id="adminHistDateFrom">
+        </div>
+        <div>
+          <label for="adminHistDateTo">To Date</label>
+          <input type="date" id="adminHistDateTo">
+        </div>
+      </div>
+      <div class="row2">
+        <div>
+          <label for="adminHistStatusFilter">Status</label>
+          <select id="adminHistStatusFilter">
+            <option value="ALL">ALL</option>
+            <option value="RTF">RTF</option>
+            <option value="REFILED">REFILED</option>
+            <option value="RESOLVED">RESOLVED</option>
+          </select>
+        </div>
+        <div>
+          <label for="adminHistAccredFilter">Facility Accreditation No. (optional)</label>
+          <input type="text" id="adminHistAccredFilter" placeholder="Leave blank for all facilities">
+        </div>
+      </div>
+      <div style="display:flex; gap:10px;">
+        <button type="button" id="adminHistSearchBtn" style="margin-top:22px; flex:1;">Search</button>
+        <button type="button" id="adminHistDownloadBtn" style="margin-top:22px; flex:1; background:var(--ok);">⬇ Download CSV</button>
+        <button type="button" id="adminHistAnnexBBtn" style="margin-top:22px; flex:1; background:var(--gold); color:var(--ph-blue-dark);">⬇ Download Annex B</button>
+      </div>
+      <div id="adminHistList" style="margin-top:18px;"></div>
+    </div>
+
+    <!-- ADMIN: REVIEW REFILED SUBMISSIONS -->
+    <div class="card" id="reviewCard" style="display:none;">
+      <h2>Review Refiled Submissions</h2>
+      <p style="font-size:12px; color:var(--muted); margin-bottom:12px;">Pharmacies that have submitted corrected documents, awaiting your review.</p>
+      <div id="reviewList"><p style="font-size:13px; color:var(--muted);">Loading...</p></div>
+    </div>
+
+    <!-- ADMIN: PER-GACN COMPLIANCE MONITORING -->
+    <div class="card" id="complianceCard" style="display:none;">
+      <h2>Compliance Monitoring (Per GACN Batch)</h2>
+      <p style="font-size:12px; color:var(--muted); margin-bottom:12px;">
+        Tracks how much of each GACN batch has been resolved, per Section III.F of CM 2026-0030.
+        <strong>≥50%</strong> allows a new amendment cycle for the remaining balance. <strong>100%</strong> means the batch exits the interim pipeline for payment processing.
+      </p>
+      <div id="complianceList"><p style="font-size:13px; color:var(--muted);">Loading...</p></div>
+    </div>
+
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<script>
+  // ⚙️ SUPABASE CONFIG
+  const SUPABASE_URL = "https://ukdiibumagfqngqkqmom.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_kTDrhXTzmYq2yvXPgrdfiw_QmhoKXwQ";
+  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  // 🎨 WATERMARK PATTERN GENERATOR (repeating tiled background)
+  (function generateWatermark() {
+    const wrap = document.getElementById('watermarkWrap');
+    if (!wrap) return;
+    const tileCount = 35;
+    let html = '';
+    for (let i = 0; i < tileCount; i++) {
+      html += '<span class="wm-item"><span class="wm-blue">EASY GAMOT</span><span class="wm-gold">ONLINE SUPPORT</span></span>';
+    }
+    wrap.innerHTML = html;
+  })();
+
+  let currentUser = { username: "", role: "", facility: "", branch: "", id_no: "", account_type: "" };
+  let pendingPollInterval = null;
+
+  // ---------- LOGIN ----------
+  document.getElementById('loginForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const loginBtn = document.getElementById('loginBtn');
+    const msg = document.getElementById('loginMsg');
+    msg.style.display = 'none';
+
+    loginBtn.disabled = true;
+    loginBtn.innerText = "Verifying...";
+
+    const username = document.getElementById('loginUser').value.trim();
+    const password = document.getElementById('loginPass').value.trim();
+
+    const { data, error } = await sb.rpc('check_staff_login', {
+      input_username: username,
+      input_password: password
+    });
+
+    loginBtn.disabled = false;
+    loginBtn.innerText = "Sign In";
+
+    if (error || !data.success) {
+      msg.className = "msg error";
+      msg.innerText = error ? error.message : data.message;
+      msg.style.display = 'block';
+      return;
+    }
+
+    currentUser = {
+      username: username.toUpperCase(),
+      role: data.role,
+      facility: data.facility,
+      branch: data.branch,
+      id_no: data.id_no,
+      account_type: data.account_type,
+      accreditation_no: data.accreditation_no
+    };
+
+    document.getElementById('sessionText').innerText =
+      currentUser.username + " · " + currentUser.branch + " · " + currentUser.facility;
+    document.getElementById('logoutBtn').style.display = 'inline-block';
+
+    document.getElementById('loginSection').style.display = 'none';
+    document.getElementById('registerSection').style.display = 'none';
+    document.getElementById('mainSection').style.display = 'block';
+
+    // Pending Account Approvals: EKSKLUSIBO lang sa "ADMIN" (super admin), hindi kasama ang "BAS"
+    if (pendingPollInterval) {
+      clearInterval(pendingPollInterval);
+      pendingPollInterval = null;
+    }
+
+    if (currentUser.role === 'ADMIN') {
+      document.getElementById('adminApprovalSection').style.display = 'block';
+      loadPendingUsers();
+      // Auto-refresh kada 20-30 segundo (direktang Supabase, walang UrlFetchApp quota concern)
+      pendingPollInterval = setInterval(loadPendingUsers, 20000 + Math.floor(Math.random() * 10000));
+    } else {
+      document.getElementById('adminApprovalSection').style.display = 'none';
+    }
+
+    if (currentUser.account_type === 'PHARMACY') {
+      document.getElementById('encodeCard').style.display = 'none';
+      document.getElementById('refileCard').style.display = 'block';
+      document.getElementById('monitorCard').style.display = 'none';
+      document.getElementById('historyCard').style.display = 'none';
+      document.getElementById('pharmacySidebar').style.display = 'block';
+      document.getElementById('adminSidebar').style.display = 'none';
+      document.querySelector('main').classList.add('wide');
+      setActiveTab('refile');
+    } else if (currentUser.role === 'ADMIN' || currentUser.role === 'BAS' || currentUser.role === 'STAFF') {
+      // Parehong dashboard (Home / History / Review) ang makikita ng ADMIN at BAS
+      document.getElementById('encodeCard').style.display = 'block';
+      document.getElementById('refileCard').style.display = 'none';
+      document.getElementById('monitorCard').style.display = 'none';
+      document.getElementById('historyCard').style.display = 'none';
+      document.getElementById('adminHistoryCard').style.display = 'none';
+      document.getElementById('reviewCard').style.display = 'none';
+      document.getElementById('complianceCard').style.display = 'none';
+      document.getElementById('pharmacySidebar').style.display = 'none';
+      document.getElementById('adminSidebar').style.display = 'block';
+      document.querySelector('main').classList.add('wide');
+      loadIssueCategories();
+      setAdminTab('home');
+    } else {
+      document.getElementById('encodeCard').style.display = 'block';
+      document.getElementById('refileCard').style.display = 'none';
+      document.getElementById('monitorCard').style.display = 'none';
+      document.getElementById('historyCard').style.display = 'none';
+      document.getElementById('adminHistoryCard').style.display = 'none';
+      document.getElementById('reviewCard').style.display = 'none';
+      document.getElementById('complianceCard').style.display = 'none';
+      document.getElementById('pharmacySidebar').style.display = 'none';
+      document.getElementById('adminSidebar').style.display = 'none';
+      loadIssueCategories();
+    }
+  });
+
+  // ---------- LOGOUT ----------
+  document.getElementById('logoutBtn').addEventListener('click', async function() {
+    const result = await Swal.fire({
+      title: 'Log out?',
+      text: 'Any unsaved changes on this page will be lost.',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, log out',
+      cancelButtonText: 'No, stay',
+      confirmButtonColor: '#0054a6',
+      cancelButtonColor: '#94a3b8'
+    });
+
+    if (!result.isConfirmed) return;
+
+    sessionStorage.removeItem('draft_searchGatn');
+    sessionStorage.removeItem('draft_refileNotes');
+
+    if (pendingPollInterval) {
+      clearInterval(pendingPollInterval);
+      pendingPollInterval = null;
+    }
+
+    currentUser = { username: "", role: "", facility: "", branch: "", id_no: "", account_type: "", accreditation_no: "" };
+    document.getElementById('sessionText').innerText = "";
+    document.getElementById('logoutBtn').style.display = 'none';
+    document.getElementById('mainSection').style.display = 'none';
+    document.getElementById('adminApprovalSection').style.display = 'none';
+    document.getElementById('loginSection').style.display = 'block';
+    document.getElementById('loginForm').reset();
+    document.querySelector('main').classList.remove('wide');
+
+    // I-reset ang lahat ng cards pabalik sa default state, para walang "naiwang" tab
+    // mula sa nakaraang session (fix para sa stale display bug)
+    document.getElementById('encodeCard').style.display = 'none';
+    document.getElementById('refileCard').style.display = 'none';
+    document.getElementById('monitorCard').style.display = 'none';
+    document.getElementById('historyCard').style.display = 'none';
+    document.getElementById('adminHistoryCard').style.display = 'none';
+    document.getElementById('reviewCard').style.display = 'none';
+    document.getElementById('complianceCard').style.display = 'none';
+    document.getElementById('pharmacySidebar').style.display = 'none';
+    document.getElementById('adminSidebar').style.display = 'none';
+  });
+
+  // ---------- TOGGLE LOGIN / REGISTER VIEWS ----------
+  document.getElementById('showRegisterLink').addEventListener('click', function(e) {
+    e.preventDefault();
+    document.getElementById('loginSection').style.display = 'none';
+    document.getElementById('registerSection').style.display = 'block';
+  });
+  document.getElementById('showLoginLink').addEventListener('click', function(e) {
+    e.preventDefault();
+    document.getElementById('registerSection').style.display = 'none';
+    document.getElementById('loginSection').style.display = 'block';
+  });
+
+  // ---------- TOGGLE FIELDS BASED ON ACCOUNT TYPE ----------
+  document.getElementById('regAccountType').addEventListener('change', function() {
+    const label = document.getElementById('regFacilityLabel');
+    const facilityInput = document.getElementById('regFacility');
+    const accredWrap = document.getElementById('regAccreditationWrap');
+    const accredInput = document.getElementById('regAccreditationNo');
+
+    if (this.value === 'STAFF') {
+      label.innerText = 'PhilHealth Department';
+      facilityInput.placeholder = 'e.g. PMT-Claims, UHC Surge Team, PRO BAS';
+      accredWrap.style.display = 'none';
+      accredInput.required = false;
+      accredInput.value = '';
+    } else if (this.value === 'PHARMACY') {
+      label.innerText = 'Facility Name';
+      facilityInput.placeholder = '';
+      accredWrap.style.display = 'block';
+      accredInput.required = true;
+    } else {
+      label.innerText = 'Facility Name';
+      facilityInput.placeholder = '';
+      accredWrap.style.display = 'none';
+      accredInput.required = false;
+    }
+  });
+
+  // ---------- REGISTER ----------
+  document.getElementById('registerForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const btn = document.getElementById('registerBtn');
+    const msg = document.getElementById('registerMsg');
+    msg.style.display = 'none';
+    btn.disabled = true;
+    btn.innerText = "Submitting...";
+
+    const { data, error } = await sb.rpc('register_user', {
+      p_username: document.getElementById('regUsername').value.trim(),
+      p_password: document.getElementById('regPassword').value.trim(),
+      p_account_type: document.getElementById('regAccountType').value,
+      p_facility: document.getElementById('regFacility').value.trim(),
+      p_branch: document.getElementById('regBranch').value.trim(),
+      p_accreditation_no: document.getElementById('regAccreditationNo').value.trim()
+    });
+
+    btn.disabled = false;
+    btn.innerText = "Submit Registration";
+
+    if (error || !data.success) {
+      msg.className = "msg error";
+      msg.innerText = error ? error.message : data.message;
+      msg.style.display = 'block';
+      return;
+    }
+
+    msg.className = "msg ok";
+    msg.innerText = "Registration submitted. Please wait for admin approval before signing in.";
+    msg.style.display = 'block';
+    document.getElementById('registerForm').reset();
+  });
+
+  // ---------- ADMIN: LOAD PENDING USERS (NOTIFICATION-FIRST) ----------
+  let pendingUsersData = [];
+  let pendingListExpanded = false;
+
+  async function loadPendingUsers() {
+    const notice = document.getElementById('pendingNotice');
+    const listContainer = document.getElementById('pendingUsersList');
+    notice.innerHTML = '<p style="font-size:13px; color:var(--muted);">Checking...</p>';
+
+    const { data, error } = await sb.rpc('get_pending_users');
+
+    if (error) {
+      notice.innerHTML = '<p style="font-size:13px; color:#a02b1f;">Error loading pending accounts.</p>';
+      return;
+    }
+
+    pendingUsersData = data || [];
+
+    if (pendingUsersData.length === 0) {
+      notice.innerHTML = '<p style="font-size:13px; color:var(--muted);">No pending accounts.</p>';
+      listContainer.style.display = 'none';
+      listContainer.innerHTML = '';
+      pendingListExpanded = false;
+      return;
+    }
+
+    notice.innerHTML =
+      '<button type="button" id="pendingNoticeBtn" style="width:auto; margin:0; background:var(--amber); padding:10px 18px; font-size:13px;">' +
+      '🔔 ' + pendingUsersData.length + ' account' + (pendingUsersData.length > 1 ? 's' : '') + ' pending approval — Click to view' +
+      '</button>';
+
+    document.getElementById('pendingNoticeBtn').addEventListener('click', togglePendingList);
+
+    // Kung bukas na dati ang listahan (hal. matapos mag-approve/reject), panatilihing bukas at i-refresh
+    if (pendingListExpanded) {
+      renderPendingList();
+    }
+  }
+
+  document.getElementById('refreshPendingBtn').addEventListener('click', loadPendingUsers);
+
+  function togglePendingList() {
+    const listContainer = document.getElementById('pendingUsersList');
+    pendingListExpanded = !pendingListExpanded;
+
+    if (pendingListExpanded) {
+      renderPendingList();
+      listContainer.style.display = 'block';
+    } else {
+      listContainer.style.display = 'none';
+    }
+  }
+
+  function renderPendingList() {
+    const container = document.getElementById('pendingUsersList');
+    container.innerHTML = '';
+
+    pendingUsersData.forEach(u => {
+      const row = document.createElement('div');
+      row.style.cssText = "display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid var(--line);";
+      row.innerHTML = `
+        <div>
+          <strong>${u.username}</strong> — ${u.account_type || 'N/A'}<br>
+          <span style="font-size:12px; color:var(--muted);">${u.facility} · ${u.branch}</span>
+        </div>
+        <div>
+          <button style="width:auto; margin:0 4px; background:var(--ok); padding:6px 12px; font-size:12px;" onclick="decideUser('${u.username}','APPROVED')">Approve</button>
+          <button style="width:auto; margin:0; background:var(--amber); padding:6px 12px; font-size:12px;" onclick="decideUser('${u.username}','REJECTED')">Reject</button>
+        </div>
+      `;
+      container.appendChild(row);
+    });
+  }
+
+  // ---------- ADMIN: APPROVE / REJECT ----------
+  async function decideUser(username, decision) {
+    const { error } = await sb.rpc('approve_user', { p_username: username, p_decision: decision });
+    if (!error) loadPendingUsers();
+  }
+  window.decideUser = decideUser;
+
+  // ---------- LOAD ISSUE CATEGORIES (from resolution guide) ----------
+  async function loadIssueCategories() {
+    const { data, error } = await sb
+      .from('deficiency_resolution_guide')
+      .select('issue_category')
+      .order('issue_category');
+
+    if (error) return;
+
+    const unique = [...new Set(data.map(r => r.issue_category))];
+    const select = document.getElementById('issueCategory');
+    select.innerHTML = '<option value="">-- Select category --</option>';
+    unique.forEach(cat => {
+      const opt = document.createElement('option');
+      opt.value = cat;
+      opt.innerText = cat.replace(/_/g, ' ');
+      select.appendChild(opt);
+    });
+  }
+
+  // ---------- LOAD SPECIFIC ISSUES (dependent on category) ----------
+  document.getElementById('issueCategory').addEventListener('change', async function() {
+    const category = this.value;
+    const specificSelect = document.getElementById('specificIssue');
+    document.getElementById('resolutionBox').style.display = 'none';
+
+    if (!category) {
+      specificSelect.innerHTML = '<option value="">-- Select category first --</option>';
+      return;
+    }
+
+    const { data, error } = await sb
+      .from('deficiency_resolution_guide')
+      .select('specific_issue, required_resolution')
+      .eq('issue_category', category);
+
+    if (error) return;
+
+    specificSelect.innerHTML = '<option value="">-- Select specific issue --</option>';
+    data.forEach(row => {
+      const opt = document.createElement('option');
+      opt.value = row.specific_issue;
+      opt.dataset.resolution = row.required_resolution;
+      opt.innerText = row.specific_issue;
+      specificSelect.appendChild(opt);
+    });
+  });
+
+  // ---------- SHOW SUGGESTED RESOLUTION ----------
+  document.getElementById('specificIssue').addEventListener('change', function() {
+    const box = document.getElementById('resolutionBox');
+    const selected = this.options[this.selectedIndex];
+    if (selected && selected.dataset.resolution) {
+      box.innerText = "Suggested action: " + selected.dataset.resolution;
+      box.style.display = 'block';
+    } else {
+      box.style.display = 'none';
+    }
+  });
+
+  // ---------- ENCODE DEFICIENCY ----------
+  document.getElementById('encodeForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const btn = document.getElementById('encodeBtn');
+    const msg = document.getElementById('encodeMsg');
+    msg.style.display = 'none';
+    btn.disabled = true;
+    btn.innerText = "Saving...";
+
+    const payload = {
+      p_pro_region: document.getElementById('proRegion').value.trim(),
+      p_gacn_no: document.getElementById('gacnNo').value.trim(),
+      p_gatn_no: document.getElementById('gatnNo').value.trim(),
+      p_issue_category: document.getElementById('issueCategory').value,
+      p_specific_issue: document.getElementById('specificIssue').value,
+      p_facility: document.getElementById('facility').value.trim(),
+      p_facility_accreditation_no: document.getElementById('facilityAccreditationNo').value.trim(),
+      p_claimant_last_name: document.getElementById('claimantLast').value.trim(),
+      p_claimant_first_name: document.getElementById('claimantFirst').value.trim(),
+      p_claimant_contact: document.getElementById('claimantContact').value.trim(),
+      p_encoded_by: currentUser.id_no || currentUser.username
+    };
+
+    const { data, error } = await sb.rpc('encode_deficiency', payload);
+
+    btn.disabled = false;
+    btn.innerText = "Encode & Save";
+
+    if (error || !data.success) {
+      msg.className = "msg error";
+      msg.innerText = error ? error.message : data.message;
+      msg.style.display = 'block';
+      return;
+    }
+
+    msg.className = "msg ok";
+    msg.innerText = "Record saved. Resolution: " + data.resolution;
+    msg.style.display = 'block';
+
+    document.getElementById('encodeForm').reset();
+    document.getElementById('resolutionBox').style.display = 'none';
+  });
+
+  // ---------- REFILE: SEARCH GATN ----------
+  let currentRefileGatn = "";
+  document.getElementById('searchGatnBtn').addEventListener('click', async function() {
+    const btn = this;
+    const searchMsg = document.getElementById('searchMsg');
+    const gatn = document.getElementById('searchGatn').value.trim();
+    searchMsg.style.display = 'none';
+    document.getElementById('refileDetails').style.display = 'none';
+
+    if (!gatn) return;
+
+    btn.disabled = true;
+    btn.innerText = "Searching...";
+
+    const { data, error } = await sb.rpc('find_deficiency_by_gatn', { p_gatn_no: gatn });
+
+    btn.disabled = false;
+    btn.innerText = "Search";
+
+    if (error || !data.found) {
+      searchMsg.className = "msg error";
+      searchMsg.innerText = error ? error.message : data.message;
+      searchMsg.style.display = 'block';
+      return;
+    }
+
+    if (data.status === 'REFILED' || data.status === 'RESOLVED') {
+      searchMsg.className = "msg ok";
+      searchMsg.innerText = "This GATN already has status: " + data.status + ". No further action needed unless instructed by PhilHealth.";
+      searchMsg.style.display = 'block';
+      return;
+    }
+
+    currentRefileGatn = gatn;
+
+    const deadline = data.compliance_deadline ? new Date(data.compliance_deadline).toLocaleDateString() : "N/A";
+    document.getElementById('refileInfoBox').innerHTML =
+      "<strong>Claimant:</strong> " + data.claimant_name + "<br>" +
+      "<strong>Facility:</strong> " + data.facility + "<br>" +
+      "<strong>GACN:</strong> " + data.gacn_no + "<br>" +
+      "<strong>Issue Category:</strong> " + (data.issue_category || "").replace(/_/g, ' ') + "<br>" +
+      "<strong>Specific Issue:</strong> " + data.specific_issue + "<br>" +
+      "<strong>Required Action:</strong> " + data.required_resolution + "<br>" +
+      "<strong>Compliance Deadline:</strong> " + deadline;
+
+    document.getElementById('refileDetails').style.display = 'block';
+  });
+
+  // ---------- REFILE: SUBMIT CORRECTED DOCUMENT ----------
+  document.getElementById('refileForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const btn = document.getElementById('refileBtn');
+    const msg = document.getElementById('refileMsg');
+    msg.style.display = 'none';
+
+    const fileInput = document.getElementById('refileFile');
+    if (!fileInput.files || fileInput.files.length === 0) {
+      msg.className = "msg error";
+      msg.innerText = "Please choose a file to upload.";
+      msg.style.display = 'block';
+      return;
+    }
+
+    btn.disabled = true;
+    btn.innerText = "Uploading...";
+
+    const file = fileInput.files[0];
+    const filePath = currentRefileGatn + "_" + Date.now() + "_" + file.name;
+
+    const { error: uploadError } = await sb.storage
+      .from('refile-attachments')
+      .upload(filePath, file);
+
+    if (uploadError) {
+      btn.disabled = false;
+      btn.innerText = "Submit Refile";
+      msg.className = "msg error";
+      msg.innerText = "Upload failed: " + uploadError.message;
+      msg.style.display = 'block';
+      return;
+    }
+
+    const { data: urlData } = sb.storage.from('refile-attachments').getPublicUrl(filePath);
+    const fileLink = urlData.publicUrl;
+
+    const { data, error } = await sb.rpc('submit_refile', {
+      p_gatn_no: currentRefileGatn,
+      p_refile_file_link: fileLink,
+      p_refile_notes: document.getElementById('refileNotes').value.trim()
+    });
+
+    btn.disabled = false;
+    btn.innerText = "Submit Refile";
+
+    if (error || !data.success) {
+      msg.className = "msg error";
+      msg.innerText = error ? error.message : data.message;
+      msg.style.display = 'block';
+      return;
+    }
+
+    msg.className = "msg ok";
+    msg.innerText = "Refile submitted successfully. PhilHealth will review your corrected document.";
+    msg.style.display = 'block';
+
+    document.getElementById('refileForm').reset();
+    document.getElementById('refileDetails').style.display = 'none';
+    document.getElementById('searchGatn').value = "";
+    sessionStorage.removeItem('draft_searchGatn');
+    sessionStorage.removeItem('draft_refileNotes');
+
+    Swal.fire({
+      icon: 'success',
+      title: 'Refile Submitted!',
+      text: 'Your corrected document has been sent to PhilHealth for review. You will see the updated status once it has been checked.',
+      confirmButtonText: 'Okay',
+      confirmButtonColor: '#0054a6'
+    });
+  });
+
+  // ---------- PHARMACY SIDEBAR TAB SWITCHING ----------
+  function setActiveTab(tab) {
+    const refileBtn = document.getElementById('tabRefileBtn');
+    const monitorBtn = document.getElementById('tabMonitorBtn');
+    const historyBtn = document.getElementById('tabHistoryBtn');
+
+    document.getElementById('refileCard').style.display = 'none';
+    document.getElementById('monitorCard').style.display = 'none';
+    document.getElementById('historyCard').style.display = 'none';
+    refileBtn.classList.remove('active');
+    monitorBtn.classList.remove('active');
+    historyBtn.classList.remove('active');
+
+    if (tab === 'refile') {
+      document.getElementById('refileCard').style.display = 'block';
+      refileBtn.classList.add('active');
+    } else if (tab === 'monitor') {
+      document.getElementById('monitorCard').style.display = 'block';
+      monitorBtn.classList.add('active');
+      loadMyDeficiencies();
+    } else if (tab === 'history') {
+      document.getElementById('historyCard').style.display = 'block';
+      historyBtn.classList.add('active');
+      searchHistory();
+    }
+  }
+
+  document.getElementById('tabRefileBtn').addEventListener('click', function() { setActiveTab('refile'); });
+  document.getElementById('tabMonitorBtn').addEventListener('click', function() { setActiveTab('monitor'); });
+  document.getElementById('tabHistoryBtn').addEventListener('click', function() { setActiveTab('history'); });
+
+  // ---------- ADMIN SIDEBAR TAB SWITCHING ----------
+  function setAdminTab(tab) {
+    const homeBtn = document.getElementById('tabAdminHomeBtn');
+    const historyBtn = document.getElementById('tabAdminHistoryBtn');
+    const reviewBtn = document.getElementById('tabReviewBtn');
+    const complianceBtn = document.getElementById('tabComplianceBtn');
+
+    document.getElementById('encodeCard').style.display = 'none';
+    document.getElementById('adminHistoryCard').style.display = 'none';
+    document.getElementById('reviewCard').style.display = 'none';
+    document.getElementById('complianceCard').style.display = 'none';
+    homeBtn.classList.remove('active');
+    historyBtn.classList.remove('active');
+    reviewBtn.classList.remove('active');
+    complianceBtn.classList.remove('active');
+
+    if (tab === 'home') {
+      document.getElementById('encodeCard').style.display = 'block';
+      homeBtn.classList.add('active');
+    } else if (tab === 'history') {
+      document.getElementById('adminHistoryCard').style.display = 'block';
+      historyBtn.classList.add('active');
+      searchAdminHistory();
+    } else if (tab === 'review') {
+      document.getElementById('reviewCard').style.display = 'block';
+      reviewBtn.classList.add('active');
+      loadReviewSubmissions();
+    } else if (tab === 'compliance') {
+      document.getElementById('complianceCard').style.display = 'block';
+      complianceBtn.classList.add('active');
+      loadComplianceMonitoring();
+    }
+  }
+
+  document.getElementById('tabAdminHomeBtn').addEventListener('click', function() { setAdminTab('home'); });
+  document.getElementById('tabAdminHistoryBtn').addEventListener('click', function() { setAdminTab('history'); });
+  document.getElementById('tabReviewBtn').addEventListener('click', function() { setAdminTab('review'); });
+  document.getElementById('tabComplianceBtn').addEventListener('click', function() { setAdminTab('compliance'); });
+
+  // ---------- PERSIST REFILE FORM STATE (survives tab switching & accidental refresh) ----------
+  (function persistRefileState() {
+    const gatnInput = document.getElementById('searchGatn');
+    const notesInput = document.getElementById('refileNotes');
+
+    // I-restore ang naka-save na values pag nag-load ang page
+    if (gatnInput && sessionStorage.getItem('draft_searchGatn')) {
+      gatnInput.value = sessionStorage.getItem('draft_searchGatn');
+    }
+    if (notesInput && sessionStorage.getItem('draft_refileNotes')) {
+      notesInput.value = sessionStorage.getItem('draft_refileNotes');
+    }
+
+    // I-save habang nagta-type
+    if (gatnInput) {
+      gatnInput.addEventListener('input', function() {
+        sessionStorage.setItem('draft_searchGatn', gatnInput.value);
+      });
+    }
+    if (notesInput) {
+      notesInput.addEventListener('input', function() {
+        sessionStorage.setItem('draft_refileNotes', notesInput.value);
+      });
+    }
+  })();
+
+  // ---------- LOAD PHARMACY'S OWN DEFICIENCY LIST ----------
+  async function loadMyDeficiencies() {
+    const container = document.getElementById('monitorList');
+    container.innerHTML = '<p style="font-size:13px; color:var(--muted);">Loading...</p>';
+
+    const { data, error } = await sb.rpc('get_facility_deficiencies', { p_accreditation_no: currentUser.accreditation_no });
+
+    if (error) {
+      container.innerHTML = '<p style="font-size:13px; color:#a02b1f;">Error loading records.</p>';
+      return;
+    }
+
+    if (!data || data.length === 0) {
+      container.innerHTML = '<p style="font-size:13px; color:var(--ok); font-weight:700;">✅ No pending deficiencies. All caught up!</p>';
+      return;
+    }
+
+    const urgencyLabels = { OVERDUE: '⚠ Overdue', DUE_SOON: '⏰ Due Soon', ON_TRACK: '✓ On Track' };
+
+    let rows = data.map(function(r) {
+      const deadline = r.compliance_deadline ? new Date(r.compliance_deadline).toLocaleDateString() : '—';
+      const urgency = r.urgency || 'ON_TRACK';
+      const returnNote = r.review_remarks
+        ? '<br><span style="color:#dc2626; font-size:11px; font-weight:700;">↺ Returned: ' + r.review_remarks + '</span>'
+        : '';
+      return '<tr class="urgency-row ' + urgency + '">' +
+        '<td><span class="urgency-badge ' + urgency + '">' + (urgencyLabels[urgency] || urgency) + '</span></td>' +
+        '<td>' + r.gatn_no + '</td>' +
+        '<td>' + r.gacn_no + '</td>' +
+        '<td>' + (r.issue_category || '').replace(/_/g, ' ') + '<br><span style="color:var(--muted); font-size:11px;">' + r.specific_issue + '</span>' + returnNote + '</td>' +
+        '<td>' + deadline + '</td>' +
+        '</tr>';
+    }).join('');
+
+    container.innerHTML =
+      '<p style="font-size:12px; color:var(--muted); margin-bottom:12px;">Showing active deficiencies that still need action, sorted by urgency.</p>' +
+      '<table class="data-table"><thead><tr>' +
+      '<th>Urgency</th><th>GATN</th><th>GACN</th><th>Issue</th><th>Deadline</th>' +
+      '</tr></thead><tbody>' + rows + '</tbody></table>';
+  }
+
+  // ---------- HISTORY: SEARCH BY DATE RANGE + STATUS ----------
+  let lastHistoryData = [];
+
+  async function searchHistory() {
+    const container = document.getElementById('historyList');
+    container.innerHTML = '<p style="font-size:13px; color:var(--muted);">Loading...</p>';
+
+    const dateFrom = document.getElementById('historyDateFrom').value;
+    const dateTo = document.getElementById('historyDateTo').value;
+    const status = document.getElementById('historyStatusFilter').value;
+
+    const { data, error } = await sb.rpc('get_facility_history', {
+      p_accreditation_no: currentUser.accreditation_no,
+      p_date_from: dateFrom || null,
+      p_date_to: dateTo || null,
+      p_status: status
+    });
+
+    if (error) {
+      container.innerHTML = '<p style="font-size:13px; color:#a02b1f;">Error loading history.</p>';
+      lastHistoryData = [];
+      return;
+    }
+
+    lastHistoryData = data || [];
+
+    if (!data || data.length === 0) {
+      container.innerHTML = '<p style="font-size:13px; color:var(--muted);">No records found for the selected filters.</p>';
+      return;
+    }
+
+    let rows = data.map(function(r) {
+      const created = r.created_at ? new Date(r.created_at).toLocaleDateString() : '—';
+      const deadline = r.compliance_deadline ? new Date(r.compliance_deadline).toLocaleDateString() : '—';
+      return '<tr>' +
+        '<td>' + created + '</td>' +
+        '<td>' + r.gatn_no + '</td>' +
+        '<td>' + r.gacn_no + '</td>' +
+        '<td>' + (r.issue_category || '').replace(/_/g, ' ') + '<br><span style="color:var(--muted); font-size:11px;">' + r.specific_issue + '</span></td>' +
+        '<td><span class="status-pill ' + r.status + '">' + r.status + '</span></td>' +
+        '<td>' + deadline + '</td>' +
+        '</tr>';
+    }).join('');
+
+    container.innerHTML =
+      '<table class="data-table"><thead><tr>' +
+      '<th>Date</th><th>GATN</th><th>GACN</th><th>Issue</th><th>Status</th><th>Deadline</th>' +
+      '</tr></thead><tbody>' + rows + '</tbody></table>';
+  }
+
+  document.getElementById('historySearchBtn').addEventListener('click', searchHistory);
+
+  // ---------- HISTORY: DOWNLOAD AS CSV ----------
+  function downloadHistoryCSV() {
+    if (!lastHistoryData || lastHistoryData.length === 0) {
+      Swal.fire('No data', 'Please search for records first before downloading.', 'info');
+      return;
+    }
+
+    const headers = ['Date', 'GATN', 'GACN', 'Issue Category', 'Specific Issue', 'Required Resolution', 'Status', 'RTF Date', 'Compliance Deadline', 'Refile Timestamp'];
+
+    const csvRows = lastHistoryData.map(function(r) {
+      const created = r.created_at ? new Date(r.created_at).toLocaleDateString() : '';
+      const rtf = r.rtf_date ? new Date(r.rtf_date).toLocaleDateString() : '';
+      const deadline = r.compliance_deadline ? new Date(r.compliance_deadline).toLocaleDateString() : '';
+      const refiled = r.refile_timestamp ? new Date(r.refile_timestamp).toLocaleDateString() : '';
+
+      const fields = [
+        created, r.gatn_no || '', r.gacn_no || '',
+        (r.issue_category || '').replace(/_/g, ' '), r.specific_issue || '',
+        r.required_resolution || '', r.status || '', rtf, deadline, refiled
+      ];
+
+      return fields.map(function(f) {
+        return '"' + String(f).replace(/"/g, '""') + '"';
+      }).join(',');
+    });
+
+    const csvContent = '\ufeff' + headers.join(',') + '\r\n' + csvRows.join('\r\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'GAMOT_History_' + new Date().toLocaleDateString().replace(/\//g, '-') + '.csv';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    setTimeout(function() { window.URL.revokeObjectURL(url); }, 100);
+  }
+
+  document.getElementById('historyDownloadBtn').addEventListener('click', downloadHistoryCSV);
+
+  // ---------- ADMIN: SYSTEM-WIDE HISTORY (ALL FACILITIES) ----------
+  let lastAdminHistoryData = [];
+
+  async function searchAdminHistory() {
+    const container = document.getElementById('adminHistList');
+    container.innerHTML = '<p style="font-size:13px; color:var(--muted);">Loading...</p>';
+
+    const dateFrom = document.getElementById('adminHistDateFrom').value;
+    const dateTo = document.getElementById('adminHistDateTo').value;
+    const status = document.getElementById('adminHistStatusFilter').value;
+    const accred = document.getElementById('adminHistAccredFilter').value.trim();
+
+    // ADMIN (super admin) = makikita lahat ng branches. BAS/STAFF = sariling branch lang.
+    const branchRestriction = currentUser.role === 'ADMIN' ? null : currentUser.branch;
+
+    const { data, error } = await sb.rpc('get_admin_history', {
+      p_date_from: dateFrom || null,
+      p_date_to: dateTo || null,
+      p_status: status,
+      p_accreditation_no: accred || null,
+      p_branch: branchRestriction
+    });
+
+    if (error) {
+      container.innerHTML = '<p style="font-size:13px; color:#a02b1f;">Error loading history.</p>';
+      lastAdminHistoryData = [];
+      return;
+    }
+
+    lastAdminHistoryData = data || [];
+
+    if (!data || data.length === 0) {
+      container.innerHTML = '<p style="font-size:13px; color:var(--muted);">No records found for the selected filters.</p>';
+      return;
+    }
+
+    let rows = data.map(function(r) {
+      const created = r.created_at ? new Date(r.created_at).toLocaleDateString() : '—';
+      const deadline = r.compliance_deadline ? new Date(r.compliance_deadline).toLocaleDateString() : '—';
+      return '<tr>' +
+        '<td>' + created + '</td>' +
+        '<td>' + (r.facility_accreditation_no || '') + '</td>' +
+        '<td>' + r.gatn_no + '</td>' +
+        '<td>' + r.gacn_no + '</td>' +
+        '<td>' + (r.issue_category || '').replace(/_/g, ' ') + '<br><span style="color:var(--muted); font-size:11px;">' + r.specific_issue + '</span></td>' +
+        '<td><span class="status-pill ' + r.status + '">' + r.status + '</span></td>' +
+        '<td>' + deadline + '</td>' +
+        '</tr>';
+    }).join('');
+
+    container.innerHTML =
+      '<table class="data-table"><thead><tr>' +
+      '<th>Date</th><th>Facility Accred.</th><th>GATN</th><th>GACN</th><th>Issue</th><th>Status</th><th>Deadline</th>' +
+      '</tr></thead><tbody>' + rows + '</tbody></table>';
+  }
+
+  document.getElementById('adminHistSearchBtn').addEventListener('click', searchAdminHistory);
+
+  function downloadAdminHistoryCSV() {
+    if (!lastAdminHistoryData || lastAdminHistoryData.length === 0) {
+      Swal.fire('No data', 'Please search for records first before downloading.', 'info');
+      return;
+    }
+
+    const headers = ['Date', 'Facility Accreditation No.', 'GATN', 'GACN', 'Issue Category', 'Specific Issue', 'Required Resolution', 'Status', 'RTF Date', 'Compliance Deadline', 'Refile Timestamp'];
+
+    const csvRows = lastAdminHistoryData.map(function(r) {
+      const created = r.created_at ? new Date(r.created_at).toLocaleDateString() : '';
+      const rtf = r.rtf_date ? new Date(r.rtf_date).toLocaleDateString() : '';
+      const deadline = r.compliance_deadline ? new Date(r.compliance_deadline).toLocaleDateString() : '';
+      const refiled = r.refile_timestamp ? new Date(r.refile_timestamp).toLocaleDateString() : '';
+
+      const fields = [
+        created, r.facility_accreditation_no || '', r.gatn_no || '', r.gacn_no || '',
+        (r.issue_category || '').replace(/_/g, ' '), r.specific_issue || '',
+        r.required_resolution || '', r.status || '', rtf, deadline, refiled
+      ];
+
+      return fields.map(function(f) {
+        return '"' + String(f).replace(/"/g, '""') + '"';
+      }).join(',');
+    });
+
+    const csvContent = '\ufeff' + headers.join(',') + '\r\n' + csvRows.join('\r\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'GAMOT_AdminHistory_' + new Date().toLocaleDateString().replace(/\//g, '-') + '.csv';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    setTimeout(function() { window.URL.revokeObjectURL(url); }, 100);
+  }
+
+  document.getElementById('adminHistDownloadBtn').addEventListener('click', downloadAdminHistoryCSV);
+
+  // ---------- ADMIN: DOWNLOAD ANNEX B FORMAT (NO, PRO, GACN, GATN, ISSUE CATEGORY, SPECIFIC ISSUE) ----------
+  function downloadAnnexBFormat() {
+    if (!lastAdminHistoryData || lastAdminHistoryData.length === 0) {
+      Swal.fire('No data', 'Please search for records first before downloading.', 'info');
+      return;
+    }
+
+    const headers = ['NO', 'PRO', 'GACN', 'GATN', 'ISSUE CATEGORY', 'SPECIFIC ISSUE'];
+
+    const csvRows = lastAdminHistoryData.map(function(r, index) {
+      const fields = [
+        index + 1,
+        r.pro_region || '',
+        r.gacn_no || '',
+        r.gatn_no || '',
+        (r.issue_category || '').replace(/_/g, ' '),
+        r.specific_issue || ''
+      ];
+
+      return fields.map(function(f) {
+        return '"' + String(f).replace(/"/g, '""') + '"';
+      }).join(',');
+    });
+
+    const csvContent = '\ufeff' + headers.join(',') + '\r\n' + csvRows.join('\r\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'Annex_B_Summary_' + new Date().toLocaleDateString().replace(/\//g, '-') + '.csv';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    setTimeout(function() { window.URL.revokeObjectURL(url); }, 100);
+  }
+
+  document.getElementById('adminHistAnnexBBtn').addEventListener('click', downloadAnnexBFormat);
+
+  // ---------- ADMIN: PER-GACN COMPLIANCE MONITORING ----------
+  async function loadComplianceMonitoring() {
+    const container = document.getElementById('complianceList');
+    container.innerHTML = '<p style="font-size:13px; color:var(--muted);">Loading...</p>';
+
+    const branchRestriction = currentUser.role === 'ADMIN' ? null : currentUser.branch;
+
+    const { data, error } = await sb.rpc('get_gacn_compliance', { p_branch: branchRestriction });
+
+    if (error) {
+      container.innerHTML = '<p style="font-size:13px; color:#a02b1f;">Error loading compliance data.</p>';
+      return;
+    }
+
+    if (!data || data.length === 0) {
+      container.innerHTML = '<p style="font-size:13px; color:var(--muted);">No GACN batches found.</p>';
+      return;
+    }
+
+    let rows = data.map(function(r) {
+      const pct = parseFloat(r.compliance_pct) || 0;
+      let statusLabel, statusClass;
+
+      if (pct >= 100) {
+        statusLabel = '✓ 100% — Exit Pipeline';
+        statusClass = 'RESOLVED';
+      } else if (pct >= 50) {
+        statusLabel = '⚠ ≥50% — Re-initiate Cycle';
+        statusClass = 'REFILED';
+      } else {
+        statusLabel = '✗ Below 50%';
+        statusClass = 'RTF';
+      }
+
+      return '<tr class="urgency-row">' +
+        '<td>' + r.gacn_no + '</td>' +
+        '<td>' + (r.pro_region || '—') + '</td>' +
+        '<td>' + r.resolved_gatn + ' / ' + r.total_gatn + '</td>' +
+        '<td><strong>' + pct + '%</strong></td>' +
+        '<td><span class="status-pill ' + statusClass + '">' + statusLabel + '</span></td>' +
+        '</tr>';
+    }).join('');
+
+    container.innerHTML =
+      '<table class="data-table"><thead><tr>' +
+      '<th>GACN</th><th>PRO Region</th><th>Resolved / Total</th><th>Compliance %</th><th>Status</th>' +
+      '</tr></thead><tbody>' + rows + '</tbody></table>';
+  }
+
+  // ---------- ADMIN: REVIEW REFILED SUBMISSIONS ----------
+  async function loadReviewSubmissions() {
+    const container = document.getElementById('reviewList');
+    container.innerHTML = '<p style="font-size:13px; color:var(--muted);">Loading...</p>';
+
+    // ADMIN (super admin) = makikita lahat ng branches. BAS/STAFF = sariling branch lang.
+    const branchRestriction = currentUser.role === 'ADMIN' ? null : currentUser.branch;
+
+    const { data, error } = await sb.rpc('get_refiled_submissions', { p_branch: branchRestriction });
+
+    if (error) {
+      container.innerHTML = '<p style="font-size:13px; color:#a02b1f;">Error loading submissions.</p>';
+      return;
+    }
+
+    if (!data || data.length === 0) {
+      container.innerHTML = '<p style="font-size:13px; color:var(--ok); font-weight:700;">✅ No pending submissions to review.</p>';
+      return;
+    }
+
+    let cardsHtml = data.map(function(r) {
+      const refiled = r.refile_timestamp ? new Date(r.refile_timestamp).toLocaleString() : '—';
+      const fileLink = r.refile_file_link
+        ? '<a href="' + r.refile_file_link + '" target="_blank" style="color:var(--ph-blue); font-weight:700;">View Corrected Document</a>'
+        : '<span style="color:var(--muted);">No file attached</span>';
+
+      return '<div class="card" style="margin-bottom:12px; padding:18px;">' +
+        '<div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px;">' +
+          '<div>' +
+            '<strong>GATN:</strong> ' + r.gatn_no + ' &nbsp; <strong>GACN:</strong> ' + r.gacn_no + '<br>' +
+            '<strong>Facility Accred.:</strong> ' + (r.facility_accreditation_no || '') + '<br>' +
+            '<strong>Issue:</strong> ' + (r.issue_category || '').replace(/_/g, ' ') + ' — ' + r.specific_issue + '<br>' +
+            '<strong>Refiled:</strong> ' + refiled + '<br>' +
+            '<strong>Notes from Facility:</strong> ' + (r.refile_notes || '—') + '<br>' +
+            fileLink +
+          '</div>' +
+          '<div style="display:flex; flex-direction:column; gap:8px; min-width:160px;">' +
+            '<button type="button" style="margin:0; background:var(--ok);" onclick="resolveSubmission(\'' + r.gatn_no + '\', \'RESOLVED\')">✓ Mark Resolved</button>' +
+            '<button type="button" style="margin:0; background:var(--amber);" onclick="resolveSubmission(\'' + r.gatn_no + '\', \'RTF\')">↺ Request Re-correction</button>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+
+    container.innerHTML = cardsHtml;
+  }
+
+  async function resolveSubmission(gatnNo, newStatus) {
+    let reviewRemarks = null;
+
+    if (newStatus === 'RTF') {
+      const { value: remarks } = await Swal.fire({
+        title: 'Reason for Return',
+        input: 'textarea',
+        inputLabel: 'Explain what still needs to be corrected for GATN ' + gatnNo + ':',
+        inputPlaceholder: 'e.g. The signature on the prescription is still missing...',
+        inputValidator: function(value) {
+          if (!value || !value.trim()) {
+            return 'A reason is required before sending this back to the facility.';
+          }
+        },
+        showCancelButton: true,
+        confirmButtonText: 'Send Back',
+        cancelButtonText: 'Cancel',
+        confirmButtonColor: '#f59e0b'
+      });
+
+      if (!remarks) return;
+      reviewRemarks = remarks.trim();
+    } else {
+      const result = await Swal.fire({
+        title: 'Confirm action',
+        text: 'Are you sure you want to mark GATN ' + gatnNo + ' as RESOLVED?',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, confirm',
+        cancelButtonText: 'Cancel',
+        confirmButtonColor: '#0054a6'
+      });
+
+      if (!result.isConfirmed) return;
+    }
+
+    const { data, error } = await sb.rpc('resolve_deficiency', {
+      p_gatn_no: gatnNo,
+      p_resolved_by: currentUser.username,
+      p_new_status: newStatus,
+      p_review_remarks: reviewRemarks
+    });
+
+    if (error || !data.success) {
+      Swal.fire('Error', error ? error.message : 'Something went wrong.', 'error');
+      return;
+    }
+
+    Swal.fire('Done', 'Record updated successfully.', 'success');
+    loadReviewSubmissions();
+  }
+  window.resolveSubmission = resolveSubmission;
+</script>
+
+<footer class="footer-gamot">
+  <div class="footer-left">
+    <img src="data:image/png;base64,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" alt="PhilHealth Logo" class="footer-logo-main">
+  </div>
+  <div class="footer-right">
+    <div class="footer-brand">
+      <span class="text-philhealth">PhilHealth</span><span class="text-gamot">GAMOT</span>
+    </div>
+    <div class="footer-tag">Guaranteed and Accessible Medications for Outpatient Treatment</div>
+  </div>
+</footer>
+
+</body>
+</html>

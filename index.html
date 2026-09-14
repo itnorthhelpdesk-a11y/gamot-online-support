@@ -118,6 +118,7 @@
   .sidebar button.active { background: var(--ph-blue); color: #fff; }
   .dashboard-content { flex: 1; min-width: 0; }
 
+  .data-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
   table.data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
   table.data-table th {
     text-align: left; background: #f0f3f6; padding: 9px 10px; font-size: 11px;
@@ -125,6 +126,17 @@
     border-bottom: 1px solid var(--line);
   }
   table.data-table td { padding: 9px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+
+  .pagination-bar {
+    display: flex; align-items: center; justify-content: center; gap: 16px;
+    margin-top: 16px; padding-top: 12px;
+  }
+  .pagination-bar .page-btn {
+    width: auto; margin: 0; padding: 7px 16px; font-size: 12px;
+    background: var(--ph-blue); color: #fff;
+  }
+  .pagination-bar .page-btn:disabled { background: #cbd5e1; cursor: not-allowed; }
+  .pagination-bar .page-info { font-size: 12px; color: var(--muted); font-weight: 700; }
 
   .status-pill { display: inline-block; padding: 3px 9px; border-radius: 20px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
   .status-pill.RTF { background: #fde8e0; color: var(--amber); }
@@ -237,6 +249,115 @@
   .footer-brand .text-philhealth { font-size: 1.3rem; }
   .footer-brand .text-gamot { font-size: 1.3rem; }
   .footer-tag { font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-top: 2px; }
+
+  /* ========================================================================
+     MOBILE POLISH — responsive adjustments para sa tablet/phone screens
+     ======================================================================== */
+  @media (max-width: 768px) {
+    /* Header: i-stack pababa ang title at session badge, bawasan ang font */
+    header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 14px 18px;
+      border-radius: 0 0 16px 16px;
+    }
+    header h1 { font-size: 1.05rem; }
+    header .tag { font-size: 8.5px; }
+    header .session {
+      width: 100%;
+      justify-content: space-between;
+      font-size: 11px;
+      flex-wrap: wrap;
+      padding: 8px 12px;
+    }
+
+    /* Main content: bawasan ang side padding para mas malawak ang gamit na espasyo */
+    main, main.wide { max-width: 100%; padding: 6px 12px 40px; }
+
+    /* Dashboard layout: i-stack ang sidebar sa ibabaw ng content, hindi na magkatabi */
+    .dashboard-layout { flex-direction: column; gap: 14px; }
+
+    /* Sidebar: gawing horizontal scrollable tab strip sa halip na patayong listahan ng buttons */
+    .sidebar {
+      display: flex;
+      flex-direction: row;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      gap: 8px;
+      width: 100%;
+      padding: 10px;
+      scrollbar-width: thin;
+    }
+    .sidebar button {
+      flex: 0 0 auto;
+      white-space: nowrap;
+      margin: 0;
+      width: auto;
+    }
+
+    /* Registration/Encode forms: isang column na lang sa halip na dalawa, mas madaling i-type sa maliit na screen */
+    .row2 { grid-template-columns: 1fr; gap: 10px; }
+
+    /* Cards: bawasan ang padding para hindi sobrang siksik */
+    .card { padding: 18px 16px; }
+    .card h2 { font-size: 1.05rem; }
+
+    /* Tables: bahagyang paliitin ang font, tiyak na naka-scroll horizontally (data-table-wrap na gumagana na) */
+    table.data-table { font-size: 12px; }
+    table.data-table th, table.data-table td { padding: 7px 8px; }
+
+    /* Buttons: siguraduhing sapat ang laki para sa pagpindot ng daliri (touch target) */
+    button[type="submit"], button[type="button"]:not(.page-btn):not(.password-toggle-btn) {
+      min-height: 42px;
+    }
+
+    /* Pagination bar: hayaang mag-wrap nang maayos sa maliit na screen */
+    .pagination-bar { flex-wrap: wrap; gap: 10px; }
+
+    /* Footer: i-stack din pababa sa halip na magkatabi */
+    footer {
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 20px;
+      text-align: center;
+    }
+    .footer-right { align-items: center; }
+
+    /* Urgency legend: isang column na lang */
+    .urgency-legend-item { flex-wrap: wrap; }
+  }
+
+  @media (max-width: 480px) {
+    /* Mas maliit pang phones: karagdagang pag-adjust */
+    header h1 { font-size: 0.92rem; }
+    .card { padding: 14px 12px; }
+    .logo-text-group { font-size: 2rem; }
+  }
+
+  /* ANALYTICS DASHBOARD */
+  .analytics-stat-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 14px; margin-bottom: 24px;
+  }
+  .analytics-stat-card {
+    background: #f8fafc; border: 1px solid var(--line); border-radius: 12px;
+    padding: 16px; text-align: center;
+  }
+  .analytics-stat-card .stat-value { font-size: 1.6rem; font-weight: 800; color: var(--ph-blue); line-height: 1.2; }
+  .analytics-stat-card .stat-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px; }
+  .analytics-chart-row { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 18px; }
+  .analytics-chart-box {
+    background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 16px;
+  }
+  .analytics-chart-box h3 { font-size: 13px; color: var(--ink); margin: 0 0 12px; }
+  .analytics-chart-box canvas { max-height: 260px; }
+
+  @media (max-width: 768px) {
+    .analytics-chart-row { grid-template-columns: 1fr; }
+    .analytics-stat-card .stat-value { font-size: 1.3rem; }
+  }
 </style>
 </head>
 <body>
@@ -276,6 +397,9 @@
     <p style="text-align:center; margin-top:16px; font-size:13px;">
       No account yet? <a href="#" id="showRegisterLink" style="color:var(--teal); font-weight:600;">Register here</a>
     </p>
+    <p style="text-align:center; margin-top:8px; font-size:13px;">
+      <a href="#" id="showForgotPasswordLink" style="color:var(--muted); font-weight:600;">Forgot Password?</a>
+    </p>
   </div>
 
   <!-- REGISTRATION SECTION -->
@@ -286,6 +410,8 @@
       <input type="text" id="regUsername" required>
       <label for="regPassword">Password</label>
       <input type="password" id="regPassword" required>
+      <label for="regEmail">Email Address</label>
+      <input type="email" id="regEmail" required placeholder="For approval/decline notifications">
       <label for="regAccountType">Account Type</label>
       <select id="regAccountType" required>
         <option value="">-- Select type --</option>
@@ -293,9 +419,17 @@
         <option value="STAFF">PhilHealth Internal Staff</option>
       </select>
       <div class="row2">
-        <div>
-          <label for="regFacility" id="regFacilityLabel">Facility Name</label>
-          <input type="text" id="regFacility" required>
+        <div id="regFacilityWrap">
+          <label for="regFacility">Facility Name</label>
+          <input type="text" id="regFacility">
+        </div>
+        <div id="regDepartmentWrap" style="display:none;">
+          <label for="regDepartment">PhilHealth Department</label>
+          <select id="regDepartment">
+            <option value="">-- Select Department --</option>
+            <option value="GAMOT Processor">GAMOT Processor</option>
+            <option value="Accounting">Accounting</option>
+          </select>
         </div>
         <div>
           <label for="regBranch">Branch / PRO Region</label>
@@ -309,14 +443,49 @@
       </div>
       <div id="regAccreditationWrap" style="display:none;">
         <label for="regAccreditationNo">Facility Accreditation No.</label>
-        <input type="text" id="regAccreditationNo" placeholder="e.g. P91034561">
+        <input type="text" id="regAccreditationNo" placeholder="e.g. P91034561" maxlength="9">
+        <label for="regPhilhealthPin">PhilHealth Identification Number (PIN)</label>
+        <input type="text" id="regPhilhealthPin" placeholder="Enter your 12-digit PIN (numbers only)" inputmode="numeric" pattern="[0-9]*" maxlength="12">
       </div>
+      <div id="regEmployeeIdWrap" style="display:none;">
+        <label for="regEmployeeIdNo">PhilHealth Employee I.D. No.</label>
+        <input type="text" id="regEmployeeIdNo" placeholder="Enter your PhilHealth Employee ID Number">
+      </div>
+      <label for="regAttachment">Supporting Document (ID, Accreditation Certificate, etc.)</label>
+      <input type="file" id="regAttachment" accept="image/*,.pdf" required>
       <button type="submit" id="registerBtn">Submit Registration</button>
       <div class="msg" id="registerMsg"></div>
     </form>
     <p style="text-align:center; margin-top:16px; font-size:13px;">
       Already have an account? <a href="#" id="showLoginLink" style="color:var(--teal); font-weight:600;">Back to Sign In</a>
     </p>
+  </div>
+
+  <!-- FORGOT PASSWORD: STEP 1 - REQUEST OTP -->
+  <div class="card" id="forgotPasswordSection" style="display:none;">
+    <h2>Forgot Password</h2>
+    <form id="forgotPasswordForm">
+      <label for="fpUsername">Username</label>
+      <input type="text" id="fpUsername" required>
+      <button type="submit" id="fpRequestBtn">Send Reset Code</button>
+      <div class="msg" id="fpRequestMsg"></div>
+    </form>
+    <p style="text-align:center; margin-top:16px; font-size:13px;">
+      <a href="#" id="backToLoginFromForgot" style="color:var(--teal); font-weight:600;">Back to Sign In</a>
+    </p>
+  </div>
+
+  <!-- FORGOT PASSWORD: STEP 2 - ENTER OTP + NEW PASSWORD -->
+  <div class="card" id="resetPasswordSection" style="display:none;">
+    <h2>Reset Password</h2>
+    <form id="resetPasswordForm">
+      <label for="rpOtp">6-Digit Code (check your email)</label>
+      <input type="text" id="rpOtp" maxlength="6" required>
+      <label for="rpNewPassword">New Password</label>
+      <input type="password" id="rpNewPassword" required>
+      <button type="submit" id="rpSubmitBtn">Reset Password</button>
+      <div class="msg" id="rpMsg"></div>
+    </form>
   </div>
 
   <!-- ADMIN: PENDING ACCOUNTS APPROVAL -->
@@ -338,6 +507,8 @@
         <button type="button" class="active" id="tabRefileBtn">📤 Refile Deficiency</button>
         <button type="button" id="tabMonitorBtn">📋 My Deficiencies</button>
         <button type="button" id="tabHistoryBtn">🕘 History</button>
+        <button type="button" id="tabPendingStaffBtn" style="display:none;">👥 Pending Staff</button>
+        <button type="button" id="tabMyStaffBtn" style="display:none;">🏥 My Staff</button>
       </div>
 
       <!-- LEFT SIDEBAR (visible for ADMIN / Benefits Administration Section) -->
@@ -346,25 +517,44 @@
         <button type="button" id="tabAdminHistoryBtn">🕘 History</button>
         <button type="button" id="tabReviewBtn">📥 Review Refiled Submissions</button>
         <button type="button" id="tabComplianceBtn">📊 Compliance Monitoring</button>
+        <button type="button" id="tabManageAdminsBtn" style="display:none;">👑 Manage Admins</button>
+        <button type="button" id="tabTrailBtn">🔍 Trail</button>
+        <button type="button" id="tabDeleteHistoryBtn">🗑️ Delete History</button>
+        <button type="button" id="tabGamotTrackerBtn">📋 GAMOT Tracker</button>
+        <button type="button" id="tabAnalyticsBtn">📊 Analytics</button>
       </div>
 
       <div class="dashboard-content">
 
     <div class="card" id="encodeCard">
       <h2>Encode Deficiency (RTF)</h2>
+
+      <div style="background:#f0f7ff; border:1px solid #cfe0f7; border-radius:12px; padding:16px; margin-bottom:20px;">
+        <label for="autofillDocument" style="font-weight:700;">🪄 Auto-fill from Document (Optional)</label>
+        <p style="font-size:12px; color:var(--muted); margin:4px 0 10px;">
+          Upload up to 2 photos/PDFs (e.g. GAMOT Prescription + Availment Slip) — AI will cross-reference both to pre-fill the fields below. Documents are not saved; they are only used to extract data. Please review all fields carefully before saving.
+        </p>
+        <label for="autofillDocument" style="font-size:12px; font-weight:600;">Document 1</label>
+        <input type="file" id="autofillDocument" accept="image/*,.pdf" style="margin-bottom:10px;">
+        <label for="autofillDocument2" style="font-size:12px; font-weight:600;">Document 2 (Optional)</label>
+        <input type="file" id="autofillDocument2" accept="image/*,.pdf" style="margin-bottom:10px;">
+        <button type="button" id="autofillBtn" style="width:auto; margin:0; background:#6366f1;">🪄 Auto-fill Fields</button>
+        <div class="msg" id="autofillMsg" style="margin-top:10px;"></div>
+      </div>
+
       <form id="encodeForm">
         <div class="row2">
           <div>
             <label for="proRegion">PRO Region</label>
-            <select id="proRegion" required>
-              <option value="">-- Select PRO Region --</option>
+            <select id="proRegion" required disabled>
+              <option value="">-- Auto-filled from your account --</option>
               <option value="PRONCR CENTRAL">PRONCR CENTRAL</option>
               <option value="PRONCR SOUTH">PRONCR SOUTH</option>
               <option value="PRONCR NORTH">PRONCR NORTH</option>
             </select>
           </div>
           <div>
-            <label for="facility">Facility</label>
+            <label for="facility">Facility Name</label>
             <input type="text" id="facility" required>
           </div>
         </div>
@@ -406,15 +596,21 @@
         <div class="row2">
           <div>
             <label for="facilityAccreditationNo">Facility Accreditation No.</label>
-            <input type="text" id="facilityAccreditationNo" placeholder="e.g. P91034561" required>
+            <input type="text" id="facilityAccreditationNo" placeholder="e.g. P91034561" maxlength="9" required>
           </div>
           <div>
             <label for="claimantContact">Claimant Contact No.</label>
-            <input type="text" id="claimantContact">
+            <input type="text" id="claimantContact" placeholder="e.g. 09171234567" inputmode="numeric" maxlength="11">
           </div>
         </div>
 
-        <button type="submit" id="encodeBtn">Encode & Save</button>
+        <label for="claimAmount">Claim Amount</label>
+        <input type="text" id="claimAmount" placeholder="e.g. 15000.00" inputmode="decimal">
+
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <button type="submit" id="encodeBtn" style="flex:1 1 200px; width:auto;">Encode & Save</button>
+          <button type="button" id="clearEncodeFormBtn" style="flex:0 0 auto; width:auto; margin-top:22px; background:#94a3b8;">Clear Fields</button>
+        </div>
         <div class="msg" id="encodeMsg"></div>
       </form>
     </div>
@@ -493,6 +689,25 @@
       <div id="historyList" style="margin-top:18px;"></div>
     </div>
 
+    <!-- PHARMACY ADMIN: PENDING STAFF APPROVALS -->
+    <div class="card" id="pendingStaffCard" style="display:none;">
+      <h2>Pending Staff Registrations</h2>
+      <p style="font-size:12px; color:var(--muted); margin-bottom:12px;">
+        New staff who registered under your facility's accreditation number, awaiting your approval.
+      </p>
+      <div id="pendingStaffList"><p style="font-size:13px; color:var(--muted);">Loading...</p></div>
+    </div>
+
+    <!-- PHARMACY ADMIN: MY STAFF LIST -->
+    <div class="card" id="myStaffCard" style="display:none;">
+      <h2>My Staff</h2>
+      <p style="font-size:12px; color:var(--muted); margin-bottom:12px;">
+        Staff accounts under your facility. You can deactivate access if needed.
+      </p>
+      <input type="text" id="myStaffSearch" placeholder="Search by username..." style="margin-bottom:16px;">
+      <div id="myStaffList"><p style="font-size:13px; color:var(--muted);">Loading...</p></div>
+    </div>
+
     <!-- ADMIN: SYSTEM-WIDE HISTORY (ALL FACILITIES) -->
     <div class="card" id="adminHistoryCard" style="display:none;">
       <h2>History (All Facilities)</h2>
@@ -511,6 +726,7 @@
           <label for="adminHistStatusFilter">Status</label>
           <select id="adminHistStatusFilter">
             <option value="ALL">ALL</option>
+            <option value="PROCESSING">PROCESSING</option>
             <option value="RTF">RTF</option>
             <option value="REFILED">REFILED</option>
             <option value="RESOLVED">RESOLVED</option>
@@ -543,7 +759,99 @@
         Tracks how much of each GACN batch has been resolved, per Section III.F of CM 2026-0030.
         <strong>≥50%</strong> allows a new amendment cycle for the remaining balance. <strong>100%</strong> means the batch exits the interim pipeline for payment processing.
       </p>
+      <input type="text" id="complianceSearch" placeholder="Search by Facility Accreditation No. or GACN No..." style="margin-bottom:16px;">
       <div id="complianceList"><p style="font-size:13px; color:var(--muted);">Loading...</p></div>
+    </div>
+
+    <!-- SUPER ADMIN / BRANCH ADMIN: MANAGE ACCOUNTS -->
+    <div class="card" id="manageAdminsCard" style="display:none;">
+      <h2>Manage Accounts</h2>
+      <p style="font-size:12px; color:var(--muted); margin-bottom:12px;">
+        View PhilHealth staff or pharmacy accounts under your scope. Assign a PhilHealth staff account as the Branch Admin for their branch — they will be able to approve/decline registrations for that branch only.
+      </p>
+      <label for="manageAdminsTypeFilter">Viewing</label>
+      <select id="manageAdminsTypeFilter">
+        <option value="STAFF">PhilHealth Staff</option>
+        <option value="PHARMACY">Pharmacy</option>
+      </select>
+      <input type="text" id="manageAdminsSearch" placeholder="Search by username or facility..." style="margin-bottom:16px;">
+      <div id="manageAdminsList"><p style="font-size:13px; color:var(--muted);">Loading...</p></div>
+    </div>
+
+    <!-- AUDIT TRAIL: track kung sino ang gumalaw ng bawat GATN -->
+    <div class="card" id="trailCard" style="display:none;">
+      <h2>Audit Trail</h2>
+      <p style="font-size:12px; color:var(--muted); margin-bottom:12px;">
+        Tracks every encode, edit, delete, and resolve action per GATN, with timestamp and PhilHealth Employee ID No.
+      </p>
+      <input type="text" id="trailSearch" placeholder="Search by GATN No..." style="margin-bottom:16px;">
+      <div id="trailList"><p style="font-size:13px; color:var(--muted);">Loading...</p></div>
+      <button type="button" id="trailDownloadBtn" style="margin-top:16px; background:var(--ok); display:none;">⬇ Download PDF</button>
+    </div>
+
+    <!-- DELETE HISTORY: browsable listahan ng lahat ng na-delete na records -->
+    <div class="card" id="deleteHistoryCard" style="display:none;">
+      <h2>Delete History</h2>
+      <p style="font-size:12px; color:var(--muted); margin-bottom:12px;">
+        Every deficiency record that has been permanently deleted, with who deleted it and when.
+      </p>
+      <input type="text" id="deleteHistorySearch" placeholder="Search by GATN No. or PhilHealth Employee ID No..." style="margin-bottom:16px;">
+      <div id="deleteHistoryList"><p style="font-size:13px; color:var(--muted);">Loading...</p></div>
+    </div>
+
+    <!-- GAMOT TRACKER: consolidated view para sa reporting, ready-to-copy-paste -->
+    <div class="card" id="gamotTrackerCard" style="display:none;">
+      <h2>GAMOT Tracker</h2>
+      <p style="font-size:12px; color:var(--muted); margin-bottom:12px;">
+        Consolidated record listing for reporting purposes. Click the PAID column to toggle payment status.
+      </p>
+      <div class="row2">
+        <div>
+          <label for="gamotTrackerDateFrom">Date Processed From</label>
+          <input type="date" id="gamotTrackerDateFrom">
+        </div>
+        <div>
+          <label for="gamotTrackerDateTo">Date Processed To</label>
+          <input type="date" id="gamotTrackerDateTo">
+        </div>
+      </div>
+      <label style="display:flex; align-items:center; gap:8px; margin-bottom:16px; font-weight:600; cursor:pointer;">
+        <input type="checkbox" id="gamotTrackerOverdueOnly" style="width:auto; margin:0;">
+        ⏰ Show Overdue Only (RTF records past the 60-day compliance deadline)
+      </label>
+      <input type="text" id="gamotTrackerSearch" placeholder="Search by GATN, GACN, or Accreditation No..." style="margin-bottom:16px;">
+      <div id="gamotTrackerList"><p style="font-size:13px; color:var(--muted);">Loading...</p></div>
+      <button type="button" id="gamotTrackerDownloadBtn" style="margin-top:16px; background:var(--ok);">⬇ Download CSV</button>
+    </div>
+
+    <!-- ANALYTICS DASHBOARD -->
+    <div class="card" id="analyticsCard" style="display:none;">
+      <h2>Analytics Dashboard</h2>
+      <p style="font-size:12px; color:var(--muted); margin-bottom:16px;">
+        Overview of deficiency records, compliance, and claim amounts.
+      </p>
+      <div id="analyticsSummary" class="analytics-stat-grid"><p style="font-size:13px; color:var(--muted);">Loading...</p></div>
+
+      <div class="analytics-chart-row">
+        <div class="analytics-chart-box">
+          <h3>Issue Category Breakdown</h3>
+          <canvas id="chartByCategory"></canvas>
+        </div>
+        <div class="analytics-chart-box">
+          <h3>Status Breakdown</h3>
+          <canvas id="chartByStatus"></canvas>
+        </div>
+      </div>
+      <div class="analytics-chart-row">
+        <div class="analytics-chart-box">
+          <h3>Monthly Trend (Last 6 Months)</h3>
+          <canvas id="chartByMonth"></canvas>
+        </div>
+        <div class="analytics-chart-box" id="branchChartBox" style="display:none;">
+          <h3>Per-Branch Comparison</h3>
+          <canvas id="chartByBranch"></canvas>
+        </div>
+      </div>
     </div>
 
       </div>
@@ -571,6 +879,115 @@
   })();
 
   let currentUser = { username: "", role: "", facility: "", branch: "", id_no: "", account_type: "" };
+
+  // ---------- PERFORMANCE: LAZY-LOAD NG MABIBIGAT NA LIBRARIES ----------
+  // Hindi na natin ide-download ang jsPDF/xlsx-js-style hanggang talagang kailangan (i.e., pag-click ng Download button).
+  // Nagpapabilis ito ng initial page load para sa lahat, dahil karamihan sa users ay hindi laging gumagamit ng export.
+  const loadedScripts = {};
+
+  function loadScriptOnce(src) {
+    if (loadedScripts[src]) return loadedScripts[src];
+    loadedScripts[src] = new Promise(function(resolve, reject) {
+      const script = document.createElement('script');
+      script.src = src;
+      script.onload = resolve;
+      script.onerror = reject;
+      document.head.appendChild(script);
+    });
+    return loadedScripts[src];
+  }
+
+  async function ensurePdfLibsLoaded() {
+    if (!window.jspdf) {
+      await loadScriptOnce('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+    }
+    if (!window.jspdf || !window.jspdf.jsPDF.API.autoTable) {
+      await loadScriptOnce('https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js');
+    }
+  }
+
+  async function ensureExcelLibLoaded() {
+    if (!window.XLSX) {
+      await loadScriptOnce('https://cdn.jsdelivr.net/npm/xlsx-js-style/dist/xlsx.bundle.js');
+    }
+  }
+
+  async function ensureChartLibLoaded() {
+    if (!window.Chart) {
+      await loadScriptOnce('https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js');
+    }
+  }
+
+  // ---------- SHARED PAGINATION HELPER ----------
+  const PAGE_SIZE = 15;
+
+  function buildPaginationBar(totalItems, currentPage, gotoFnName) {
+    const totalPages = Math.max(1, Math.ceil(totalItems / PAGE_SIZE));
+    return '<div class="pagination-bar">' +
+      '<button type="button" class="page-btn" ' + (currentPage <= 1 ? 'disabled' : '') +
+        ' onclick="' + gotoFnName + '(' + (currentPage - 1) + ')">‹ Prev</button>' +
+      '<span class="page-info">Page ' + currentPage + ' of ' + totalPages + ' (' + totalItems + ' total)</span>' +
+      '<button type="button" class="page-btn" ' + (currentPage >= totalPages ? 'disabled' : '') +
+        ' onclick="' + gotoFnName + '(' + (currentPage + 1) + ')">Next ›</button>' +
+      '</div>';
+  }
+
+  function pageSlice(data, page) {
+    const start = (page - 1) * PAGE_SIZE;
+    return data.slice(start, start + PAGE_SIZE);
+  }
+
+  // ---------- SHARED: STYLED EXCEL EXPORT (bold header, auto-fit columns, borders) ----------
+  async function downloadStyledExcel(filename, headers, rows) {
+    await ensureExcelLibLoaded();
+
+    const wsData = [headers, ...rows];
+    const worksheet = XLSX.utils.aoa_to_sheet(wsData);
+
+    const borderStyle = { style: 'thin', color: { rgb: 'CCCCCC' } };
+
+    // Header row: bold white text, PhilHealth blue background
+    for (let c = 0; c < headers.length; c++) {
+      const cellRef = XLSX.utils.encode_cell({ r: 0, c: c });
+      if (!worksheet[cellRef]) worksheet[cellRef] = { t: 's', v: headers[c] };
+      worksheet[cellRef].s = {
+        font: { bold: true, color: { rgb: 'FFFFFF' } },
+        fill: { fgColor: { rgb: '0054A6' } },
+        alignment: { vertical: 'center', horizontal: 'center', wrapText: true },
+        border: { top: borderStyle, bottom: borderStyle, left: borderStyle, right: borderStyle }
+      };
+    }
+
+    // Data rows: thin borders, vertical-align top, wrap text
+    for (let r = 1; r < wsData.length; r++) {
+      for (let c = 0; c < headers.length; c++) {
+        const cellRef = XLSX.utils.encode_cell({ r: r, c: c });
+        if (!worksheet[cellRef]) continue;
+        worksheet[cellRef].s = {
+          alignment: { vertical: 'top', wrapText: true },
+          border: { top: borderStyle, bottom: borderStyle, left: borderStyle, right: borderStyle }
+        };
+      }
+    }
+
+    // Auto-fit column widths base sa pinakamahabang laman kada column (may max cap para hindi sobrang lapad)
+    worksheet['!cols'] = headers.map(function(h, colIdx) {
+      let maxLen = String(h).length;
+      for (let r = 0; r < rows.length; r++) {
+        const val = rows[r][colIdx];
+        if (val != null) maxLen = Math.max(maxLen, String(val).length);
+      }
+      return { wch: Math.min(Math.max(maxLen + 2, 10), 45) };
+    });
+
+    // I-freeze ang header row para laging nakikita habang nagsa-scroll
+    worksheet['!freeze'] = { xSplit: 0, ySplit: 1 };
+
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
+    XLSX.writeFile(workbook, filename);
+  }
+
   let pendingPollInterval = null;
 
   // ---------- LOGIN ----------
@@ -619,13 +1036,13 @@
     document.getElementById('registerSection').style.display = 'none';
     document.getElementById('mainSection').style.display = 'block';
 
-    // Pending Account Approvals: EKSKLUSIBO lang sa "ADMIN" (super admin), hindi kasama ang "BAS"
+    // Pending Account Approvals: "ADMIN" (lahat ng branches) at "BRANCH_ADMIN" (sariling branch lang)
     if (pendingPollInterval) {
       clearInterval(pendingPollInterval);
       pendingPollInterval = null;
     }
 
-    if (currentUser.role === 'ADMIN') {
+    if (currentUser.role === 'ADMIN' || currentUser.role === 'BRANCH_ADMIN') {
       document.getElementById('adminApprovalSection').style.display = 'block';
       loadPendingUsers();
       // Auto-refresh kada 20-30 segundo (direktang Supabase, walang UrlFetchApp quota concern)
@@ -639,11 +1056,19 @@
       document.getElementById('refileCard').style.display = 'block';
       document.getElementById('monitorCard').style.display = 'none';
       document.getElementById('historyCard').style.display = 'none';
+      document.getElementById('pendingStaffCard').style.display = 'none';
+      document.getElementById('myStaffCard').style.display = 'none';
       document.getElementById('pharmacySidebar').style.display = 'block';
       document.getElementById('adminSidebar').style.display = 'none';
       document.querySelector('main').classList.add('wide');
+
+      // "Pending Staff" / "My Staff" tabs: EKSKLUSIBO lang sa PHARMACY_ADMIN
+      const isPharmacyAdmin = (currentUser.role === 'PHARMACY_ADMIN');
+      document.getElementById('tabPendingStaffBtn').style.display = isPharmacyAdmin ? 'block' : 'none';
+      document.getElementById('tabMyStaffBtn').style.display = isPharmacyAdmin ? 'block' : 'none';
+
       setActiveTab('refile');
-    } else if (currentUser.role === 'ADMIN' || currentUser.role === 'BAS' || currentUser.role === 'STAFF') {
+    } else if (currentUser.role === 'ADMIN' || currentUser.role === 'BAS' || currentUser.role === 'STAFF' || currentUser.role === 'BRANCH_ADMIN') {
       // Parehong dashboard (Home / History / Review) ang makikita ng ADMIN at BAS
       document.getElementById('encodeCard').style.display = 'block';
       document.getElementById('refileCard').style.display = 'none';
@@ -652,10 +1077,28 @@
       document.getElementById('adminHistoryCard').style.display = 'none';
       document.getElementById('reviewCard').style.display = 'none';
       document.getElementById('complianceCard').style.display = 'none';
+      document.getElementById('manageAdminsCard').style.display = 'none';
+      document.getElementById('trailCard').style.display = 'none';
+      document.getElementById('deleteHistoryCard').style.display = 'none';
+      document.getElementById('gamotTrackerCard').style.display = 'none';
+      document.getElementById('analyticsCard').style.display = 'none';
       document.getElementById('pharmacySidebar').style.display = 'none';
       document.getElementById('adminSidebar').style.display = 'block';
       document.querySelector('main').classList.add('wide');
+
+      // "Manage Admins" tab: makikita ng global "ADMIN" (full features) at "BRANCH_ADMIN" (sariling branch lang, walang promote/revoke)
+      document.getElementById('tabManageAdminsBtn').style.display =
+        (currentUser.role === 'ADMIN' || currentUser.role === 'BRANCH_ADMIN') ? 'block' : 'none';
+
+      // "Accounting" department (STAFF): Home, History, Compliance Monitoring, Trail, Delete History, GAMOT Tracker.
+      // "Review Refiled Submissions" lang ang itinatago sa kanila. "GAMOT Processor"/ibang roles: buong dashboard tulad ng dati.
+      const isAccounting = (currentUser.role === 'STAFF' && (currentUser.facility || '').toUpperCase() === 'ACCOUNTING');
+      document.getElementById('tabAdminHistoryBtn').style.display = 'block';
+      document.getElementById('tabReviewBtn').style.display = isAccounting ? 'none' : 'block';
+      document.getElementById('tabComplianceBtn').style.display = 'block';
+
       loadIssueCategories();
+      document.getElementById('proRegion').value = currentUser.branch;
       setAdminTab('home');
     } else {
       document.getElementById('encodeCard').style.display = 'block';
@@ -665,9 +1108,15 @@
       document.getElementById('adminHistoryCard').style.display = 'none';
       document.getElementById('reviewCard').style.display = 'none';
       document.getElementById('complianceCard').style.display = 'none';
+      document.getElementById('manageAdminsCard').style.display = 'none';
+      document.getElementById('trailCard').style.display = 'none';
+      document.getElementById('deleteHistoryCard').style.display = 'none';
+      document.getElementById('gamotTrackerCard').style.display = 'none';
+      document.getElementById('analyticsCard').style.display = 'none';
       document.getElementById('pharmacySidebar').style.display = 'none';
       document.getElementById('adminSidebar').style.display = 'none';
       loadIssueCategories();
+      document.getElementById('proRegion').value = currentUser.branch;
     }
   });
 
@@ -712,6 +1161,13 @@
     document.getElementById('adminHistoryCard').style.display = 'none';
     document.getElementById('reviewCard').style.display = 'none';
     document.getElementById('complianceCard').style.display = 'none';
+    document.getElementById('manageAdminsCard').style.display = 'none';
+    document.getElementById('trailCard').style.display = 'none';
+    document.getElementById('deleteHistoryCard').style.display = 'none';
+    document.getElementById('gamotTrackerCard').style.display = 'none';
+    document.getElementById('analyticsCard').style.display = 'none';
+    document.getElementById('pendingStaffCard').style.display = 'none';
+    document.getElementById('myStaffCard').style.display = 'none';
     document.getElementById('pharmacySidebar').style.display = 'none';
     document.getElementById('adminSidebar').style.display = 'none';
   });
@@ -728,30 +1184,360 @@
     document.getElementById('loginSection').style.display = 'block';
   });
 
+  // ---------- FORGOT PASSWORD NAVIGATION ----------
+  document.getElementById('showForgotPasswordLink').addEventListener('click', function(e) {
+    e.preventDefault();
+    document.getElementById('forgotPasswordForm').reset();
+    document.getElementById('fpRequestMsg').style.display = 'none';
+    window.forgotPasswordUsername = "";
+    document.getElementById('loginSection').style.display = 'none';
+    document.getElementById('forgotPasswordSection').style.display = 'block';
+  });
+  document.getElementById('backToLoginFromForgot').addEventListener('click', function(e) {
+    e.preventDefault();
+    document.getElementById('forgotPasswordForm').reset();
+    document.getElementById('fpRequestMsg').style.display = 'none';
+    window.forgotPasswordUsername = "";
+    document.getElementById('forgotPasswordSection').style.display = 'none';
+    document.getElementById('loginSection').style.display = 'block';
+  });
+
+  // ---------- FORGOT PASSWORD: STEP 1 - REQUEST OTP ----------
+  document.getElementById('forgotPasswordForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const btn = document.getElementById('fpRequestBtn');
+    const msg = document.getElementById('fpRequestMsg');
+    msg.style.display = 'none';
+    btn.disabled = true;
+    btn.innerText = "Sending...";
+
+    const username = document.getElementById('fpUsername').value.trim();
+
+    try {
+      const res = await fetch("https://ukdiibumagfqngqkqmom.supabase.co/functions/v1/send-reset-otp", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer " + SUPABASE_KEY,
+          "apikey": SUPABASE_KEY
+        },
+        body: JSON.stringify({ username: username })
+      });
+      const result = await res.json();
+
+      btn.disabled = false;
+      btn.innerText = "Send Reset Code";
+
+      if (!result.success) {
+        msg.className = "msg error";
+        msg.innerText = result.error || "Something went wrong.";
+        msg.style.display = 'block';
+        return;
+      }
+
+      window.forgotPasswordUsername = username;
+
+      document.getElementById('forgotPasswordSection').style.display = 'none';
+      document.getElementById('resetPasswordSection').style.display = 'block';
+    } catch (err) {
+      btn.disabled = false;
+      btn.innerText = "Send Reset Code";
+      msg.className = "msg error";
+      msg.innerText = "Network error. Please try again.";
+      msg.style.display = 'block';
+    }
+  });
+
+  // ---------- FORGOT PASSWORD: STEP 2 - RESET WITH OTP ----------
+  document.getElementById('resetPasswordForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const btn = document.getElementById('rpSubmitBtn');
+    const msg = document.getElementById('rpMsg');
+    msg.style.display = 'none';
+    btn.disabled = true;
+    btn.innerText = "Resetting...";
+
+    const otp = document.getElementById('rpOtp').value.trim();
+    const newPassword = document.getElementById('rpNewPassword').value.trim();
+
+    const { data, error } = await sb.rpc('reset_password_with_otp', {
+      p_username: window.forgotPasswordUsername,
+      p_otp: otp,
+      p_new_password: newPassword
+    });
+
+    btn.disabled = false;
+    btn.innerText = "Reset Password";
+
+    if (error || !data.success) {
+      msg.className = "msg error";
+      msg.innerText = error ? error.message : data.message;
+      msg.style.display = 'block';
+      return;
+    }
+
+    await Swal.fire({
+      icon: 'success',
+      title: 'Password Reset!',
+      text: 'You may now log in using your new password.',
+      confirmButtonText: 'Okay',
+      confirmButtonColor: '#0054a6'
+    });
+
+    document.getElementById('resetPasswordForm').reset();
+    document.getElementById('forgotPasswordForm').reset();
+    window.forgotPasswordUsername = "";
+    document.getElementById('resetPasswordSection').style.display = 'none';
+    document.getElementById('loginSection').style.display = 'block';
+  });
+
   // ---------- TOGGLE FIELDS BASED ON ACCOUNT TYPE ----------
   document.getElementById('regAccountType').addEventListener('change', function() {
-    const label = document.getElementById('regFacilityLabel');
+    const facilityWrap = document.getElementById('regFacilityWrap');
     const facilityInput = document.getElementById('regFacility');
+    const departmentWrap = document.getElementById('regDepartmentWrap');
+    const departmentSelect = document.getElementById('regDepartment');
     const accredWrap = document.getElementById('regAccreditationWrap');
     const accredInput = document.getElementById('regAccreditationNo');
+    const pinInput = document.getElementById('regPhilhealthPin');
+    const employeeIdWrap = document.getElementById('regEmployeeIdWrap');
+    const employeeIdInput = document.getElementById('regEmployeeIdNo');
 
     if (this.value === 'STAFF') {
-      label.innerText = 'PhilHealth Department';
-      facilityInput.placeholder = 'e.g. PMT-Claims, UHC Surge Team, PRO BAS';
+      facilityWrap.style.display = 'none';
+      facilityInput.required = false;
+      facilityInput.value = '';
+      departmentWrap.style.display = 'block';
+      departmentSelect.required = true;
       accredWrap.style.display = 'none';
       accredInput.required = false;
       accredInput.value = '';
+      pinInput.required = false;
+      pinInput.value = '';
+      employeeIdWrap.style.display = 'block';
+      employeeIdInput.required = true;
     } else if (this.value === 'PHARMACY') {
-      label.innerText = 'Facility Name';
-      facilityInput.placeholder = '';
+      facilityWrap.style.display = 'block';
+      facilityInput.required = true;
+      departmentWrap.style.display = 'none';
+      departmentSelect.required = false;
+      departmentSelect.value = '';
       accredWrap.style.display = 'block';
       accredInput.required = true;
+      pinInput.required = true;
+      employeeIdWrap.style.display = 'none';
+      employeeIdInput.required = false;
+      employeeIdInput.value = '';
     } else {
-      label.innerText = 'Facility Name';
-      facilityInput.placeholder = '';
+      facilityWrap.style.display = 'block';
+      facilityInput.required = false;
+      departmentWrap.style.display = 'none';
+      departmentSelect.required = false;
+      departmentSelect.value = '';
       accredWrap.style.display = 'none';
       accredInput.required = false;
+      pinInput.required = false;
+      pinInput.value = '';
+      employeeIdWrap.style.display = 'none';
+      employeeIdInput.required = false;
+      employeeIdInput.value = '';
     }
+  });
+
+  // ---------- CLEAR FIELDS: i-reset ang buong Encode form pati na ang auto-fill section ----------
+  document.getElementById('clearEncodeFormBtn').addEventListener('click', async function() {
+    const result = await Swal.fire({
+      title: 'Clear all fields?',
+      text: 'This will reset the entire Encode form, including any auto-filled data.',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, clear it',
+      cancelButtonText: 'Cancel',
+      confirmButtonColor: '#94a3b8'
+    });
+
+    if (!result.isConfirmed) return;
+
+    document.getElementById('encodeForm').reset();
+    document.getElementById('specificIssue').innerHTML = '<option value="">-- Select category first --</option>';
+    document.getElementById('resolutionBox').style.display = 'none';
+    document.getElementById('encodeMsg').style.display = 'none';
+    document.getElementById('autofillDocument').value = '';
+    document.getElementById('autofillDocument2').value = '';
+    document.getElementById('autofillMsg').style.display = 'none';
+    // PRO Region ay dapat manatiling naka-lock sa branch ng account
+    document.getElementById('proRegion').value = currentUser.branch;
+  });
+
+  // ---------- AI AUTO-FILL: kinukuha ang detalye mula sa 1-2 na uploaded na dokumento ----------
+  document.getElementById('autofillBtn').addEventListener('click', async function() {
+    const fileInput1 = document.getElementById('autofillDocument');
+    const fileInput2 = document.getElementById('autofillDocument2');
+    const msg = document.getElementById('autofillMsg');
+    const btn = this;
+    msg.style.display = 'none';
+
+    if (!fileInput1.files || fileInput1.files.length === 0) {
+      msg.className = "msg error";
+      msg.innerText = "Please choose at least Document 1.";
+      msg.style.display = 'block';
+      return;
+    }
+
+    // I-convert ang mga file papuntang base64 (hindi ito isa-save, gagamitin lang pansamantala)
+    async function fileToBase64(file) {
+      return new Promise(function(resolve, reject) {
+        const reader = new FileReader();
+        reader.onload = function() { resolve(reader.result.split(',')[1]); };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
+    const images = [];
+    const file1 = fileInput1.files[0];
+    images.push({ base64Image: await fileToBase64(file1), mimeType: file1.type });
+
+    if (fileInput2.files && fileInput2.files.length > 0) {
+      const file2 = fileInput2.files[0];
+      images.push({ base64Image: await fileToBase64(file2), mimeType: file2.type });
+    }
+
+    btn.disabled = true;
+    btn.innerText = "Reading document(s)...";
+
+    try {
+      const res = await fetch("https://ukdiibumagfqngqkqmom.supabase.co/functions/v1/extract-deficiency-data", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer " + SUPABASE_KEY,
+          "apikey": SUPABASE_KEY
+        },
+        body: JSON.stringify({ images: images })
+      });
+
+      const result = await res.json();
+
+      btn.disabled = false;
+      btn.innerText = "🪄 Auto-fill Fields";
+
+      if (!result.success) {
+        msg.className = "msg error";
+        msg.innerText = "Could not read document: " + (result.error || "Unknown error.");
+        msg.style.display = 'block';
+        return;
+      }
+
+      const d = result.data || {};
+
+      // ---------- HUWAG I-FILL ANG KAHIT ANO KUNG HINDI TUGMA ANG PANGALAN SA DALAWANG DOKUMENTO ----------
+      if (d.names_match === false) {
+        btn.disabled = false;
+        btn.innerText = "🪄 Auto-fill Fields";
+        msg.className = "msg error";
+        msg.innerText = "⚠ Documents were NOT auto-filled: " +
+          (d.mismatch_note || "the patient/claimant name does not appear to match between the two documents.") +
+          " Please double-check that you uploaded the correct pair of documents, or fill in the fields manually.";
+        msg.style.display = 'block';
+        return;
+      }
+
+      let filledCount = 0;
+      let blankCount = 0;
+
+      // I-fill lang ang fields kung may laman ang nakuhang data — huwag i-overwrite ng blangko
+      const mapping = {
+        gacn_no: 'gacnNo',
+        gatn_no: 'gatnNo',
+        facility: 'facility',
+        facility_accreditation_no: 'facilityAccreditationNo',
+        claimant_last_name: 'claimantLast',
+        claimant_first_name: 'claimantFirst',
+        claimant_contact: 'claimantContact',
+        claim_amount: 'claimAmount'
+      };
+
+      Object.keys(mapping).forEach(function(key) {
+        const fieldEl = document.getElementById(mapping[key]);
+        if (d[key] && String(d[key]).trim()) {
+          fieldEl.value = String(d[key]).trim();
+          // I-trigger ang input event para gumana rin ang mga existing filters (hal. accreditation/contact number formatting)
+          fieldEl.dispatchEvent(new Event('input'));
+          filledCount++;
+        } else {
+          blankCount++;
+        }
+      });
+
+      msg.className = "msg ok";
+      msg.innerText = "Auto-filled " + filledCount + " field(s). " +
+        (blankCount > 0 ? blankCount + " field(s) could not be read — please fill in manually. " : "") +
+        "Please review all fields carefully, then select the Issue Category and Specific Issue manually before saving.";
+      msg.style.display = 'block';
+
+      // ---------- MAAGANG BABALA: kung mukhang ibang branch ang accreditation number na nakuha ----------
+      const detectedAccred = (d.facility_accreditation_no || '').toUpperCase().trim();
+      const branchPrefixMap = { 'PRONCR NORTH': 'P91', 'PRONCR SOUTH': 'P92', 'PRONCR CENTRAL': 'P93' };
+      const expectedPrefix = branchPrefixMap[currentUser.branch];
+
+      if (detectedAccred && expectedPrefix && !detectedAccred.startsWith(expectedPrefix)) {
+        await Swal.fire({
+          title: '⚠ Possible Branch Mismatch',
+          html: 'The Facility Accreditation No. detected from the document (<strong>' + detectedAccred + '</strong>) ' +
+                'does not appear to match your branch (<strong>' + currentUser.branch + '</strong>).<br><br>' +
+                'This may mean the document belongs to a facility under a different PRO branch. ' +
+                'You may still review and correct the fields, but the system will not allow saving this record if the accreditation number does not match your branch.',
+          icon: 'warning',
+          confirmButtonText: 'Understood',
+          confirmButtonColor: '#f59e0b'
+        });
+      }
+    } catch (err) {
+      btn.disabled = false;
+      btn.innerText = "🪄 Auto-fill Fields";
+      msg.className = "msg error";
+      msg.innerText = "Network error while reading document. Please try again or fill in manually.";
+      msg.style.display = 'block';
+    }
+  });
+
+  // ---------- PIN FIELD: NUMBERS ONLY (aktibong tinatanggal ang letters habang nagta-type) ----------
+  document.getElementById('regPhilhealthPin').addEventListener('input', function() {
+    this.value = this.value.replace(/[^0-9]/g, '');
+  });
+
+  // ---------- ENCODE FORM: ACCREDITATION NO. (1 letra + 8 digits = 9 total) ----------
+  document.getElementById('facilityAccreditationNo').addEventListener('input', function() {
+    let val = this.value.toUpperCase();
+    // Unang character: letra lang. Susunod na characters: numbers lang.
+    let firstChar = val.charAt(0).replace(/[^A-Z]/g, '');
+    let rest = val.slice(1).replace(/[^0-9]/g, '');
+    this.value = (firstChar + rest).slice(0, 9);
+  });
+
+  // ---------- REGISTRATION FORM: ACCREDITATION NO. (1 letra + 8 digits = 9 total) ----------
+  document.getElementById('regAccreditationNo').addEventListener('input', function() {
+    let val = this.value.toUpperCase();
+    let firstChar = val.charAt(0).replace(/[^A-Z]/g, '');
+    let rest = val.slice(1).replace(/[^0-9]/g, '');
+    this.value = (firstChar + rest).slice(0, 9);
+  });
+
+  // ---------- ENCODE FORM: CONTACT NO. (11 digits, numbers only) ----------
+  document.getElementById('claimantContact').addEventListener('input', function() {
+    this.value = this.value.replace(/[^0-9]/g, '').slice(0, 11);
+  });
+
+  // ---------- ENCODE FORM: CLAIM AMOUNT (numbers + isang decimal point lang) ----------
+  document.getElementById('claimAmount').addEventListener('input', function() {
+    let val = this.value.replace(/[^0-9.]/g, '');
+    // Isang decimal point lang ang papayagan
+    let parts = val.split('.');
+    if (parts.length > 2) {
+      val = parts[0] + '.' + parts.slice(1).join('');
+    }
+    this.value = val;
   });
 
   // ---------- REGISTER ----------
@@ -760,16 +1546,56 @@
     const btn = document.getElementById('registerBtn');
     const msg = document.getElementById('registerMsg');
     msg.style.display = 'none';
+
+    const fileInput = document.getElementById('regAttachment');
+    if (!fileInput.files || fileInput.files.length === 0) {
+      msg.className = "msg error";
+      msg.innerText = "Please attach a supporting document.";
+      msg.style.display = 'block';
+      return;
+    }
+
     btn.disabled = true;
+    btn.innerText = "Uploading document...";
+
+    const usernameForFile = document.getElementById('regUsername').value.trim();
+    const file = fileInput.files[0];
+    const filePath = usernameForFile + "_" + Date.now() + "_" + file.name;
+
+    const { error: uploadError } = await sb.storage
+      .from('registration-attachments')
+      .upload(filePath, file);
+
+    if (uploadError) {
+      btn.disabled = false;
+      btn.innerText = "Submit Registration";
+      msg.className = "msg error";
+      msg.innerText = "Document upload failed: " + uploadError.message;
+      msg.style.display = 'block';
+      return;
+    }
+
+    const { data: urlData } = sb.storage.from('registration-attachments').getPublicUrl(filePath);
+    const attachmentLink = urlData.publicUrl;
+
     btn.innerText = "Submitting...";
 
+    const accountTypeValue = document.getElementById('regAccountType').value;
+    const facilityOrDepartment = accountTypeValue === 'STAFF'
+      ? document.getElementById('regDepartment').value.trim()
+      : document.getElementById('regFacility').value.trim();
+
     const { data, error } = await sb.rpc('register_user', {
-      p_username: document.getElementById('regUsername').value.trim(),
+      p_username: usernameForFile,
       p_password: document.getElementById('regPassword').value.trim(),
-      p_account_type: document.getElementById('regAccountType').value,
-      p_facility: document.getElementById('regFacility').value.trim(),
+      p_account_type: accountTypeValue,
+      p_facility: facilityOrDepartment,
       p_branch: document.getElementById('regBranch').value.trim(),
-      p_accreditation_no: document.getElementById('regAccreditationNo').value.trim()
+      p_accreditation_no: document.getElementById('regAccreditationNo').value.trim(),
+      p_email: document.getElementById('regEmail').value.trim(),
+      p_attachment_link: attachmentLink,
+      p_philhealth_pin: document.getElementById('regPhilhealthPin').value.trim(),
+      p_employee_id_no: document.getElementById('regEmployeeIdNo').value.trim()
     });
 
     btn.disabled = false;
@@ -797,7 +1623,10 @@
     const listContainer = document.getElementById('pendingUsersList');
     notice.innerHTML = '<p style="font-size:13px; color:var(--muted);">Checking...</p>';
 
-    const { data, error } = await sb.rpc('get_pending_users');
+    // ADMIN (global) = lahat ng branches. BRANCH_ADMIN = sariling branch lang.
+    const branchRestriction = currentUser.role === 'ADMIN' ? null : currentUser.branch;
+
+    const { data, error } = await sb.rpc('get_pending_users', { p_branch: branchRestriction });
 
     if (error) {
       notice.innerHTML = '<p style="font-size:13px; color:#a02b1f;">Error loading pending accounts.</p>';
@@ -847,11 +1676,25 @@
 
     pendingUsersData.forEach(u => {
       const row = document.createElement('div');
-      row.style.cssText = "display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid var(--line);";
+      row.style.cssText = "display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid var(--line); gap:12px; flex-wrap:wrap;";
+      const attachmentHtml = u.attachment_link
+        ? '<a href="' + u.attachment_link + '" target="_blank" style="color:var(--ph-blue); font-weight:700;">📎 View Document</a>'
+        : '<span style="color:var(--muted);">No document</span>';
+
+      const roleDropdownHtml = (u.account_type === 'PHARMACY')
+        ? `<select id="roleSelect_${u.username}" style="width:auto; margin-top:6px; padding:4px 8px; font-size:11px;">
+             <option value="">-- Auto-detect (default) --</option>
+             <option value="PHARMACY_ADMIN">Make Pharmacy Admin</option>
+             <option value="USER">Regular Staff</option>
+           </select>`
+        : '';
+
       row.innerHTML = `
         <div>
           <strong>${u.username}</strong> — ${u.account_type || 'N/A'}<br>
-          <span style="font-size:12px; color:var(--muted);">${u.facility} · ${u.branch}</span>
+          <span style="font-size:12px; color:var(--muted);">${u.facility} · ${u.branch}</span><br>
+          ${attachmentHtml}
+          ${roleDropdownHtml ? '<br>' + roleDropdownHtml : ''}
         </div>
         <div>
           <button style="width:auto; margin:0 4px; background:var(--ok); padding:6px 12px; font-size:12px;" onclick="decideUser('${u.username}','APPROVED')">Approve</button>
@@ -864,10 +1707,68 @@
 
   // ---------- ADMIN: APPROVE / REJECT ----------
   async function decideUser(username, decision) {
-    const { error } = await sb.rpc('approve_user', { p_username: username, p_decision: decision });
-    if (!error) loadPendingUsers();
+    let declineReason = null;
+
+    if (decision === 'REJECTED') {
+      const { value: reason } = await Swal.fire({
+        title: 'Reason for Decline',
+        input: 'textarea',
+        inputLabel: 'Explain why this account is being declined for ' + username + ':',
+        inputPlaceholder: 'e.g. The uploaded document does not match the accreditation number...',
+        inputValidator: function(value) {
+          if (!value || !value.trim()) {
+            return 'A reason is required before declining this account.';
+          }
+        },
+        showCancelButton: true,
+        confirmButtonText: 'Decline',
+        cancelButtonText: 'Cancel',
+        confirmButtonColor: '#f59e0b'
+      });
+
+      if (!reason) return;
+      declineReason = reason.trim();
+    }
+
+    // Kunin ang napiling role mula sa dropdown (kung PHARMACY account, meron nito; kung wala, null lang)
+    const roleSelect = document.getElementById('roleSelect_' + username);
+    const selectedRole = roleSelect ? (roleSelect.value || null) : null;
+
+    const { data, error } = await sb.rpc('approve_user', {
+      p_username: username,
+      p_decision: decision,
+      p_decline_reason: declineReason,
+      p_role: selectedRole
+    });
+
+    if (error) {
+      Swal.fire('Error', error.message, 'error');
+      return;
+    }
+
+    // I-trigger ang email notification (fire-and-forget, hindi hinihintay ng approval flow)
+    sendAccountDecisionEmail(username, decision, declineReason);
+
+    loadPendingUsers();
   }
   window.decideUser = decideUser;
+
+  // ---------- EMAIL NOTIFICATION (fire-and-forget, hindi hinihintay ng approval flow) ----------
+  async function sendAccountDecisionEmail(username, decision, declineReason) {
+    try {
+      await fetch("https://ukdiibumagfqngqkqmom.supabase.co/functions/v1/send-account-email", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer " + SUPABASE_KEY,
+          "apikey": SUPABASE_KEY
+        },
+        body: JSON.stringify({ username: username, decision: decision, declineReason: declineReason })
+      });
+    } catch (e) {
+      console.log("Email notification failed silently: " + e.message);
+    }
+  }
 
   // ---------- LOAD ISSUE CATEGORIES (from resolution guide) ----------
   async function loadIssueCategories() {
@@ -911,7 +1812,7 @@
     data.forEach(row => {
       const opt = document.createElement('option');
       opt.value = row.specific_issue;
-      opt.dataset.resolution = row.required_resolution;
+      opt.dataset.resolution = row.required_resolution || '';
       opt.innerText = row.specific_issue;
       specificSelect.appendChild(opt);
     });
@@ -921,8 +1822,9 @@
   document.getElementById('specificIssue').addEventListener('change', function() {
     const box = document.getElementById('resolutionBox');
     const selected = this.options[this.selectedIndex];
-    if (selected && selected.dataset.resolution) {
-      box.innerText = "Suggested action: " + selected.dataset.resolution;
+    if (selected && selected.value) {
+      const resolution = selected.dataset.resolution;
+      box.innerText = "Suggested action: " + (resolution || "No specific action documented yet. Please coordinate with PMT-Claims or your supervisor for guidance.");
       box.style.display = 'block';
     } else {
       box.style.display = 'none';
@@ -932,11 +1834,8 @@
   // ---------- ENCODE DEFICIENCY ----------
   document.getElementById('encodeForm').addEventListener('submit', async function(e) {
     e.preventDefault();
-    const btn = document.getElementById('encodeBtn');
     const msg = document.getElementById('encodeMsg');
     msg.style.display = 'none';
-    btn.disabled = true;
-    btn.innerText = "Saving...";
 
     const payload = {
       p_pro_region: document.getElementById('proRegion').value.trim(),
@@ -949,8 +1848,76 @@
       p_claimant_last_name: document.getElementById('claimantLast').value.trim(),
       p_claimant_first_name: document.getElementById('claimantFirst').value.trim(),
       p_claimant_contact: document.getElementById('claimantContact').value.trim(),
-      p_encoded_by: currentUser.id_no || currentUser.username
+      p_claim_amount: document.getElementById('claimAmount').value.trim() || null,
+      p_encoded_by: currentUser.id_no || currentUser.username,
+      p_performed_by_username: currentUser.username
     };
+
+    // ---------- PREVIEW: ipakita muna ang buong encoded data bago talaga i-save ----------
+    const previewHtml =
+      '<div style="text-align:left; font-size:13px; line-height:1.7;">' +
+        '<strong>PRO Region:</strong> ' + payload.p_pro_region + '<br>' +
+        '<strong>Facility:</strong> ' + payload.p_facility + '<br>' +
+        '<strong>Facility Accreditation No.:</strong> ' + payload.p_facility_accreditation_no + '<br>' +
+        '<strong>GACN No.:</strong> ' + payload.p_gacn_no + '<br>' +
+        '<strong>GATN No.:</strong> ' + payload.p_gatn_no + '<br>' +
+        '<strong>Issue Category:</strong> ' + payload.p_issue_category.replace(/_/g, ' ') + '<br>' +
+        '<strong>Specific Issue:</strong> ' + payload.p_specific_issue + '<br>' +
+        '<strong>Claimant Name:</strong> ' + payload.p_claimant_first_name + ' ' + payload.p_claimant_last_name + '<br>' +
+        '<strong>Contact No.:</strong> ' + (payload.p_claimant_contact || '—') + '<br>' +
+        '<strong>Claim Amount:</strong> ' + (payload.p_claim_amount || '—') +
+      '</div>';
+
+    const confirmResult = await Swal.fire({
+      title: 'Please Review Before Saving',
+      html: previewHtml,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Confirm & Save',
+      cancelButtonText: 'Go Back to Edit',
+      confirmButtonColor: '#0054a6',
+      cancelButtonColor: '#94a3b8',
+      width: 520
+    });
+
+    if (!confirmResult.isConfirmed) return;
+    // ---------- END PREVIEW ----------
+
+    const isAccountingUser = (currentUser.role === 'STAFF' && (currentUser.facility || '').toUpperCase() === 'ACCOUNTING');
+
+    if (isAccountingUser) {
+      // Accounting: PROCESSING lang palagi, walang paraan para mag-send diretso sa Pharmacy (RTF)
+      payload.p_send_to_pharmacy = false;
+    } else {
+      // ---------- SECOND PROMPT: Isesend ba sa Pharmacy, o i-save lang sa GAMOT Tracker? ----------
+      const routeResult = await Swal.fire({
+        title: 'How should this record be saved?',
+        html:
+          '<div style="text-align:left; font-size:13px; line-height:1.6;">' +
+            '<p><strong>Send to Pharmacy (RTF)</strong> — the facility will be notified and the 60-day compliance countdown starts immediately.</p>' +
+            '<p><strong>Save to Tracker Only (Processing)</strong> — record is saved for internal tracking only; nothing is sent to the pharmacy yet.</p>' +
+          '</div>',
+        icon: 'question',
+        showDenyButton: true,
+        showCancelButton: true,
+        confirmButtonText: 'Send to Pharmacy (RTF)',
+        denyButtonText: 'Save to Tracker Only',
+        cancelButtonText: 'Cancel',
+        confirmButtonColor: '#0054a6',
+        denyButtonColor: '#f59e0b',
+        cancelButtonColor: '#94a3b8',
+        width: 520
+      });
+
+      if (!routeResult.isConfirmed && !routeResult.isDenied) return;
+
+      payload.p_send_to_pharmacy = routeResult.isConfirmed;
+      // ---------- END SECOND PROMPT ----------
+    }
+
+    const btn = document.getElementById('encodeBtn');
+    btn.disabled = true;
+    btn.innerText = "Saving...";
 
     const { data, error } = await sb.rpc('encode_deficiency', payload);
 
@@ -965,15 +1932,21 @@
     }
 
     msg.className = "msg ok";
-    msg.innerText = "Record saved. Resolution: " + data.resolution;
+    const routeLabel = data.status === 'RTF' ? 'Sent to Pharmacy (RTF).' : 'Saved to GAMOT Tracker only (Processing).';
+    msg.innerText = "Record saved. " + routeLabel + " Resolution: " + data.resolution;
     msg.style.display = 'block';
 
     document.getElementById('encodeForm').reset();
     document.getElementById('resolutionBox').style.display = 'none';
+    document.getElementById('specificIssue').innerHTML = '<option value="">-- Select category first --</option>';
+    document.getElementById('autofillDocument').value = '';
+    document.getElementById('autofillDocument2').value = '';
+    document.getElementById('autofillMsg').style.display = 'none';
   });
 
   // ---------- REFILE: SEARCH GATN ----------
   let currentRefileGatn = "";
+  let currentRefileDeadline = null;
   document.getElementById('searchGatnBtn').addEventListener('click', async function() {
     const btn = this;
     const searchMsg = document.getElementById('searchMsg');
@@ -986,7 +1959,7 @@
     btn.disabled = true;
     btn.innerText = "Searching...";
 
-    const { data, error } = await sb.rpc('find_deficiency_by_gatn', { p_gatn_no: gatn });
+    const { data, error } = await sb.rpc('find_deficiency_by_gatn', { p_gatn_no: gatn, p_accreditation_no: currentUser.accreditation_no });
 
     btn.disabled = false;
     btn.innerText = "Search";
@@ -1006,6 +1979,7 @@
     }
 
     currentRefileGatn = gatn;
+    currentRefileDeadline = data.compliance_deadline || null;
 
     const deadline = data.compliance_deadline ? new Date(data.compliance_deadline).toLocaleDateString() : "N/A";
     document.getElementById('refileInfoBox').innerHTML =
@@ -1035,6 +2009,22 @@
       return;
     }
 
+    // ---------- WARNING: kung lampas na sa 60-day compliance deadline ----------
+    if (currentRefileDeadline && new Date() > new Date(currentRefileDeadline)) {
+      const lateConfirm = await Swal.fire({
+        title: 'Past Compliance Deadline',
+        html: 'You have passed the 60-day compliance deadline for this GATN.<br><br>' +
+              'Your submission will still be accepted, but it will be <strong>marked as LATE</strong> for PhilHealth\'s review and may be subject to further action.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Submit Anyway',
+        cancelButtonText: 'Cancel',
+        confirmButtonColor: '#f59e0b'
+      });
+
+      if (!lateConfirm.isConfirmed) return;
+    }
+
     btn.disabled = true;
     btn.innerText = "Uploading...";
 
@@ -1060,7 +2050,8 @@
     const { data, error } = await sb.rpc('submit_refile', {
       p_gatn_no: currentRefileGatn,
       p_refile_file_link: fileLink,
-      p_refile_notes: document.getElementById('refileNotes').value.trim()
+      p_refile_notes: document.getElementById('refileNotes').value.trim(),
+      p_accreditation_no: currentUser.accreditation_no
     });
 
     btn.disabled = false;
@@ -1083,10 +2074,16 @@
     sessionStorage.removeItem('draft_searchGatn');
     sessionStorage.removeItem('draft_refileNotes');
 
+    const wasLate = currentRefileDeadline && new Date() > new Date(currentRefileDeadline);
+    currentRefileGatn = "";
+    currentRefileDeadline = null;
+
     Swal.fire({
-      icon: 'success',
+      icon: wasLate ? 'warning' : 'success',
       title: 'Refile Submitted!',
-      text: 'Your corrected document has been sent to PhilHealth for review. You will see the updated status once it has been checked.',
+      text: wasLate
+        ? 'Your corrected document has been submitted, but it was marked as LATE (past the compliance deadline) and will be flagged for PhilHealth\'s review.'
+        : 'Your corrected document has been sent to PhilHealth for review. You will see the updated status once it has been checked.',
       confirmButtonText: 'Okay',
       confirmButtonColor: '#0054a6'
     });
@@ -1097,13 +2094,19 @@
     const refileBtn = document.getElementById('tabRefileBtn');
     const monitorBtn = document.getElementById('tabMonitorBtn');
     const historyBtn = document.getElementById('tabHistoryBtn');
+    const pendingStaffBtn = document.getElementById('tabPendingStaffBtn');
+    const myStaffBtn = document.getElementById('tabMyStaffBtn');
 
     document.getElementById('refileCard').style.display = 'none';
     document.getElementById('monitorCard').style.display = 'none';
     document.getElementById('historyCard').style.display = 'none';
+    document.getElementById('pendingStaffCard').style.display = 'none';
+    document.getElementById('myStaffCard').style.display = 'none';
     refileBtn.classList.remove('active');
     monitorBtn.classList.remove('active');
     historyBtn.classList.remove('active');
+    pendingStaffBtn.classList.remove('active');
+    myStaffBtn.classList.remove('active');
 
     if (tab === 'refile') {
       document.getElementById('refileCard').style.display = 'block';
@@ -1116,12 +2119,22 @@
       document.getElementById('historyCard').style.display = 'block';
       historyBtn.classList.add('active');
       searchHistory();
+    } else if (tab === 'pendingStaff') {
+      document.getElementById('pendingStaffCard').style.display = 'block';
+      pendingStaffBtn.classList.add('active');
+      loadPendingStaff();
+    } else if (tab === 'myStaff') {
+      document.getElementById('myStaffCard').style.display = 'block';
+      myStaffBtn.classList.add('active');
+      loadMyStaff();
     }
   }
 
   document.getElementById('tabRefileBtn').addEventListener('click', function() { setActiveTab('refile'); });
   document.getElementById('tabMonitorBtn').addEventListener('click', function() { setActiveTab('monitor'); });
   document.getElementById('tabHistoryBtn').addEventListener('click', function() { setActiveTab('history'); });
+  document.getElementById('tabPendingStaffBtn').addEventListener('click', function() { setActiveTab('pendingStaff'); });
+  document.getElementById('tabMyStaffBtn').addEventListener('click', function() { setActiveTab('myStaff'); });
 
   // ---------- ADMIN SIDEBAR TAB SWITCHING ----------
   function setAdminTab(tab) {
@@ -1129,15 +2142,30 @@
     const historyBtn = document.getElementById('tabAdminHistoryBtn');
     const reviewBtn = document.getElementById('tabReviewBtn');
     const complianceBtn = document.getElementById('tabComplianceBtn');
+    const manageAdminsBtn = document.getElementById('tabManageAdminsBtn');
+    const trailBtn = document.getElementById('tabTrailBtn');
+    const deleteHistoryBtn = document.getElementById('tabDeleteHistoryBtn');
+    const gamotTrackerBtn = document.getElementById('tabGamotTrackerBtn');
+    const analyticsBtn = document.getElementById('tabAnalyticsBtn');
 
     document.getElementById('encodeCard').style.display = 'none';
     document.getElementById('adminHistoryCard').style.display = 'none';
     document.getElementById('reviewCard').style.display = 'none';
     document.getElementById('complianceCard').style.display = 'none';
+    document.getElementById('manageAdminsCard').style.display = 'none';
+    document.getElementById('trailCard').style.display = 'none';
+    document.getElementById('deleteHistoryCard').style.display = 'none';
+    document.getElementById('gamotTrackerCard').style.display = 'none';
+    document.getElementById('analyticsCard').style.display = 'none';
     homeBtn.classList.remove('active');
     historyBtn.classList.remove('active');
     reviewBtn.classList.remove('active');
     complianceBtn.classList.remove('active');
+    manageAdminsBtn.classList.remove('active');
+    trailBtn.classList.remove('active');
+    deleteHistoryBtn.classList.remove('active');
+    gamotTrackerBtn.classList.remove('active');
+    analyticsBtn.classList.remove('active');
 
     if (tab === 'home') {
       document.getElementById('encodeCard').style.display = 'block';
@@ -1154,6 +2182,26 @@
       document.getElementById('complianceCard').style.display = 'block';
       complianceBtn.classList.add('active');
       loadComplianceMonitoring();
+    } else if (tab === 'manageAdmins') {
+      document.getElementById('manageAdminsCard').style.display = 'block';
+      manageAdminsBtn.classList.add('active');
+      loadManageAdmins();
+    } else if (tab === 'trail') {
+      document.getElementById('trailCard').style.display = 'block';
+      trailBtn.classList.add('active');
+      loadAuditTrail();
+    } else if (tab === 'deleteHistory') {
+      document.getElementById('deleteHistoryCard').style.display = 'block';
+      deleteHistoryBtn.classList.add('active');
+      loadDeleteHistory();
+    } else if (tab === 'gamotTracker') {
+      document.getElementById('gamotTrackerCard').style.display = 'block';
+      gamotTrackerBtn.classList.add('active');
+      loadGamotTracker();
+    } else if (tab === 'analytics') {
+      document.getElementById('analyticsCard').style.display = 'block';
+      analyticsBtn.classList.add('active');
+      loadAnalytics();
     }
   }
 
@@ -1161,6 +2209,11 @@
   document.getElementById('tabAdminHistoryBtn').addEventListener('click', function() { setAdminTab('history'); });
   document.getElementById('tabReviewBtn').addEventListener('click', function() { setAdminTab('review'); });
   document.getElementById('tabComplianceBtn').addEventListener('click', function() { setAdminTab('compliance'); });
+  document.getElementById('tabManageAdminsBtn').addEventListener('click', function() { setAdminTab('manageAdmins'); });
+  document.getElementById('tabTrailBtn').addEventListener('click', function() { setAdminTab('trail'); });
+  document.getElementById('tabDeleteHistoryBtn').addEventListener('click', function() { setAdminTab('deleteHistory'); });
+  document.getElementById('tabGamotTrackerBtn').addEventListener('click', function() { setAdminTab('gamotTracker'); });
+  document.getElementById('tabAnalyticsBtn').addEventListener('click', function() { setAdminTab('analytics'); });
 
   // ---------- PERSIST REFILE FORM STATE (survives tab switching & accidental refresh) ----------
   (function persistRefileState() {
@@ -1189,6 +2242,9 @@
   })();
 
   // ---------- LOAD PHARMACY'S OWN DEFICIENCY LIST ----------
+  let lastMyDeficienciesData = [];
+  let myDeficienciesPageNum = 1;
+
   async function loadMyDeficiencies() {
     const container = document.getElementById('monitorList');
     container.innerHTML = '<p style="font-size:13px; color:var(--muted);">Loading...</p>';
@@ -1197,8 +2253,17 @@
 
     if (error) {
       container.innerHTML = '<p style="font-size:13px; color:#a02b1f;">Error loading records.</p>';
+      lastMyDeficienciesData = [];
       return;
     }
+
+    lastMyDeficienciesData = data || [];
+    myDeficienciesPageNum = 1;
+    renderMyDeficienciesList(lastMyDeficienciesData);
+  }
+
+  function renderMyDeficienciesList(data) {
+    const container = document.getElementById('monitorList');
 
     if (!data || data.length === 0) {
       container.innerHTML = '<p style="font-size:13px; color:var(--ok); font-weight:700;">✅ No pending deficiencies. All caught up!</p>';
@@ -1206,8 +2271,9 @@
     }
 
     const urgencyLabels = { OVERDUE: '⚠ Overdue', DUE_SOON: '⏰ Due Soon', ON_TRACK: '✓ On Track' };
+    const pageData = pageSlice(data, myDeficienciesPageNum);
 
-    let rows = data.map(function(r) {
+    let rows = pageData.map(function(r) {
       const deadline = r.compliance_deadline ? new Date(r.compliance_deadline).toLocaleDateString() : '—';
       const urgency = r.urgency || 'ON_TRACK';
       const returnNote = r.review_remarks
@@ -1224,10 +2290,17 @@
 
     container.innerHTML =
       '<p style="font-size:12px; color:var(--muted); margin-bottom:12px;">Showing active deficiencies that still need action, sorted by urgency.</p>' +
-      '<table class="data-table"><thead><tr>' +
+      '<div class="data-table-wrap"><table class="data-table"><thead><tr>' +
       '<th>Urgency</th><th>GATN</th><th>GACN</th><th>Issue</th><th>Deadline</th>' +
-      '</tr></thead><tbody>' + rows + '</tbody></table>';
+      '</tr></thead><tbody>' + rows + '</tbody></table></div>' +
+      buildPaginationBar(data.length, myDeficienciesPageNum, 'goToMyDeficienciesPage');
   }
+
+  function goToMyDeficienciesPage(p) {
+    myDeficienciesPageNum = p;
+    renderMyDeficienciesList(lastMyDeficienciesData);
+  }
+  window.goToMyDeficienciesPage = goToMyDeficienciesPage;
 
   // ---------- HISTORY: SEARCH BY DATE RANGE + STATUS ----------
   let lastHistoryData = [];
@@ -1254,13 +2327,23 @@
     }
 
     lastHistoryData = data || [];
+    pharmacyHistoryPageNum = 1;
+    renderPharmacyHistoryList(lastHistoryData);
+  }
+
+  let pharmacyHistoryPageNum = 1;
+
+  function renderPharmacyHistoryList(data) {
+    const container = document.getElementById('historyList');
 
     if (!data || data.length === 0) {
       container.innerHTML = '<p style="font-size:13px; color:var(--muted);">No records found for the selected filters.</p>';
       return;
     }
 
-    let rows = data.map(function(r) {
+    const pageData = pageSlice(data, pharmacyHistoryPageNum);
+
+    let rows = pageData.map(function(r) {
       const created = r.created_at ? new Date(r.created_at).toLocaleDateString() : '—';
       const deadline = r.compliance_deadline ? new Date(r.compliance_deadline).toLocaleDateString() : '—';
       return '<tr>' +
@@ -1274,10 +2357,17 @@
     }).join('');
 
     container.innerHTML =
-      '<table class="data-table"><thead><tr>' +
+      '<div class="data-table-wrap"><table class="data-table"><thead><tr>' +
       '<th>Date</th><th>GATN</th><th>GACN</th><th>Issue</th><th>Status</th><th>Deadline</th>' +
-      '</tr></thead><tbody>' + rows + '</tbody></table>';
+      '</tr></thead><tbody>' + rows + '</tbody></table></div>' +
+      buildPaginationBar(data.length, pharmacyHistoryPageNum, 'goToPharmacyHistoryPage');
   }
+
+  function goToPharmacyHistoryPage(p) {
+    pharmacyHistoryPageNum = p;
+    renderPharmacyHistoryList(lastHistoryData);
+  }
+  window.goToPharmacyHistoryPage = goToPharmacyHistoryPage;
 
   document.getElementById('historySearchBtn').addEventListener('click', searchHistory);
 
@@ -1290,37 +2380,293 @@
 
     const headers = ['Date', 'GATN', 'GACN', 'Issue Category', 'Specific Issue', 'Required Resolution', 'Status', 'RTF Date', 'Compliance Deadline', 'Refile Timestamp'];
 
-    const csvRows = lastHistoryData.map(function(r) {
+    const rows = lastHistoryData.map(function(r) {
       const created = r.created_at ? new Date(r.created_at).toLocaleDateString() : '';
       const rtf = r.rtf_date ? new Date(r.rtf_date).toLocaleDateString() : '';
       const deadline = r.compliance_deadline ? new Date(r.compliance_deadline).toLocaleDateString() : '';
       const refiled = r.refile_timestamp ? new Date(r.refile_timestamp).toLocaleDateString() : '';
 
-      const fields = [
+      return [
         created, r.gatn_no || '', r.gacn_no || '',
         (r.issue_category || '').replace(/_/g, ' '), r.specific_issue || '',
         r.required_resolution || '', r.status || '', rtf, deadline, refiled
       ];
-
-      return fields.map(function(f) {
-        return '"' + String(f).replace(/"/g, '""') + '"';
-      }).join(',');
     });
 
-    const csvContent = '\ufeff' + headers.join(',') + '\r\n' + csvRows.join('\r\n');
-
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = window.URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = 'GAMOT_History_' + new Date().toLocaleDateString().replace(/\//g, '-') + '.csv';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    setTimeout(function() { window.URL.revokeObjectURL(url); }, 100);
+    downloadStyledExcel('GAMOT_History_' + new Date().toLocaleDateString().replace(/\//g, '-') + '.xlsx', headers, rows);
   }
 
   document.getElementById('historyDownloadBtn').addEventListener('click', downloadHistoryCSV);
+
+  // ---------- PHARMACY ADMIN: PENDING STAFF APPROVALS ----------
+  let lastPendingStaffData = [];
+  let pendingStaffPageNum = 1;
+
+  async function loadPendingStaff() {
+    const container = document.getElementById('pendingStaffList');
+    container.innerHTML = '<p style="font-size:13px; color:var(--muted);">Loading...</p>';
+
+    const { data, error } = await sb.rpc('get_pending_pharmacy_staff', { p_accreditation_no: currentUser.accreditation_no });
+
+    if (error) {
+      container.innerHTML = '<p style="font-size:13px; color:#a02b1f;">Error loading pending staff.</p>';
+      lastPendingStaffData = [];
+      return;
+    }
+
+    lastPendingStaffData = data || [];
+    pendingStaffPageNum = 1;
+    renderPendingStaffList(lastPendingStaffData);
+  }
+
+  function renderPendingStaffList(data) {
+    const container = document.getElementById('pendingStaffList');
+
+    if (!data || data.length === 0) {
+      container.innerHTML = '<p style="font-size:13px; color:var(--muted);">No pending staff registrations.</p>';
+      return;
+    }
+
+    const pageData = pageSlice(data, pendingStaffPageNum);
+
+    let rows = pageData.map(function(u) {
+      const attachmentHtml = u.attachment_link
+        ? '<a href="' + u.attachment_link + '" target="_blank" style="color:var(--ph-blue); font-weight:700;">📎 View Document</a>'
+        : '<span style="color:var(--muted);">No document</span>';
+      return '<div style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid var(--line);">' +
+        '<div>' +
+          '<strong>' + u.username + '</strong><br>' +
+          '<span style="font-size:12px; color:var(--muted);">' + u.facility + ' · ' + u.branch + '</span><br>' +
+          attachmentHtml +
+        '</div>' +
+        '<div>' +
+          '<button style="width:auto; margin:0 4px; background:var(--ok); padding:6px 12px; font-size:12px;" onclick="decidePharmacyStaff(\'' + u.username + '\',\'APPROVED\')">Approve</button>' +
+          '<button style="width:auto; margin:0; background:var(--amber); padding:6px 12px; font-size:12px;" onclick="decidePharmacyStaff(\'' + u.username + '\',\'REJECTED\')">Reject</button>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+
+    container.innerHTML = rows + buildPaginationBar(data.length, pendingStaffPageNum, 'goToPendingStaffPage');
+  }
+
+  function goToPendingStaffPage(p) {
+    pendingStaffPageNum = p;
+    renderPendingStaffList(lastPendingStaffData);
+  }
+  window.goToPendingStaffPage = goToPendingStaffPage;
+
+  async function decidePharmacyStaff(username, decision) {
+    let declineReason = null;
+
+    if (decision === 'REJECTED') {
+      const { value: reason } = await Swal.fire({
+        title: 'Reason for Decline',
+        input: 'textarea',
+        inputLabel: 'Explain why this staff registration is being declined:',
+        inputValidator: function(value) {
+          if (!value || !value.trim()) return 'A reason is required.';
+        },
+        showCancelButton: true,
+        confirmButtonText: 'Decline',
+        cancelButtonText: 'Cancel',
+        confirmButtonColor: '#f59e0b'
+      });
+      if (!reason) return;
+      declineReason = reason.trim();
+    }
+
+    const { data, error } = await sb.rpc('approve_pharmacy_staff', {
+      p_username: username,
+      p_decision: decision,
+      p_decline_reason: declineReason,
+      p_accreditation_no: currentUser.accreditation_no
+    });
+
+    if (error || !data.success) {
+      Swal.fire('Error', error ? error.message : data.message, 'error');
+      return;
+    }
+
+    sendAccountDecisionEmail(username, decision, declineReason);
+
+    loadPendingStaff();
+  }
+  window.decidePharmacyStaff = decidePharmacyStaff;
+
+  // ---------- PHARMACY ADMIN: MY STAFF LIST ----------
+  let lastMyStaffData = [];
+  let myStaffPageNum = 1;
+
+  async function loadMyStaff() {
+    const container = document.getElementById('myStaffList');
+    container.innerHTML = '<p style="font-size:13px; color:var(--muted);">Loading...</p>';
+
+    const { data, error } = await sb.rpc('get_my_pharmacy_staff', { p_accreditation_no: currentUser.accreditation_no });
+
+    if (error) {
+      container.innerHTML = '<p style="font-size:13px; color:#a02b1f;">Error loading staff list.</p>';
+      lastMyStaffData = [];
+      return;
+    }
+
+    lastMyStaffData = data || [];
+    currentMyStaffFiltered = lastMyStaffData;
+    myStaffPageNum = 1;
+    renderMyStaffList(lastMyStaffData);
+  }
+
+  function renderMyStaffList(data) {
+    const container = document.getElementById('myStaffList');
+
+    if (!data || data.length === 0) {
+      container.innerHTML = '<p style="font-size:13px; color:var(--muted);">No staff accounts found.</p>';
+      return;
+    }
+
+    const pageData = pageSlice(data, myStaffPageNum);
+
+    let rows = pageData.map(function(u) {
+      const isActive = u.status === 'APPROVED';
+      const btnLabel = isActive ? 'Deactivate' : 'Reactivate';
+      const btnColor = isActive ? '#dc2626' : 'var(--ok)';
+      return '<tr>' +
+        '<td>' + u.username + '</td>' +
+        '<td>' + (u.email || '—') + '</td>' +
+        '<td>' + (u.philhealth_pin || '—') + '</td>' +
+        '<td><span class="status-pill ' + (isActive ? 'RESOLVED' : 'RTF') + '">' + u.status + '</span></td>' +
+        '<td>' +
+          '<button type="button" style="width:auto; margin:0 4px 4px 0; padding:6px 12px; font-size:12px; background:var(--ph-blue);" ' +
+            'onclick="editStaffEmail(\'' + u.username + '\', \'' + (u.email || '').replace(/'/g, "\\'") + '\')">Edit Email</button>' +
+          '<button type="button" style="width:auto; margin:0 4px 4px 0; padding:6px 12px; font-size:12px; background:var(--gold); color:var(--ph-blue-dark);" ' +
+            'onclick="editStaffPin(\'' + u.username + '\', \'' + (u.philhealth_pin || '') + '\')">Edit PIN</button>' +
+          '<button type="button" style="width:auto; margin:0; padding:6px 12px; font-size:12px; background:' + btnColor + '; color:#fff;" ' +
+            'onclick="toggleStaffActive(\'' + u.username + '\', ' + !isActive + ')">' + btnLabel + '</button>' +
+        '</td>' +
+        '</tr>';
+    }).join('');
+
+    container.innerHTML =
+      '<div class="data-table-wrap"><table class="data-table"><thead><tr>' +
+      '<th>Username</th><th>Email</th><th>PIN</th><th>Status</th><th>Action</th>' +
+      '</tr></thead><tbody>' + rows + '</tbody></table></div>' +
+      buildPaginationBar(data.length, myStaffPageNum, 'goToMyStaffPage');
+  }
+
+  function goToMyStaffPage(p) {
+    myStaffPageNum = p;
+    renderMyStaffList(currentMyStaffFiltered);
+  }
+  window.goToMyStaffPage = goToMyStaffPage;
+
+  let currentMyStaffFiltered = [];
+
+  document.getElementById('myStaffSearch').addEventListener('input', function() {
+    myStaffPageNum = 1;
+    const term = this.value.trim().toUpperCase();
+    currentMyStaffFiltered = term
+      ? lastMyStaffData.filter(function(u) { return (u.username || '').toUpperCase().includes(term); })
+      : lastMyStaffData;
+    renderMyStaffList(currentMyStaffFiltered);
+  });
+
+  async function toggleStaffActive(username, makeActive) {
+    const actionLabel = makeActive ? 'reactivate' : 'deactivate';
+    const result = await Swal.fire({
+      title: 'Confirm action',
+      text: 'Are you sure you want to ' + actionLabel + ' the account for ' + username + '?',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, confirm',
+      cancelButtonText: 'Cancel',
+      confirmButtonColor: '#0054a6'
+    });
+
+    if (!result.isConfirmed) return;
+
+    const { data, error } = await sb.rpc('set_staff_active_status', {
+      p_username: username,
+      p_accreditation_no: currentUser.accreditation_no,
+      p_active: makeActive
+    });
+
+    if (error || !data.success) {
+      Swal.fire('Error', error ? error.message : data.message, 'error');
+      return;
+    }
+
+    Swal.fire('Done', 'Staff status updated.', 'success');
+    loadMyStaff();
+  }
+
+  async function editStaffEmail(username, currentEmail) {
+    const { value: newEmail } = await Swal.fire({
+      title: 'Edit Email',
+      input: 'email',
+      inputLabel: 'New email address for ' + username + ':',
+      inputValue: currentEmail || '',
+      inputValidator: function(value) {
+        if (!value || !value.trim()) return 'Email address is required.';
+      },
+      showCancelButton: true,
+      confirmButtonText: 'Save',
+      cancelButtonText: 'Cancel',
+      confirmButtonColor: '#0054a6'
+    });
+
+    if (!newEmail) return;
+
+    const { data, error } = await sb.rpc('update_staff_email', {
+      p_username: username,
+      p_accreditation_no: currentUser.accreditation_no,
+      p_new_email: newEmail.trim()
+    });
+
+    if (error || !data.success) {
+      Swal.fire('Error', error ? error.message : data.message, 'error');
+      return;
+    }
+
+    Swal.fire('Done', 'Email updated successfully.', 'success');
+    loadMyStaff();
+  }
+  window.editStaffEmail = editStaffEmail;
+
+  async function editStaffPin(username, currentPin) {
+    const { value: newPin } = await Swal.fire({
+      title: 'Edit PhilHealth PIN',
+      input: 'text',
+      inputLabel: 'New 12-digit PIN for ' + username + ':',
+      inputValue: currentPin || '',
+      inputAttributes: { inputmode: 'numeric', maxlength: 12 },
+      inputValidator: function(value) {
+        if (!value || !value.trim()) return 'PIN is required.';
+        if (!/^[0-9]+$/.test(value.trim())) return 'PIN must contain numbers only.';
+      },
+      showCancelButton: true,
+      confirmButtonText: 'Save',
+      cancelButtonText: 'Cancel',
+      confirmButtonColor: '#0054a6'
+    });
+
+    if (!newPin) return;
+
+    const { data, error } = await sb.rpc('update_staff_pin', {
+      p_username: username,
+      p_accreditation_no: currentUser.accreditation_no,
+      p_new_pin: newPin.trim()
+    });
+
+    if (error || !data.success) {
+      Swal.fire('Error', error ? error.message : data.message, 'error');
+      return;
+    }
+
+    Swal.fire('Done', 'PIN updated successfully.', 'success');
+    loadMyStaff();
+  }
+  window.editStaffPin = editStaffPin;
+
+  window.toggleStaffActive = toggleStaffActive;
 
   // ---------- ADMIN: SYSTEM-WIDE HISTORY (ALL FACILITIES) ----------
   let lastAdminHistoryData = [];
@@ -1352,13 +2698,23 @@
     }
 
     lastAdminHistoryData = data || [];
+    adminHistoryPageNum = 1;
+    renderAdminHistoryList(lastAdminHistoryData);
+  }
+
+  let adminHistoryPageNum = 1;
+
+  function renderAdminHistoryList(data) {
+    const container = document.getElementById('adminHistList');
 
     if (!data || data.length === 0) {
       container.innerHTML = '<p style="font-size:13px; color:var(--muted);">No records found for the selected filters.</p>';
       return;
     }
 
-    let rows = data.map(function(r) {
+    const pageData = pageSlice(data, adminHistoryPageNum);
+
+    let rows = pageData.map(function(r) {
       const created = r.created_at ? new Date(r.created_at).toLocaleDateString() : '—';
       const deadline = r.compliance_deadline ? new Date(r.compliance_deadline).toLocaleDateString() : '—';
       return '<tr>' +
@@ -1369,14 +2725,134 @@
         '<td>' + (r.issue_category || '').replace(/_/g, ' ') + '<br><span style="color:var(--muted); font-size:11px;">' + r.specific_issue + '</span></td>' +
         '<td><span class="status-pill ' + r.status + '">' + r.status + '</span></td>' +
         '<td>' + deadline + '</td>' +
+        '<td>' +
+          '<button type="button" style="width:auto; margin:0 4px 4px 0; padding:6px 12px; font-size:12px; background:var(--ph-blue);" ' +
+            'onclick="openEditRecordModal(\'' + r.gatn_no + '\')">Edit</button>' +
+          '<button type="button" style="width:auto; margin:0; padding:6px 12px; font-size:12px; background:#dc2626; color:#fff;" ' +
+            'onclick="deleteDeficiencyRecord(\'' + r.gatn_no + '\')">Delete</button>' +
+        '</td>' +
         '</tr>';
     }).join('');
 
     container.innerHTML =
-      '<table class="data-table"><thead><tr>' +
-      '<th>Date</th><th>Facility Accred.</th><th>GATN</th><th>GACN</th><th>Issue</th><th>Status</th><th>Deadline</th>' +
-      '</tr></thead><tbody>' + rows + '</tbody></table>';
+      '<div class="data-table-wrap"><table class="data-table"><thead><tr>' +
+      '<th>Date</th><th>Facility Accred.</th><th>GATN</th><th>GACN</th><th>Issue</th><th>Status</th><th>Deadline</th><th>Action</th>' +
+      '</tr></thead><tbody>' + rows + '</tbody></table></div>' +
+      buildPaginationBar(data.length, adminHistoryPageNum, 'goToAdminHistoryPage');
   }
+
+  function goToAdminHistoryPage(p) {
+    adminHistoryPageNum = p;
+    renderAdminHistoryList(lastAdminHistoryData);
+  }
+  window.goToAdminHistoryPage = goToAdminHistoryPage;
+
+  // ---------- ADMIN: EDIT / DELETE DEFICIENCY RECORD (last resort correction) ----------
+  async function openEditRecordModal(gatnNo) {
+    const record = lastAdminHistoryData.find(function(r) { return r.gatn_no === gatnNo; });
+    if (!record) {
+      Swal.fire('Error', 'Record not found in the current list.', 'error');
+      return;
+    }
+
+    const { value: formValues } = await Swal.fire({
+      title: 'Edit Deficiency Record',
+      width: 560,
+      html:
+        '<div style="text-align:left; font-size:13px;">' +
+          '<label style="display:block; font-weight:700; margin:8px 0 4px;">GACN No.</label>' +
+          '<input id="editGacn" class="swal2-input" style="margin:0; width:100%;" value="' + (record.gacn_no || '') + '">' +
+          '<label style="display:block; font-weight:700; margin:8px 0 4px;">Facility</label>' +
+          '<input id="editFacility" class="swal2-input" style="margin:0; width:100%;" value="' + (record.facility || '') + '">' +
+          '<label style="display:block; font-weight:700; margin:8px 0 4px;">Facility Accreditation No.</label>' +
+          '<input id="editAccred" class="swal2-input" style="margin:0; width:100%;" value="' + (record.facility_accreditation_no || '') + '">' +
+          '<label style="display:block; font-weight:700; margin:8px 0 4px;">Issue Category</label>' +
+          '<input id="editCategory" class="swal2-input" style="margin:0; width:100%;" value="' + (record.issue_category || '') + '">' +
+          '<label style="display:block; font-weight:700; margin:8px 0 4px;">Specific Issue</label>' +
+          '<input id="editSpecific" class="swal2-input" style="margin:0; width:100%;" value="' + (record.specific_issue || '') + '">' +
+          '<label style="display:block; font-weight:700; margin:8px 0 4px;">Claimant Last Name</label>' +
+          '<input id="editLastName" class="swal2-input" style="margin:0; width:100%;" value="' + (record.claimant_last_name || '') + '">' +
+          '<label style="display:block; font-weight:700; margin:8px 0 4px;">Claimant First Name</label>' +
+          '<input id="editFirstName" class="swal2-input" style="margin:0; width:100%;" value="' + (record.claimant_first_name || '') + '">' +
+          '<label style="display:block; font-weight:700; margin:8px 0 4px;">Contact No.</label>' +
+          '<input id="editContact" class="swal2-input" style="margin:0; width:100%;" value="' + (record.claimant_contact || '') + '">' +
+        '</div>',
+      showCancelButton: true,
+      confirmButtonText: 'Save Changes',
+      cancelButtonText: 'Cancel',
+      confirmButtonColor: '#0054a6',
+      preConfirm: function() {
+        return {
+          gacn: document.getElementById('editGacn').value.trim(),
+          facility: document.getElementById('editFacility').value.trim(),
+          accred: document.getElementById('editAccred').value.trim(),
+          category: document.getElementById('editCategory').value.trim(),
+          specific: document.getElementById('editSpecific').value.trim(),
+          lastName: document.getElementById('editLastName').value.trim(),
+          firstName: document.getElementById('editFirstName').value.trim(),
+          contact: document.getElementById('editContact').value.trim()
+        };
+      }
+    });
+
+    if (!formValues) return;
+
+    const branchRestriction = currentUser.role === 'ADMIN' ? null : currentUser.branch;
+
+    const { data, error } = await sb.rpc('edit_deficiency_record', {
+      p_gatn_no: gatnNo,
+      p_requesting_branch: branchRestriction,
+      p_gacn_no: formValues.gacn,
+      p_issue_category: formValues.category,
+      p_specific_issue: formValues.specific,
+      p_facility: formValues.facility,
+      p_facility_accreditation_no: formValues.accred,
+      p_claimant_last_name: formValues.lastName,
+      p_claimant_first_name: formValues.firstName,
+      p_claimant_contact: formValues.contact,
+      p_performed_by_username: currentUser.username
+    });
+
+    if (error || !data.success) {
+      Swal.fire('Error', error ? error.message : data.message, 'error');
+      return;
+    }
+
+    Swal.fire('Done', 'Record updated successfully.', 'success');
+    searchAdminHistory();
+  }
+  window.openEditRecordModal = openEditRecordModal;
+
+  async function deleteDeficiencyRecord(gatnNo) {
+    const result = await Swal.fire({
+      title: 'Delete this record?',
+      text: 'GATN ' + gatnNo + ' will be permanently deleted. This cannot be undone.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, delete it',
+      cancelButtonText: 'Cancel',
+      confirmButtonColor: '#dc2626'
+    });
+
+    if (!result.isConfirmed) return;
+
+    const branchRestriction = currentUser.role === 'ADMIN' ? null : currentUser.branch;
+
+    const { data, error } = await sb.rpc('delete_deficiency_record', {
+      p_gatn_no: gatnNo,
+      p_requesting_branch: branchRestriction,
+      p_performed_by_username: currentUser.username
+    });
+
+    if (error || !data.success) {
+      Swal.fire('Error', error ? error.message : data.message, 'error');
+      return;
+    }
+
+    Swal.fire('Deleted', 'Record has been deleted.', 'success');
+    searchAdminHistory();
+  }
+  window.deleteDeficiencyRecord = deleteDeficiencyRecord;
 
   document.getElementById('adminHistSearchBtn').addEventListener('click', searchAdminHistory);
 
@@ -1386,36 +2862,24 @@
       return;
     }
 
-    const headers = ['Date', 'Facility Accreditation No.', 'GATN', 'GACN', 'Issue Category', 'Specific Issue', 'Required Resolution', 'Status', 'RTF Date', 'Compliance Deadline', 'Refile Timestamp'];
+    const headers = ['Date', 'Facility Accreditation No.', 'GATN', 'GACN', 'Issue Category', 'Specific Issue', 'Required Resolution', 'Claimant Name', 'Contact No.', 'Status', 'RTF Date', 'Compliance Deadline', 'Refile Timestamp'];
 
-    const csvRows = lastAdminHistoryData.map(function(r) {
+    const rows = lastAdminHistoryData.map(function(r) {
       const created = r.created_at ? new Date(r.created_at).toLocaleDateString() : '';
       const rtf = r.rtf_date ? new Date(r.rtf_date).toLocaleDateString() : '';
       const deadline = r.compliance_deadline ? new Date(r.compliance_deadline).toLocaleDateString() : '';
       const refiled = r.refile_timestamp ? new Date(r.refile_timestamp).toLocaleDateString() : '';
+      const claimantName = [r.claimant_first_name, r.claimant_last_name].filter(Boolean).join(' ');
 
-      const fields = [
+      return [
         created, r.facility_accreditation_no || '', r.gatn_no || '', r.gacn_no || '',
         (r.issue_category || '').replace(/_/g, ' '), r.specific_issue || '',
-        r.required_resolution || '', r.status || '', rtf, deadline, refiled
+        r.required_resolution || '', claimantName || '', r.claimant_contact || '',
+        r.status || '', rtf, deadline, refiled
       ];
-
-      return fields.map(function(f) {
-        return '"' + String(f).replace(/"/g, '""') + '"';
-      }).join(',');
     });
 
-    const csvContent = '\ufeff' + headers.join(',') + '\r\n' + csvRows.join('\r\n');
-
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = window.URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = 'GAMOT_AdminHistory_' + new Date().toLocaleDateString().replace(/\//g, '-') + '.csv';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    setTimeout(function() { window.URL.revokeObjectURL(url); }, 100);
+    downloadStyledExcel('GAMOT_AdminHistory_' + new Date().toLocaleDateString().replace(/\//g, '-') + '.xlsx', headers, rows);
   }
 
   document.getElementById('adminHistDownloadBtn').addEventListener('click', downloadAdminHistoryCSV);
@@ -1429,8 +2893,8 @@
 
     const headers = ['NO', 'PRO', 'GACN', 'GATN', 'ISSUE CATEGORY', 'SPECIFIC ISSUE'];
 
-    const csvRows = lastAdminHistoryData.map(function(r, index) {
-      const fields = [
+    const rows = lastAdminHistoryData.map(function(r, index) {
+      return [
         index + 1,
         r.pro_region || '',
         r.gacn_no || '',
@@ -1438,28 +2902,16 @@
         (r.issue_category || '').replace(/_/g, ' '),
         r.specific_issue || ''
       ];
-
-      return fields.map(function(f) {
-        return '"' + String(f).replace(/"/g, '""') + '"';
-      }).join(',');
     });
 
-    const csvContent = '\ufeff' + headers.join(',') + '\r\n' + csvRows.join('\r\n');
-
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = window.URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = 'Annex_B_Summary_' + new Date().toLocaleDateString().replace(/\//g, '-') + '.csv';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    setTimeout(function() { window.URL.revokeObjectURL(url); }, 100);
+    downloadStyledExcel('Annex_B_Summary_' + new Date().toLocaleDateString().replace(/\//g, '-') + '.xlsx', headers, rows);
   }
 
   document.getElementById('adminHistAnnexBBtn').addEventListener('click', downloadAnnexBFormat);
 
   // ---------- ADMIN: PER-GACN COMPLIANCE MONITORING ----------
+  let lastComplianceData = [];
+
   async function loadComplianceMonitoring() {
     const container = document.getElementById('complianceList');
     container.innerHTML = '<p style="font-size:13px; color:var(--muted);">Loading...</p>';
@@ -1470,15 +2922,30 @@
 
     if (error) {
       container.innerHTML = '<p style="font-size:13px; color:#a02b1f;">Error loading compliance data.</p>';
+      lastComplianceData = [];
       return;
     }
+
+    lastComplianceData = data || [];
+    compliancePage = 1;
+    renderComplianceList(lastComplianceData);
+  }
+
+  let compliancePage = 1;
+  let currentComplianceFiltered = [];
+
+  function renderComplianceList(data) {
+    const container = document.getElementById('complianceList');
+    currentComplianceFiltered = data;
 
     if (!data || data.length === 0) {
-      container.innerHTML = '<p style="font-size:13px; color:var(--muted);">No GACN batches found.</p>';
+      container.innerHTML = '<p style="font-size:13px; color:var(--muted);">No matching GACN batches found.</p>';
       return;
     }
 
-    let rows = data.map(function(r) {
+    const pageData = pageSlice(data, compliancePage);
+
+    let rows = pageData.map(function(r) {
       const pct = parseFloat(r.compliance_pct) || 0;
       let statusLabel, statusClass;
 
@@ -1495,6 +2962,7 @@
 
       return '<tr class="urgency-row">' +
         '<td>' + r.gacn_no + '</td>' +
+        '<td>' + (r.facility_accreditation_no || '—') + '</td>' +
         '<td>' + (r.pro_region || '—') + '</td>' +
         '<td>' + r.resolved_gatn + ' / ' + r.total_gatn + '</td>' +
         '<td><strong>' + pct + '%</strong></td>' +
@@ -1503,12 +2971,859 @@
     }).join('');
 
     container.innerHTML =
-      '<table class="data-table"><thead><tr>' +
-      '<th>GACN</th><th>PRO Region</th><th>Resolved / Total</th><th>Compliance %</th><th>Status</th>' +
-      '</tr></thead><tbody>' + rows + '</tbody></table>';
+      '<div class="data-table-wrap"><table class="data-table"><thead><tr>' +
+      '<th>GACN</th><th>Facility Accreditation No.</th><th>PRO Region</th><th>Resolved / Total</th><th>Compliance %</th><th>Status</th>' +
+      '</tr></thead><tbody>' + rows + '</tbody></table></div>' +
+      buildPaginationBar(data.length, compliancePage, 'goToCompliancePage');
   }
 
-  // ---------- ADMIN: REVIEW REFILED SUBMISSIONS ----------
+  function goToCompliancePage(p) {
+    compliancePage = p;
+    renderComplianceList(currentComplianceFiltered);
+  }
+  window.goToCompliancePage = goToCompliancePage;
+
+  document.getElementById('complianceSearch').addEventListener('input', function() {
+    compliancePage = 1;
+    const term = this.value.trim().toUpperCase();
+    if (!term) {
+      renderComplianceList(lastComplianceData);
+      return;
+    }
+    const filtered = lastComplianceData.filter(function(r) {
+      return (r.facility_accreditation_no || '').toUpperCase().includes(term) ||
+             (r.gacn_no || '').toUpperCase().includes(term);
+    });
+    renderComplianceList(filtered);
+  });
+
+  // ---------- SUPER ADMIN ONLY: MANAGE BRANCH ADMINS ----------
+  let lastManageAdminsData = [];
+
+  async function loadManageAdmins() {
+    const container = document.getElementById('manageAdminsList');
+    container.innerHTML = '<p style="font-size:13px; color:var(--muted);">Loading...</p>';
+
+    const branchRestriction = currentUser.role === 'ADMIN' ? null : currentUser.branch;
+    const accountType = document.getElementById('manageAdminsTypeFilter').value;
+
+    const { data, error } = await sb.rpc('get_approved_accounts_by_type', { p_account_type: accountType, p_branch: branchRestriction });
+
+    if (error) {
+      container.innerHTML = '<p style="font-size:13px; color:#a02b1f;">Error loading accounts.</p>';
+      lastManageAdminsData = [];
+      return;
+    }
+
+    lastManageAdminsData = data || [];
+    manageAdminsPageNum = 1;
+    document.getElementById('manageAdminsSearch').value = '';
+    renderManageAdminsList(lastManageAdminsData);
+  }
+
+  document.getElementById('manageAdminsTypeFilter').addEventListener('change', loadManageAdmins);
+
+  let manageAdminsPageNum = 1;
+  let currentManageAdminsFiltered = [];
+
+  function renderManageAdminsList(data) {
+    const container = document.getElementById('manageAdminsList');
+    currentManageAdminsFiltered = data;
+
+    if (!data || data.length === 0) {
+      container.innerHTML = '<p style="font-size:13px; color:var(--muted);">No matching accounts found.</p>';
+      return;
+    }
+
+    const viewingType = document.getElementById('manageAdminsTypeFilter').value;
+    const pageData = pageSlice(data, manageAdminsPageNum);
+
+    if (viewingType === 'STAFF') {
+      let rows = pageData.map(function(u) {
+        const isBranchAdmin = u.role === 'BRANCH_ADMIN';
+        const btnLabel = isBranchAdmin ? 'Revoke Branch Admin' : 'Make Branch Admin';
+        const btnColor = isBranchAdmin ? 'var(--amber)' : 'var(--ok)';
+        const isActive = u.status !== 'DEACTIVATED';
+        const activeBtnLabel = isActive ? 'Deactivate' : 'Reactivate';
+        const activeBtnColor = isActive ? '#dc2626' : 'var(--ok)';
+
+        // Ang promote/revoke ay EKSKLUSIBO lang sa global ADMIN, hindi BRANCH_ADMIN
+        const adminActionBtn = (currentUser.role === 'ADMIN')
+          ? '<button type="button" style="width:auto; margin:0 4px 4px 0; padding:6px 12px; font-size:12px; background:' + btnColor + ';" ' +
+              'onclick="toggleBranchAdmin(\'' + u.username + '\', ' + !isBranchAdmin + ')">' + btnLabel + '</button>'
+          : '';
+
+        return '<tr>' +
+          '<td>' + u.username + '</td>' +
+          '<td>' + (u.facility || '—') + '</td>' +
+          '<td>' + (u.branch || '—') + '</td>' +
+          '<td>' + (u.email || '—') + '</td>' +
+          '<td>' + (u.employee_id_no || '—') + '</td>' +
+          '<td><span class="status-pill ' + (isActive ? 'RESOLVED' : 'RTF') + '">' + u.status + '</span></td>' +
+          '<td><span class="status-pill ' + (isBranchAdmin ? 'RESOLVED' : 'PENDING') + '">' + u.role + '</span></td>' +
+          '<td>' +
+            adminActionBtn +
+            '<button type="button" style="width:auto; margin:0 4px 4px 0; padding:6px 12px; font-size:12px; background:var(--ph-blue);" ' +
+              'onclick="editAdminStaffEmail(\'' + u.username + '\', \'' + (u.email || '').replace(/'/g, "\\'") + '\')">Edit Email</button>' +
+            '<button type="button" style="width:auto; margin:0 4px 4px 0; padding:6px 12px; font-size:12px; background:var(--gold); color:var(--ph-blue-dark);" ' +
+              'onclick="editAdminStaffId(\'' + u.username + '\', \'' + (u.employee_id_no || '').replace(/'/g, "\\'") + '\')">Edit ID No.</button>' +
+            '<button type="button" style="width:auto; margin:0; padding:6px 12px; font-size:12px; background:' + activeBtnColor + '; color:#fff;" ' +
+              'onclick="toggleAdminStaffActive(\'' + u.username + '\', ' + !isActive + ')">' + activeBtnLabel + '</button>' +
+          '</td>' +
+          '</tr>';
+      }).join('');
+
+      container.innerHTML =
+        '<div class="data-table-wrap"><table class="data-table"><thead><tr>' +
+        '<th>Username</th><th>Facility</th><th>Branch</th><th>Email</th><th>Employee ID</th><th>Status</th><th>Current Role</th><th>Action</th>' +
+        '</tr></thead><tbody>' + rows + '</tbody></table></div>' +
+        buildPaginationBar(data.length, manageAdminsPageNum, 'goToManageAdminsPage');
+    } else {
+      // PHARMACY view
+      let rows = pageData.map(function(u) {
+        const isActive = u.status !== 'DEACTIVATED';
+        const activeBtnLabel = isActive ? 'Deactivate' : 'Reactivate';
+        const activeBtnColor = isActive ? '#dc2626' : 'var(--ok)';
+        const isPharmacyAdmin = u.role === 'PHARMACY_ADMIN';
+
+        return '<tr>' +
+          '<td>' + u.username + '</td>' +
+          '<td>' + (u.facility || '—') + '</td>' +
+          '<td>' + (u.branch || '—') + '</td>' +
+          '<td>' + (u.accreditation_no || '—') + '</td>' +
+          '<td>' + (u.email || '—') + '</td>' +
+          '<td><span class="status-pill ' + (isActive ? 'RESOLVED' : 'RTF') + '">' + u.status + '</span></td>' +
+          '<td><span class="status-pill ' + (isPharmacyAdmin ? 'RESOLVED' : 'PENDING') + '">' + u.role + '</span></td>' +
+          '<td>' +
+            '<button type="button" style="width:auto; margin:0 4px 4px 0; padding:6px 12px; font-size:12px; background:var(--ph-blue);" ' +
+              'onclick="editAdminStaffEmail(\'' + u.username + '\', \'' + (u.email || '').replace(/'/g, "\\'") + '\')">Edit Email</button>' +
+            '<button type="button" style="width:auto; margin:0; padding:6px 12px; font-size:12px; background:' + activeBtnColor + '; color:#fff;" ' +
+              'onclick="toggleAdminStaffActive(\'' + u.username + '\', ' + !isActive + ')">' + activeBtnLabel + '</button>' +
+          '</td>' +
+          '</tr>';
+      }).join('');
+
+      container.innerHTML =
+        '<div class="data-table-wrap"><table class="data-table"><thead><tr>' +
+        '<th>Username</th><th>Facility</th><th>Branch</th><th>Accreditation No.</th><th>Email</th><th>Status</th><th>Current Role</th><th>Action</th>' +
+        '</tr></thead><tbody>' + rows + '</tbody></table></div>' +
+        buildPaginationBar(data.length, manageAdminsPageNum, 'goToManageAdminsPage');
+    }
+  }
+
+  function goToManageAdminsPage(p) {
+    manageAdminsPageNum = p;
+    renderManageAdminsList(currentManageAdminsFiltered);
+  }
+  window.goToManageAdminsPage = goToManageAdminsPage;
+
+  document.getElementById('manageAdminsSearch').addEventListener('input', function() {
+    manageAdminsPageNum = 1;
+    const term = this.value.trim().toUpperCase();
+    if (!term) {
+      renderManageAdminsList(lastManageAdminsData);
+      return;
+    }
+    const filtered = lastManageAdminsData.filter(function(u) {
+      return (u.username || '').toUpperCase().includes(term) ||
+             (u.facility || '').toUpperCase().includes(term);
+    });
+    renderManageAdminsList(filtered);
+  });
+
+  async function toggleBranchAdmin(username, makeAdmin) {
+    const actionLabel = makeAdmin ? 'assign' : 'revoke';
+    const result = await Swal.fire({
+      title: 'Confirm action',
+      text: 'Are you sure you want to ' + actionLabel + ' Branch Admin rights for ' + username + '?',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, confirm',
+      cancelButtonText: 'Cancel',
+      confirmButtonColor: '#0054a6'
+    });
+
+    if (!result.isConfirmed) return;
+
+    const { data, error } = await sb.rpc('set_branch_admin', {
+      p_username: username,
+      p_make_admin: makeAdmin
+    });
+
+    if (error || !data.success) {
+      Swal.fire('Error', error ? error.message : 'Something went wrong.', 'error');
+      return;
+    }
+
+    Swal.fire('Done', 'Role updated successfully.', 'success');
+    loadManageAdmins();
+  }
+  window.toggleBranchAdmin = toggleBranchAdmin;
+
+  async function editAdminStaffEmail(username, currentEmail) {
+    const { value: newEmail } = await Swal.fire({
+      title: 'Edit Email',
+      input: 'email',
+      inputLabel: 'New email address for ' + username + ':',
+      inputValue: currentEmail || '',
+      inputValidator: function(value) {
+        if (!value || !value.trim()) return 'Email address is required.';
+      },
+      showCancelButton: true,
+      confirmButtonText: 'Save',
+      cancelButtonText: 'Cancel',
+      confirmButtonColor: '#0054a6'
+    });
+
+    if (!newEmail) return;
+
+    // Global ADMIN = walang branch restriction. BRANCH_ADMIN = sariling branch lang.
+    const branchRestriction = currentUser.role === 'ADMIN' ? null : currentUser.branch;
+
+    const { data, error } = await sb.rpc('update_staff_email_by_admin', {
+      p_username: username,
+      p_requesting_branch: branchRestriction,
+      p_new_email: newEmail.trim()
+    });
+
+    if (error || !data.success) {
+      Swal.fire('Error', error ? error.message : data.message, 'error');
+      return;
+    }
+
+    Swal.fire('Done', 'Email updated successfully.', 'success');
+    loadManageAdmins();
+  }
+  window.editAdminStaffEmail = editAdminStaffEmail;
+
+  async function toggleAdminStaffActive(username, makeActive) {
+    const actionLabel = makeActive ? 'reactivate' : 'deactivate';
+    const result = await Swal.fire({
+      title: 'Confirm action',
+      text: 'Are you sure you want to ' + actionLabel + ' the account for ' + username + '?',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, confirm',
+      cancelButtonText: 'Cancel',
+      confirmButtonColor: '#0054a6'
+    });
+
+    if (!result.isConfirmed) return;
+
+    const branchRestriction = currentUser.role === 'ADMIN' ? null : currentUser.branch;
+
+    const { data, error } = await sb.rpc('set_staff_active_status_by_admin', {
+      p_username: username,
+      p_requesting_branch: branchRestriction,
+      p_active: makeActive
+    });
+
+    if (error || !data.success) {
+      Swal.fire('Error', error ? error.message : data.message, 'error');
+      return;
+    }
+
+    Swal.fire('Done', 'Staff status updated.', 'success');
+    loadManageAdmins();
+  }
+  window.toggleAdminStaffActive = toggleAdminStaffActive;
+
+  async function editAdminStaffId(username, currentId) {
+    const { value: newId } = await Swal.fire({
+      title: 'Edit Employee ID No.',
+      input: 'text',
+      inputLabel: 'New PhilHealth Employee ID No. for ' + username + ':',
+      inputValue: currentId || '',
+      inputValidator: function(value) {
+        if (!value || !value.trim()) return 'Employee ID is required.';
+      },
+      showCancelButton: true,
+      confirmButtonText: 'Save',
+      cancelButtonText: 'Cancel',
+      confirmButtonColor: '#0054a6'
+    });
+
+    if (!newId) return;
+
+    const branchRestriction = currentUser.role === 'ADMIN' ? null : currentUser.branch;
+
+    const { data, error } = await sb.rpc('update_staff_employee_id_by_admin', {
+      p_username: username,
+      p_requesting_branch: branchRestriction,
+      p_new_employee_id: newId.trim()
+    });
+
+    if (error || !data.success) {
+      Swal.fire('Error', error ? error.message : data.message, 'error');
+      return;
+    }
+
+    Swal.fire('Done', 'Employee ID updated successfully.', 'success');
+    loadManageAdmins();
+  }
+  window.editAdminStaffId = editAdminStaffId;
+
+  // ---------- AUDIT TRAIL ----------
+  let lastTrailData = [];
+  let trailPageNum = 1;
+
+  async function loadAuditTrail() {
+    const container = document.getElementById('trailList');
+    container.innerHTML = '<p style="font-size:13px; color:var(--muted);">Enter a GATN number above to view its trail.</p>';
+    document.getElementById('trailDownloadBtn').style.display = 'none';
+    lastTrailData = [];
+    trailPageNum = 1;
+  }
+
+  function renderTrailList(data) {
+    const container = document.getElementById('trailList');
+    const downloadBtn = document.getElementById('trailDownloadBtn');
+
+    if (!data || data.length === 0) {
+      container.innerHTML = '<p style="font-size:13px; color:var(--muted);">No trail records found for that GATN.</p>';
+      downloadBtn.style.display = 'none';
+      return;
+    }
+
+    downloadBtn.style.display = 'block';
+
+    const pageData = pageSlice(data, trailPageNum);
+
+    const actionColors = {
+      ENCODE: 'RESOLVED', EDIT: 'REFILED', DELETE: 'RTF',
+      RESOLVE: 'RESOLVED', RETURN_FOR_CORRECTION: 'REFILED', TRACKER_UPDATE: 'PENDING',
+      PAID_STATUS_CHANGE: 'RESOLVED'
+    };
+
+    let rows = pageData.map(function(t) {
+      const when = t.performed_at ? new Date(t.performed_at).toLocaleString() : '—';
+      const badgeClass = actionColors[t.action] || 'PENDING';
+      return '<tr>' +
+        '<td>' + t.gatn_no + '</td>' +
+        '<td><span class="status-pill ' + badgeClass + '">' + t.action.replace(/_/g, ' ') + '</span></td>' +
+        '<td>' + (t.performed_by_employee_id || '—') + '<br><span style="color:var(--muted); font-size:11px;">' + t.performed_by_username + '</span></td>' +
+        '<td>' + when + '</td>' +
+        '<td>' + (t.details || '—') + '</td>' +
+        '</tr>';
+    }).join('');
+
+    container.innerHTML =
+      '<div class="data-table-wrap"><table class="data-table"><thead><tr>' +
+      '<th>GATN</th><th>Action</th><th>Employee ID</th><th>Date/Time</th><th>Details</th>' +
+      '</tr></thead><tbody>' + rows + '</tbody></table></div>' +
+      buildPaginationBar(data.length, trailPageNum, 'goToTrailPage');
+  }
+
+  function goToTrailPage(p) {
+    trailPageNum = p;
+    renderTrailList(lastTrailData);
+  }
+  window.goToTrailPage = goToTrailPage;
+
+  // ---------- AUDIT TRAIL: DOWNLOAD AS PDF ----------
+  async function downloadTrailPDF() {
+    if (!lastTrailData || lastTrailData.length === 0) {
+      Swal.fire('No data', 'Please search a GATN first before downloading.', 'info');
+      return;
+    }
+
+    await ensurePdfLibsLoaded();
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+
+    const gatnRef = lastTrailData[0].gatn_no || '';
+
+    doc.setFontSize(14);
+    doc.text('GAMOT Audit Trail', 14, 15);
+    doc.setFontSize(10);
+    doc.text('GATN: ' + gatnRef, 14, 22);
+    doc.text('Generated: ' + new Date().toLocaleString(), 14, 27);
+
+    const tableBody = lastTrailData.map(function(t) {
+      const when = t.performed_at ? new Date(t.performed_at).toLocaleString() : '—';
+      return [
+        t.gatn_no,
+        t.action.replace(/_/g, ' '),
+        t.performed_by_employee_id || '—',
+        t.performed_by_username || '—',
+        when,
+        t.details || '—'
+      ];
+    });
+
+    doc.autoTable({
+      startY: 32,
+      head: [['GATN', 'Action', 'Employee ID', 'Username', 'Date/Time', 'Details']],
+      body: tableBody,
+      styles: { fontSize: 8 },
+      headStyles: { fillColor: [0, 84, 166] }
+    });
+
+    doc.save('Audit_Trail_' + gatnRef + '_' + new Date().toLocaleDateString().replace(/\//g, '-') + '.pdf');
+  }
+
+  document.getElementById('trailDownloadBtn').addEventListener('click', downloadTrailPDF);
+
+  // ---------- DELETE HISTORY: browsable, hindi na kailangang mag-search muna ----------
+  let lastDeleteHistoryData = [];
+  let deleteHistoryPageNum = 1;
+
+  async function loadDeleteHistory() {
+    const container = document.getElementById('deleteHistoryList');
+    container.innerHTML = '<p style="font-size:13px; color:var(--muted);">Loading...</p>';
+
+    const branchRestriction = currentUser.role === 'ADMIN' ? null : currentUser.branch;
+
+    const { data, error } = await sb.rpc('get_deleted_records', { p_branch: branchRestriction });
+
+    if (error) {
+      container.innerHTML = '<p style="font-size:13px; color:#a02b1f;">Error loading delete history.</p>';
+      lastDeleteHistoryData = [];
+      return;
+    }
+
+    lastDeleteHistoryData = data || [];
+    currentDeleteHistoryFiltered = lastDeleteHistoryData;
+    deleteHistoryPageNum = 1;
+    document.getElementById('deleteHistorySearch').value = '';
+    renderDeleteHistoryList(lastDeleteHistoryData);
+  }
+
+  function renderDeleteHistoryList(data) {
+    const container = document.getElementById('deleteHistoryList');
+
+    if (!data || data.length === 0) {
+      container.innerHTML = '<p style="font-size:13px; color:var(--muted);">No matching deleted records found.</p>';
+      return;
+    }
+
+    const pageData = pageSlice(data, deleteHistoryPageNum);
+
+    let rows = pageData.map(function(t) {
+      const when = t.performed_at ? new Date(t.performed_at).toLocaleString() : '—';
+      return '<tr>' +
+        '<td>' + t.gatn_no + '</td>' +
+        '<td>' + (t.branch || '—') + '</td>' +
+        '<td>' + (t.performed_by_employee_id || '—') + '<br><span style="color:var(--muted); font-size:11px;">' + t.performed_by_username + '</span></td>' +
+        '<td>' + when + '</td>' +
+        '</tr>';
+    }).join('');
+
+    container.innerHTML =
+      '<div class="data-table-wrap"><table class="data-table"><thead><tr>' +
+      '<th>GATN (Deleted)</th><th>Branch</th><th>Deleted By</th><th>Date/Time Deleted</th>' +
+      '</tr></thead><tbody>' + rows + '</tbody></table></div>' +
+      buildPaginationBar(data.length, deleteHistoryPageNum, 'goToDeleteHistoryPage');
+  }
+
+  function goToDeleteHistoryPage(p) {
+    deleteHistoryPageNum = p;
+    renderDeleteHistoryList(currentDeleteHistoryFiltered);
+  }
+  window.goToDeleteHistoryPage = goToDeleteHistoryPage;
+
+  let currentDeleteHistoryFiltered = [];
+
+  // ---------- GAMOT TRACKER ----------
+  let lastGamotTrackerData = [];
+
+  // Priority: (1) manual na naitakda ng Accounting, (2) resolved_timestamp kung RESOLVED na, (3) encoding date
+  function getTrackerDateRaw(r) {
+    if (r.tracker_date_processed) return r.tracker_date_processed;
+    if (r.status === 'RESOLVED' && r.resolved_timestamp) return r.resolved_timestamp.slice(0, 10);
+    if (r.created_at) return r.created_at.slice(0, 10);
+    return null;
+  }
+
+  function getTrackerDateDisplay(r) {
+    const raw = getTrackerDateRaw(r);
+    return raw ? new Date(raw + 'T00:00:00').toLocaleDateString() : '—';
+  }
+  let currentGamotTrackerFiltered = [];
+  let gamotTrackerPageNum = 1;
+
+  async function loadGamotTracker() {
+    const container = document.getElementById('gamotTrackerList');
+    container.innerHTML = '<p style="font-size:13px; color:var(--muted);">Loading...</p>';
+
+    const branchRestriction = currentUser.role === 'ADMIN' ? null : currentUser.branch;
+
+    const { data, error } = await sb.rpc('get_gamot_tracker', { p_branch: branchRestriction });
+
+    if (error) {
+      container.innerHTML = '<p style="font-size:13px; color:#a02b1f;">Error loading GAMOT Tracker.</p>';
+      lastGamotTrackerData = [];
+      return;
+    }
+
+    lastGamotTrackerData = data || [];
+    currentGamotTrackerFiltered = lastGamotTrackerData;
+    gamotTrackerPageNum = 1;
+    document.getElementById('gamotTrackerSearch').value = '';
+    document.getElementById('gamotTrackerDateFrom').value = '';
+    document.getElementById('gamotTrackerDateTo').value = '';
+    document.getElementById('gamotTrackerOverdueOnly').checked = false;
+    renderGamotTrackerList(lastGamotTrackerData);
+  }
+
+  function renderGamotTrackerList(data) {
+    const container = document.getElementById('gamotTrackerList');
+
+    if (!data || data.length === 0) {
+      container.innerHTML = '<p style="font-size:13px; color:var(--muted);">No matching records found.</p>';
+      return;
+    }
+
+    const pageData = pageSlice(data, gamotTrackerPageNum);
+    const startNo = (gamotTrackerPageNum - 1) * PAGE_SIZE;
+
+    let rows = pageData.map(function(r, idx) {
+      const dateProcessed = getTrackerDateDisplay(r);
+      const rtfDate = r.rtf_date ? new Date(r.rtf_date).toLocaleDateString() : '—';
+      const additionalRemarks = (r.tracker_remarks !== null && r.tracker_remarks !== undefined && r.tracker_remarks !== '')
+        ? r.tracker_remarks
+        : (r.review_remarks || '');
+      const displayRemarks = r.status + (additionalRemarks ? (' — ' + additionalRemarks) : '');
+      const displayActionTaken = (r.tracker_action_taken !== null && r.tracker_action_taken !== undefined && r.tracker_action_taken !== '') ? r.tracker_action_taken : (r.required_resolution || '—');
+      const isPaid = r.paid === true;
+      const overdueClass = isRecordOverdue(r) ? 'urgency-row OVERDUE' : '';
+
+      return '<tr class="' + overdueClass + '">' +
+        '<td>' + (startNo + idx + 1) + '</td>' +
+        '<td>' + (r.facility_accreditation_no || '—') + '</td>' +
+        '<td>' + (r.facility || '—') + '</td>' +
+        '<td>' + (r.gacn_no || '—') + '</td>' +
+        '<td>' + (r.gatn_no || '—') + (isRecordOverdue(r) ? ' <span class="urgency-badge OVERDUE">⚠ OVERDUE</span>' : '') + '</td>' +
+        '<td>' + (r.claim_amount != null ? r.claim_amount : '—') + '</td>' +
+        '<td>' + (r.issue_category || '').replace(/_/g, ' ') + '</td>' +
+        '<td>' + (r.specific_issue || '—') + '</td>' +
+        '<td>' + dateProcessed + '</td>' +
+        '<td>' + displayRemarks + '</td>' +
+        '<td>' + displayActionTaken + '</td>' +
+        '<td>' + rtfDate + '</td>' +
+        '<td>' +
+          '<button type="button" style="width:auto; margin:0 0 4px 0; padding:6px 12px; font-size:12px; background:' + (isPaid ? 'var(--ok)' : '#94a3b8') + '; color:#fff;" ' +
+            'onclick="togglePaidStatus(\'' + r.gatn_no + '\', ' + !isPaid + ')">' + (isPaid ? 'PAID' : 'UNPAID') + '</button><br>' +
+          '<button type="button" style="width:auto; margin:0; padding:6px 12px; font-size:12px; background:var(--ph-blue);" ' +
+            'onclick="editTrackerFields(\'' + r.gatn_no + '\')">Edit</button>' +
+        '</td>' +
+        '</tr>';
+    }).join('');
+
+    container.innerHTML =
+      '<div class="data-table-wrap"><table class="data-table"><thead><tr>' +
+      '<th>NO.</th><th>ACCRE. NO.</th><th>GAMOT FACILITY NAME</th><th>GACN NO.</th><th>AFFECTED GATN NO.</th>' +
+      '<th>CLAIM AMOUNT</th><th>ISSUE CATEGORY</th><th>SPECIFIC ISSUE</th><th>DATE PROCESSED/ENCOUNTERED</th>' +
+      '<th>REMARKS/STATUS</th><th>ACTION TAKEN</th><th>RTF DATE</th><th>PAID</th>' +
+      '</tr></thead><tbody>' + rows + '</tbody></table></div>' +
+      buildPaginationBar(data.length, gamotTrackerPageNum, 'goToGamotTrackerPage');
+  }
+
+  function goToGamotTrackerPage(p) {
+    gamotTrackerPageNum = p;
+    renderGamotTrackerList(currentGamotTrackerFiltered);
+  }
+  window.goToGamotTrackerPage = goToGamotTrackerPage;
+
+  function isRecordOverdue(r) {
+    return r.status === 'RTF' && r.compliance_deadline && new Date(r.compliance_deadline) < new Date();
+  }
+
+  function applyGamotTrackerFilters() {
+    gamotTrackerPageNum = 1;
+    const term = document.getElementById('gamotTrackerSearch').value.trim().toUpperCase();
+    const dateFrom = document.getElementById('gamotTrackerDateFrom').value;
+    const dateTo = document.getElementById('gamotTrackerDateTo').value;
+    const overdueOnly = document.getElementById('gamotTrackerOverdueOnly').checked;
+
+    currentGamotTrackerFiltered = lastGamotTrackerData.filter(function(r) {
+      const matchesTerm = !term ||
+        (r.gatn_no || '').toUpperCase().includes(term) ||
+        (r.gacn_no || '').toUpperCase().includes(term) ||
+        (r.facility_accreditation_no || '').toUpperCase().includes(term);
+
+      const recordDate = getTrackerDateRaw(r);
+      const matchesFrom = !dateFrom || (recordDate && recordDate >= dateFrom);
+      const matchesTo = !dateTo || (recordDate && recordDate <= dateTo);
+
+      const matchesOverdue = !overdueOnly || isRecordOverdue(r);
+
+      return matchesTerm && matchesFrom && matchesTo && matchesOverdue;
+    });
+
+    renderGamotTrackerList(currentGamotTrackerFiltered);
+  }
+
+  document.getElementById('gamotTrackerSearch').addEventListener('input', applyGamotTrackerFilters);
+  document.getElementById('gamotTrackerDateFrom').addEventListener('change', applyGamotTrackerFilters);
+  document.getElementById('gamotTrackerDateTo').addEventListener('change', applyGamotTrackerFilters);
+  document.getElementById('gamotTrackerOverdueOnly').addEventListener('change', applyGamotTrackerFilters);
+
+  async function togglePaidStatus(gatnNo, makePaid) {
+    const { data, error } = await sb.rpc('toggle_gatn_paid_status', {
+      p_gatn_no: gatnNo,
+      p_paid: makePaid,
+      p_performed_by_username: currentUser.username
+    });
+
+    if (error || !data.success) {
+      Swal.fire('Error', error ? error.message : 'Something went wrong.', 'error');
+      return;
+    }
+
+    // I-update lokal na data (walang kailangang mag re-fetch ulit sa buong listahan)
+    const record = lastGamotTrackerData.find(function(r) { return r.gatn_no === gatnNo; });
+    if (record) record.paid = makePaid;
+    renderGamotTrackerList(currentGamotTrackerFiltered);
+  }
+  window.togglePaidStatus = togglePaidStatus;
+
+  async function editTrackerFields(gatnNo) {
+    const record = lastGamotTrackerData.find(function(r) { return r.gatn_no === gatnNo; });
+    if (!record) {
+      Swal.fire('Error', 'Record not found in the current list.', 'error');
+      return;
+    }
+
+    const currentRemarks = (record.tracker_remarks !== null && record.tracker_remarks !== undefined && record.tracker_remarks !== '')
+      ? record.tracker_remarks
+      : (record.review_remarks || '');
+    const currentActionTaken = (record.tracker_action_taken !== null && record.tracker_action_taken !== undefined && record.tracker_action_taken !== '') ? record.tracker_action_taken : (record.required_resolution || '');
+    const currentDateProcessed = record.tracker_date_processed || '';
+
+    const { value: formValues } = await Swal.fire({
+      title: 'Edit Tracker Fields — GATN ' + gatnNo,
+      width: 520,
+      html:
+        '<div style="text-align:left; font-size:13px;">' +
+          '<label style="display:block; font-weight:700; margin:8px 0 4px;">Status (system-tracked, cannot be edited here)</label>' +
+          '<div style="padding:10px 12px; background:#f1f5f9; border-radius:8px; font-weight:700; color:var(--ph-blue);">' + record.status + '</div>' +
+          '<label style="display:block; font-weight:700; margin:12px 0 4px;">Date Processed/Encountered</label>' +
+          '<input type="date" id="editTrackerDateProcessed" class="swal2-input" style="margin:0; width:100%;" value="' + currentDateProcessed + '">' +
+          '<label style="display:block; font-weight:700; margin:12px 0 4px;">Additional Remarks</label>' +
+          '<textarea id="editTrackerRemarks" class="swal2-textarea" style="margin:0; width:100%; min-height:70px;">' + currentRemarks + '</textarea>' +
+          '<label style="display:block; font-weight:700; margin:8px 0 4px;">Action Taken</label>' +
+          '<textarea id="editTrackerAction" class="swal2-textarea" style="margin:0; width:100%; min-height:70px;">' + currentActionTaken + '</textarea>' +
+        '</div>',
+      showCancelButton: true,
+      confirmButtonText: 'Save Changes',
+      cancelButtonText: 'Cancel',
+      confirmButtonColor: '#0054a6',
+      preConfirm: function() {
+        return {
+          remarks: document.getElementById('editTrackerRemarks').value.trim(),
+          actionTaken: document.getElementById('editTrackerAction').value.trim(),
+          dateProcessed: document.getElementById('editTrackerDateProcessed').value || null
+        };
+      }
+    });
+
+    if (!formValues) return;
+
+    const branchRestriction = currentUser.role === 'ADMIN' ? null : currentUser.branch;
+
+    const { data, error } = await sb.rpc('update_tracker_fields', {
+      p_gatn_no: gatnNo,
+      p_requesting_branch: branchRestriction,
+      p_remarks: formValues.remarks,
+      p_action_taken: formValues.actionTaken,
+      p_date_processed: formValues.dateProcessed,
+      p_performed_by_username: currentUser.username
+    });
+
+    if (error || !data.success) {
+      Swal.fire('Error', error ? error.message : data.message, 'error');
+      return;
+    }
+
+    record.tracker_remarks = formValues.remarks;
+    record.tracker_action_taken = formValues.actionTaken;
+    record.tracker_date_processed = formValues.dateProcessed;
+    renderGamotTrackerList(currentGamotTrackerFiltered);
+    Swal.fire('Done', 'Tracker fields updated.', 'success');
+  }
+  window.editTrackerFields = editTrackerFields;
+
+  function downloadGamotTrackerCSV() {
+    if (!lastGamotTrackerData || lastGamotTrackerData.length === 0) {
+      Swal.fire('No data', 'Nothing to download yet.', 'info');
+      return;
+    }
+
+    const headers = ['NO.', 'ACCRE. NO.', 'GAMOT FACILITY NAME', 'GACN_NO.', 'AFFECTED GATN NO.', 'CLAIM_AMOUNT', 'ISSUE CATEGORY', 'SPECIFIC ISSUE', 'DATE PROCESSED/ENCOUNTERED', 'REMARKS/STATUS', 'ACTION TAKEN', 'RTF DATE', 'PAID'];
+
+    const rows = currentGamotTrackerFiltered.map(function(r, idx) {
+      const dateProcessed = getTrackerDateDisplay(r);
+      const rtfDate = r.rtf_date ? new Date(r.rtf_date).toLocaleDateString() : '';
+      const additionalRemarks = (r.tracker_remarks !== null && r.tracker_remarks !== undefined && r.tracker_remarks !== '')
+        ? r.tracker_remarks
+        : (r.review_remarks || '');
+      const displayRemarks = r.status + (additionalRemarks ? (' - ' + additionalRemarks) : '');
+      const displayActionTaken = (r.tracker_action_taken !== null && r.tracker_action_taken !== undefined && r.tracker_action_taken !== '') ? r.tracker_action_taken : (r.required_resolution || '');
+
+      return [
+        idx + 1, r.facility_accreditation_no || '', r.facility || '', r.gacn_no || '',
+        r.gatn_no || '', r.claim_amount != null ? r.claim_amount : '',
+        (r.issue_category || '').replace(/_/g, ' '), r.specific_issue || '',
+        dateProcessed, displayRemarks, displayActionTaken, rtfDate,
+        r.paid === true
+      ];
+    });
+
+    downloadStyledExcel('GAMOT_Tracker_' + new Date().toLocaleDateString().replace(/\//g, '-') + '.xlsx', headers, rows);
+  }
+
+  document.getElementById('gamotTrackerDownloadBtn').addEventListener('click', downloadGamotTrackerCSV);
+
+  // ---------- ANALYTICS DASHBOARD ----------
+  let chartByCategory = null;
+  let chartByStatus = null;
+  let chartByMonth = null;
+  let chartByBranch = null;
+
+  async function loadAnalytics() {
+    const summaryContainer = document.getElementById('analyticsSummary');
+    summaryContainer.innerHTML = '<p style="font-size:13px; color:var(--muted);">Loading...</p>';
+
+    const branchRestriction = currentUser.role === 'ADMIN' ? null : currentUser.branch;
+
+    const { data, error } = await sb.rpc('get_analytics_data', { p_branch: branchRestriction });
+
+    if (error) {
+      summaryContainer.innerHTML = '<p style="font-size:13px; color:#a02b1f;">Error loading analytics.</p>';
+      return;
+    }
+
+    // ---------- SUMMARY CARDS ----------
+    const s = data.summary || {};
+    const fmtMoney = function(n) { return '₱' + Number(n || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }); };
+
+    summaryContainer.innerHTML =
+      '<div class="analytics-stat-card"><div class="stat-value">' + (s.total_records || 0) + '</div><div class="stat-label">Total Records</div></div>' +
+      '<div class="analytics-stat-card"><div class="stat-value">' + (s.total_rtf || 0) + '</div><div class="stat-label">RTF (Pending)</div></div>' +
+      '<div class="analytics-stat-card"><div class="stat-value">' + (s.total_refiled || 0) + '</div><div class="stat-label">Refiled</div></div>' +
+      '<div class="analytics-stat-card"><div class="stat-value">' + (s.total_resolved || 0) + '</div><div class="stat-label">Resolved</div></div>' +
+      '<div class="analytics-stat-card"><div class="stat-value">' + (s.total_processing || 0) + '</div><div class="stat-label">Processing</div></div>' +
+      '<div class="analytics-stat-card"><div class="stat-value" style="color:#dc2626;">' + (s.total_late || 0) + '</div><div class="stat-label">Late Submissions</div></div>' +
+      '<div class="analytics-stat-card"><div class="stat-value" style="font-size:1.15rem;">' + fmtMoney(s.total_claim_amount) + '</div><div class="stat-label">Total Claim Amount</div></div>' +
+      '<div class="analytics-stat-card"><div class="stat-value" style="font-size:1.15rem; color:var(--ok);">' + fmtMoney(s.total_paid_amount) + '</div><div class="stat-label">Paid Amount</div></div>' +
+      '<div class="analytics-stat-card"><div class="stat-value" style="font-size:1.15rem; color:var(--amber);">' + fmtMoney(s.total_unpaid_amount) + '</div><div class="stat-label">Unpaid Amount</div></div>';
+
+    // ---------- I-LOAD ANG CHART.JS, TAPOS I-RENDER ANG MGA CHARTS ----------
+    await ensureChartLibLoaded();
+
+    const chartColors = ['#0054a6', '#fdb913', '#10b981', '#f59e0b', '#dc2626', '#6366f1', '#14b8a6', '#a855f7', '#ec4899'];
+
+    // Chart 1: Issue Category (bar)
+    const byCategory = data.by_category || [];
+    if (chartByCategory) chartByCategory.destroy();
+    chartByCategory = new Chart(document.getElementById('chartByCategory'), {
+      type: 'bar',
+      data: {
+        labels: byCategory.map(function(c) { return (c.issue_category || 'Unknown').replace(/_/g, ' '); }),
+        datasets: [{ label: 'Records', data: byCategory.map(function(c) { return c.total; }), backgroundColor: '#0054a6' }]
+      },
+      options: { responsive: true, indexAxis: 'y', plugins: { legend: { display: false } } }
+    });
+
+    // Chart 2: Status (donut)
+    const byStatus = data.by_status || [];
+    if (chartByStatus) chartByStatus.destroy();
+    chartByStatus = new Chart(document.getElementById('chartByStatus'), {
+      type: 'doughnut',
+      data: {
+        labels: byStatus.map(function(st) { return st.status; }),
+        datasets: [{ data: byStatus.map(function(st) { return st.total; }), backgroundColor: chartColors }]
+      },
+      options: { responsive: true }
+    });
+
+    // Chart 3: Monthly trend (line)
+    const byMonth = data.by_month || [];
+    if (chartByMonth) chartByMonth.destroy();
+    chartByMonth = new Chart(document.getElementById('chartByMonth'), {
+      type: 'line',
+      data: {
+        labels: byMonth.map(function(m) { return m.month_label; }),
+        datasets: [{ label: 'Records Encoded', data: byMonth.map(function(m) { return m.total; }), borderColor: '#0054a6', backgroundColor: 'rgba(0,84,166,0.1)', fill: true, tension: 0.3 }]
+      },
+      options: { responsive: true, plugins: { legend: { display: false } } }
+    });
+
+    // Chart 4: Per-branch (ADMIN lang, para sa comparison)
+    const branchBox = document.getElementById('branchChartBox');
+    if (currentUser.role === 'ADMIN') {
+      branchBox.style.display = 'block';
+      const byBranch = data.by_branch || [];
+      if (chartByBranch) chartByBranch.destroy();
+      chartByBranch = new Chart(document.getElementById('chartByBranch'), {
+        type: 'bar',
+        data: {
+          labels: byBranch.map(function(b) { return b.pro_region || 'Unknown'; }),
+          datasets: [{ label: 'Records', data: byBranch.map(function(b) { return b.total; }), backgroundColor: '#fdb913' }]
+        },
+        options: { responsive: true, plugins: { legend: { display: false } } }
+      });
+    } else {
+      branchBox.style.display = 'none';
+    }
+  }
+
+
+  document.getElementById('deleteHistorySearch').addEventListener('input', function() {
+    deleteHistoryPageNum = 1;
+    const term = this.value.trim().toUpperCase();
+    currentDeleteHistoryFiltered = term
+      ? lastDeleteHistoryData.filter(function(t) {
+          return (t.gatn_no || '').toUpperCase().includes(term) ||
+                 (t.performed_by_employee_id || '').toUpperCase().includes(term);
+        })
+      : lastDeleteHistoryData;
+    renderDeleteHistoryList(currentDeleteHistoryFiltered);
+  });
+
+  // ---------- REQUIRED SEARCH: hindi lalabas ang kahit anong record hanggat walang GATN na hinanap ----------
+  let trailSearchTimeout = null;
+
+  document.getElementById('trailSearch').addEventListener('input', function() {
+    const term = this.value.trim();
+    const container = document.getElementById('trailList');
+
+    clearTimeout(trailSearchTimeout);
+
+    if (!term) {
+      container.innerHTML = '<p style="font-size:13px; color:var(--muted);">Enter a GATN number above to view its trail.</p>';
+      document.getElementById('trailDownloadBtn').style.display = 'none';
+      lastTrailData = [];
+      return;
+    }
+
+    document.getElementById('trailDownloadBtn').style.display = 'none';
+    container.innerHTML = '<p style="font-size:13px; color:var(--muted);">Searching...</p>';
+
+    // Bahagyang delay para hindi masyadong madalas ang tawag habang nagta-type
+    trailSearchTimeout = setTimeout(async function() {
+      const branchRestriction = currentUser.role === 'ADMIN' ? null : currentUser.branch;
+
+      const { data, error } = await sb.rpc('get_audit_trail', { p_gatn_no: term, p_branch: branchRestriction });
+
+      if (error) {
+        container.innerHTML = '<p style="font-size:13px; color:#a02b1f;">Error loading audit trail.</p>';
+        lastTrailData = [];
+        return;
+      }
+
+      lastTrailData = data || [];
+      trailPageNum = 1;
+      renderTrailList(lastTrailData);
+    }, 400);
+  });
+
+
+  let lastReviewData = [];
+  let reviewPageNum = 1;
+
   async function loadReviewSubmissions() {
     const container = document.getElementById('reviewList');
     container.innerHTML = '<p style="font-size:13px; color:var(--muted);">Loading...</p>';
@@ -1520,24 +3835,38 @@
 
     if (error) {
       container.innerHTML = '<p style="font-size:13px; color:#a02b1f;">Error loading submissions.</p>';
+      lastReviewData = [];
       return;
     }
+
+    lastReviewData = data || [];
+    reviewPageNum = 1;
+    renderReviewList(lastReviewData);
+  }
+
+  function renderReviewList(data) {
+    const container = document.getElementById('reviewList');
 
     if (!data || data.length === 0) {
       container.innerHTML = '<p style="font-size:13px; color:var(--ok); font-weight:700;">✅ No pending submissions to review.</p>';
       return;
     }
 
-    let cardsHtml = data.map(function(r) {
+    const pageData = pageSlice(data, reviewPageNum);
+
+    let cardsHtml = pageData.map(function(r) {
       const refiled = r.refile_timestamp ? new Date(r.refile_timestamp).toLocaleString() : '—';
       const fileLink = r.refile_file_link
         ? '<a href="' + r.refile_file_link + '" target="_blank" style="color:var(--ph-blue); font-weight:700;">View Corrected Document</a>'
         : '<span style="color:var(--muted);">No file attached</span>';
+      const lateBadge = r.is_late_submission
+        ? ' <span class="status-pill RTF" style="background:#dc2626; color:#fff;">⚠ LATE</span>'
+        : '';
 
       return '<div class="card" style="margin-bottom:12px; padding:18px;">' +
         '<div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px;">' +
           '<div>' +
-            '<strong>GATN:</strong> ' + r.gatn_no + ' &nbsp; <strong>GACN:</strong> ' + r.gacn_no + '<br>' +
+            '<strong>GATN:</strong> ' + r.gatn_no + ' &nbsp; <strong>GACN:</strong> ' + r.gacn_no + lateBadge + '<br>' +
             '<strong>Facility Accred.:</strong> ' + (r.facility_accreditation_no || '') + '<br>' +
             '<strong>Issue:</strong> ' + (r.issue_category || '').replace(/_/g, ' ') + ' — ' + r.specific_issue + '<br>' +
             '<strong>Refiled:</strong> ' + refiled + '<br>' +
@@ -1552,8 +3881,14 @@
       '</div>';
     }).join('');
 
-    container.innerHTML = cardsHtml;
+    container.innerHTML = cardsHtml + buildPaginationBar(data.length, reviewPageNum, 'goToReviewPage');
   }
+
+  function goToReviewPage(p) {
+    reviewPageNum = p;
+    renderReviewList(lastReviewData);
+  }
+  window.goToReviewPage = goToReviewPage;
 
   async function resolveSubmission(gatnNo, newStatus) {
     let reviewRemarks = null;

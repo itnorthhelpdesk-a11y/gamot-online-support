@@ -90,8 +90,19 @@
     border: 1.5px solid rgba(255,255,255,0.4);
     border-radius: 16px;
     padding: 8px 16px;
-    display: flex; align-items: center; gap: 12px;
+    display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
   }
+  #sessionText { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  #sessionText .session-segment {
+    display: flex; flex-direction: column; align-items: flex-start; line-height: 1.2;
+  }
+  #sessionText .session-segment .seg-label {
+    font-size: 8.5px; text-transform: uppercase; letter-spacing: 0.5px; color: #cfe0f0; font-weight: 600;
+  }
+  #sessionText .session-segment .seg-value {
+    font-size: 12px; font-weight: 700; color: #fff;
+  }
+  #sessionText .session-divider { color: rgba(255,255,255,0.4); font-weight: 400; }
 
   main { max-width: 780px; margin: 0 auto; padding: 8px 20px 60px; flex: 1; width: 100%; }
   main.wide { max-width: 1080px; }
@@ -410,8 +421,26 @@
       <input type="text" id="regUsername" required>
       <label for="regPassword">Password</label>
       <input type="password" id="regPassword" required>
+      <div id="passwordRequirements" style="font-size:11px; margin:6px 0 14px; padding:10px 12px; background:#f8fafc; border-radius:8px;">
+        <div id="reqLength" style="color:var(--muted);">○ At least 8 characters</div>
+        <div id="reqUpper" style="color:var(--muted);">○ At least one uppercase letter (A-Z)</div>
+        <div id="reqLower" style="color:var(--muted);">○ At least one lowercase letter (a-z)</div>
+        <div id="reqNumber" style="color:var(--muted);">○ At least one number (0-9)</div>
+      </div>
       <label for="regEmail">Email Address</label>
-      <input type="email" id="regEmail" required placeholder="For approval/decline notifications">
+      <div style="display:flex; gap:8px; align-items:flex-start;">
+        <input type="email" id="regEmail" required placeholder="For approval/decline notifications" style="flex:1;">
+        <button type="button" id="sendRegOtpBtn" style="width:auto; margin:0; flex:0 0 auto; background:#6366f1; padding:12px 16px;">Verify</button>
+      </div>
+      <div id="regEmailVerifiedNote" style="display:none; color:var(--ok); font-size:12px; font-weight:700; margin:-6px 0 10px;">✓ Email verified</div>
+      <div id="regOtpSection" style="display:none; margin-bottom:14px;">
+        <label for="regOtpCode">Enter the 6-digit code sent to your email</label>
+        <div style="display:flex; gap:8px; align-items:flex-start;">
+          <input type="text" id="regOtpCode" maxlength="6" inputmode="numeric" style="flex:1;">
+          <button type="button" id="confirmRegOtpBtn" style="width:auto; margin:0; flex:0 0 auto; background:var(--ok); padding:12px 16px;">Confirm</button>
+        </div>
+      </div>
+      <div class="msg" id="regOtpMsg" style="margin-bottom:14px;"></div>
       <label for="regAccountType">Account Type</label>
       <select id="regAccountType" required>
         <option value="">-- Select type --</option>
@@ -451,7 +480,7 @@
         <label for="regEmployeeIdNo">PhilHealth Employee I.D. No.</label>
         <input type="text" id="regEmployeeIdNo" placeholder="Enter your PhilHealth Employee ID Number">
       </div>
-      <label for="regAttachment">Supporting Document (ID, Accreditation Certificate, etc.)</label>
+      <label for="regAttachment">Supporting Document (ID, Accreditation Certificate, etc.) — Max 10 MB</label>
       <input type="file" id="regAttachment" accept="image/*,.pdf" required>
       <button type="submit" id="registerBtn">Submit Registration</button>
       <div class="msg" id="registerMsg"></div>
@@ -532,7 +561,7 @@
       <div style="background:#f0f7ff; border:1px solid #cfe0f7; border-radius:12px; padding:16px; margin-bottom:20px;">
         <label for="autofillDocument" style="font-weight:700;">🪄 Auto-fill from Document (Optional)</label>
         <p style="font-size:12px; color:var(--muted); margin:4px 0 10px;">
-          Upload up to 2 photos/PDFs (e.g. GAMOT Prescription + Availment Slip) — AI will cross-reference both to pre-fill the fields below. Documents are not saved; they are only used to extract data. Please review all fields carefully before saving.
+          Upload up to 2 photos/PDFs (e.g. GAMOT Prescription + Availment Slip, max 10 MB each) — AI will cross-reference both to pre-fill the fields below. Documents are not saved; they are only used to extract data. Please review all fields carefully before saving.
         </p>
         <label for="autofillDocument" style="font-size:12px; font-weight:600;">Document 1</label>
         <input type="file" id="autofillDocument" accept="image/*,.pdf" style="margin-bottom:10px;">
@@ -630,7 +659,7 @@
         <div class="resolution-box" id="refileInfoBox" style="display:block;"></div>
 
         <form id="refileForm" style="margin-top:14px;">
-          <label for="refileFile">Upload Corrected Document</label>
+          <label for="refileFile">Upload Corrected Document — Max 10 MB</label>
           <input type="file" id="refileFile" required>
 
           <label for="refileNotes">Notes (optional)</label>
@@ -784,9 +813,22 @@
       <p style="font-size:12px; color:var(--muted); margin-bottom:12px;">
         Tracks every encode, edit, delete, and resolve action per GATN, with timestamp and PhilHealth Employee ID No.
       </p>
-      <input type="text" id="trailSearch" placeholder="Search by GATN No..." style="margin-bottom:16px;">
-      <div id="trailList"><p style="font-size:13px; color:var(--muted);">Loading...</p></div>
-      <button type="button" id="trailDownloadBtn" style="margin-top:16px; background:var(--ok); display:none;">⬇ Download PDF</button>
+      <label for="trailViewFilter">Viewing</label>
+      <select id="trailViewFilter">
+        <option value="gatn">GATN Activity</option>
+        <option value="accounts">Account Approvals</option>
+      </select>
+
+      <div id="trailGatnSection">
+        <input type="text" id="trailSearch" placeholder="Search by GATN No..." style="margin-bottom:16px;">
+        <div id="trailList"><p style="font-size:13px; color:var(--muted);">Loading...</p></div>
+        <button type="button" id="trailDownloadBtn" style="margin-top:16px; background:var(--ok); display:none;">⬇ Download PDF</button>
+      </div>
+
+      <div id="trailAccountsSection" style="display:none;">
+        <input type="text" id="accountTrailSearch" placeholder="Search by username..." style="margin-bottom:16px;">
+        <div id="accountTrailList"><p style="font-size:13px; color:var(--muted);">Loading...</p></div>
+      </div>
     </div>
 
     <!-- DELETE HISTORY: browsable listahan ng lahat ng na-delete na records -->
@@ -879,6 +921,69 @@
   })();
 
   let currentUser = { username: "", role: "", facility: "", branch: "", id_no: "", account_type: "" };
+
+  // ---------- SESSION TIMEOUT: auto-logout pagkatapos ng ilang minutong walang aktibidad ----------
+  const INACTIVITY_TIMEOUT_MS = 30 * 60 * 1000; // 30 minuto
+  const WARNING_BEFORE_MS = 2 * 60 * 1000; // 2 minutong babala bago mag-logout
+  let inactivityWarningTimer = null;
+  let inactivityLogoutTimer = null;
+  let inactivityWarningShown = false;
+
+  function clearInactivityTimers() {
+    if (inactivityWarningTimer) clearTimeout(inactivityWarningTimer);
+    if (inactivityLogoutTimer) clearTimeout(inactivityLogoutTimer);
+    inactivityWarningTimer = null;
+    inactivityLogoutTimer = null;
+    inactivityWarningShown = false;
+    if (Swal.isVisible() && document.getElementById('inactivityWarningMarker')) {
+      Swal.close();
+    }
+  }
+
+  function resetInactivityTimers() {
+    // Huwag mag-track kung walang naka-login
+    if (!currentUser.username) return;
+
+    clearInactivityTimers();
+
+    inactivityWarningTimer = setTimeout(function() {
+      inactivityWarningShown = true;
+      Swal.fire({
+        title: 'Are you still there?',
+        html: '<span id="inactivityWarningMarker"></span>Your session will automatically log out in <strong>2 minutes</strong> due to inactivity, for your security.',
+        icon: 'warning',
+        confirmButtonText: 'I\'m still here',
+        confirmButtonColor: '#0054a6',
+        allowOutsideClick: false,
+        timer: WARNING_BEFORE_MS,
+        timerProgressBar: true
+      }).then(function(result) {
+        if (result.isConfirmed) {
+          resetInactivityTimers();
+        }
+      });
+    }, INACTIVITY_TIMEOUT_MS - WARNING_BEFORE_MS);
+
+    inactivityLogoutTimer = setTimeout(function() {
+      if (!currentUser.username) return;
+      performLogout();
+      Swal.fire({
+        title: 'Session Expired',
+        text: 'You have been logged out due to inactivity, for your security.',
+        icon: 'info',
+        confirmButtonText: 'Okay',
+        confirmButtonColor: '#0054a6'
+      });
+    }, INACTIVITY_TIMEOUT_MS);
+  }
+
+  // I-reset ang timer sa kahit anong aktibidad ng user
+  ['mousemove', 'mousedown', 'keydown', 'scroll', 'touchstart', 'click'].forEach(function(evt) {
+    document.addEventListener(evt, function() {
+      // Huwag i-reset habang nakikita ang warning popup mismo (para hindi ma-cancel agad ang warning)
+      if (!inactivityWarningShown) resetInactivityTimers();
+    }, { passive: true });
+  });
 
   // ---------- PERFORMANCE: LAZY-LOAD NG MABIBIGAT NA LIBRARIES ----------
   // Hindi na natin ide-download ang jsPDF/xlsx-js-style hanggang talagang kailangan (i.e., pag-click ng Download button).
@@ -1028,8 +1133,15 @@
       accreditation_no: data.accreditation_no
     };
 
-    document.getElementById('sessionText').innerText =
-      currentUser.username + " · " + currentUser.branch + " · " + currentUser.facility;
+    resetInactivityTimers();
+
+    const thirdSegmentLabel = currentUser.account_type === 'PHARMACY' ? 'Pharmacy' : 'Department';
+    document.getElementById('sessionText').innerHTML =
+      '<div class="session-segment"><span class="seg-label">Branch</span><span class="seg-value">' + (currentUser.branch || '—') + '</span></div>' +
+      '<span class="session-divider">|</span>' +
+      '<div class="session-segment"><span class="seg-label">User</span><span class="seg-value">' + (currentUser.username || '—') + '</span></div>' +
+      '<span class="session-divider">|</span>' +
+      '<div class="session-segment"><span class="seg-label">' + thirdSegmentLabel + '</span><span class="seg-value">' + (currentUser.facility || '—') + '</span></div>';
     document.getElementById('logoutBtn').style.display = 'inline-block';
 
     document.getElementById('loginSection').style.display = 'none';
@@ -1121,20 +1233,7 @@
   });
 
   // ---------- LOGOUT ----------
-  document.getElementById('logoutBtn').addEventListener('click', async function() {
-    const result = await Swal.fire({
-      title: 'Log out?',
-      text: 'Any unsaved changes on this page will be lost.',
-      icon: 'question',
-      showCancelButton: true,
-      confirmButtonText: 'Yes, log out',
-      cancelButtonText: 'No, stay',
-      confirmButtonColor: '#0054a6',
-      cancelButtonColor: '#94a3b8'
-    });
-
-    if (!result.isConfirmed) return;
-
+  function performLogout() {
     sessionStorage.removeItem('draft_searchGatn');
     sessionStorage.removeItem('draft_refileNotes');
 
@@ -1142,6 +1241,8 @@
       clearInterval(pendingPollInterval);
       pendingPollInterval = null;
     }
+
+    clearInactivityTimers();
 
     currentUser = { username: "", role: "", facility: "", branch: "", id_no: "", account_type: "", accreditation_no: "" };
     document.getElementById('sessionText').innerText = "";
@@ -1170,6 +1271,23 @@
     document.getElementById('myStaffCard').style.display = 'none';
     document.getElementById('pharmacySidebar').style.display = 'none';
     document.getElementById('adminSidebar').style.display = 'none';
+  }
+
+  document.getElementById('logoutBtn').addEventListener('click', async function() {
+    const result = await Swal.fire({
+      title: 'Log out?',
+      text: 'Any unsaved changes on this page will be lost.',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, log out',
+      cancelButtonText: 'No, stay',
+      confirmButtonColor: '#0054a6',
+      cancelButtonColor: '#94a3b8'
+    });
+
+    if (!result.isConfirmed) return;
+
+    performLogout();
   });
 
   // ---------- TOGGLE LOGIN / REGISTER VIEWS ----------
@@ -1384,6 +1502,24 @@
       return;
     }
 
+    const doc1SizeCheck = checkFileSize(fileInput1.files[0], MAX_ATTACHMENT_MB);
+    if (!doc1SizeCheck.ok) {
+      msg.className = "msg error";
+      msg.innerText = doc1SizeCheck.message;
+      msg.style.display = 'block';
+      return;
+    }
+
+    if (fileInput2.files && fileInput2.files.length > 0) {
+      const doc2SizeCheck = checkFileSize(fileInput2.files[0], MAX_ATTACHMENT_MB);
+      if (!doc2SizeCheck.ok) {
+        msg.className = "msg error";
+        msg.innerText = doc2SizeCheck.message;
+        msg.style.display = 'block';
+        return;
+      }
+    }
+
     // I-convert ang mga file papuntang base64 (hindi ito isa-save, gagamitin lang pansamantala)
     async function fileToBase64(file) {
       return new Promise(function(resolve, reject) {
@@ -1502,6 +1638,138 @@
     }
   });
 
+  // ---------- EMAIL VERIFICATION: OTP bago tumuloy sa registration ----------
+  let regEmailVerified = false;
+  let regVerifiedEmailValue = "";
+
+  document.getElementById('regEmail').addEventListener('input', function() {
+    // Kung binago ang email pagkatapos ma-verify, kailangan nang mag-verify ulit
+    if (regEmailVerified && this.value.trim().toLowerCase() !== regVerifiedEmailValue) {
+      regEmailVerified = false;
+      document.getElementById('regEmailVerifiedNote').style.display = 'none';
+      document.getElementById('regOtpSection').style.display = 'none';
+    }
+  });
+
+  document.getElementById('sendRegOtpBtn').addEventListener('click', async function() {
+    const email = document.getElementById('regEmail').value.trim();
+    const msg = document.getElementById('regOtpMsg');
+    msg.style.display = 'none';
+    const btn = this;
+
+    if (!email || !email.includes('@')) {
+      msg.className = "msg error";
+      msg.innerText = "Please enter a valid email address first.";
+      msg.style.display = 'block';
+      return;
+    }
+
+    btn.disabled = true;
+    btn.innerText = "Sending...";
+
+    try {
+      const res = await fetch("https://ukdiibumagfqngqkqmom.supabase.co/functions/v1/send-registration-otp", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer " + SUPABASE_KEY,
+          "apikey": SUPABASE_KEY
+        },
+        body: JSON.stringify({ email: email })
+      });
+      const result = await res.json();
+
+      btn.disabled = false;
+      btn.innerText = "Verify";
+
+      if (!result.success) {
+        msg.className = "msg error";
+        msg.innerText = result.error || "Could not send verification code.";
+        msg.style.display = 'block';
+        return;
+      }
+
+      document.getElementById('regOtpSection').style.display = 'block';
+      msg.className = "msg ok";
+      msg.innerText = "A verification code has been sent to your email.";
+      msg.style.display = 'block';
+    } catch (err) {
+      btn.disabled = false;
+      btn.innerText = "Verify";
+      msg.className = "msg error";
+      msg.innerText = "Network error. Please try again.";
+      msg.style.display = 'block';
+    }
+  });
+
+  document.getElementById('confirmRegOtpBtn').addEventListener('click', async function() {
+    const email = document.getElementById('regEmail').value.trim();
+    const otp = document.getElementById('regOtpCode').value.trim();
+    const msg = document.getElementById('regOtpMsg');
+    msg.style.display = 'none';
+
+    if (!otp) {
+      msg.className = "msg error";
+      msg.innerText = "Please enter the code sent to your email.";
+      msg.style.display = 'block';
+      return;
+    }
+
+    const { data, error } = await sb.rpc('verify_registration_otp', {
+      p_email: email,
+      p_otp: otp
+    });
+
+    if (error || !data.success) {
+      msg.className = "msg error";
+      msg.innerText = error ? error.message : data.message;
+      msg.style.display = 'block';
+      return;
+    }
+
+    regEmailVerified = true;
+    regVerifiedEmailValue = email.toLowerCase();
+    document.getElementById('regOtpSection').style.display = 'none';
+    document.getElementById('regEmailVerifiedNote').style.display = 'block';
+    msg.style.display = 'none';
+  });
+
+  // ---------- PASSWORD STRENGTH: real-time checklist para sa Registration ----------
+  // ---------- FILE SIZE LIMIT: shared helper para sa lahat ng file uploads ----------
+  const MAX_ATTACHMENT_MB = 10;
+
+  function checkFileSize(file, maxMB) {
+    const maxBytes = maxMB * 1024 * 1024;
+    if (file.size > maxBytes) {
+      return { ok: false, message: 'File "' + file.name + '" is too large (' + (file.size / 1024 / 1024).toFixed(1) + ' MB). Maximum allowed size is ' + maxMB + ' MB.' };
+    }
+    return { ok: true };
+  }
+
+  function isPasswordStrong(pw) {
+    return pw.length >= 8 && /[A-Z]/.test(pw) && /[a-z]/.test(pw) && /[0-9]/.test(pw);
+  }
+
+  document.getElementById('regPassword').addEventListener('input', function() {
+    const pw = this.value;
+    const checks = [
+      { id: 'reqLength', pass: pw.length >= 8 },
+      { id: 'reqUpper', pass: /[A-Z]/.test(pw) },
+      { id: 'reqLower', pass: /[a-z]/.test(pw) },
+      { id: 'reqNumber', pass: /[0-9]/.test(pw) }
+    ];
+    checks.forEach(function(c) {
+      const el = document.getElementById(c.id);
+      if (c.pass) {
+        el.style.color = 'var(--ok)';
+        el.innerText = el.innerText.replace('○', '✓');
+      } else {
+        el.style.color = 'var(--muted)';
+        el.innerText = el.innerText.replace('✓', '○');
+      }
+    });
+  });
+
   // ---------- PIN FIELD: NUMBERS ONLY (aktibong tinatanggal ang letters habang nagta-type) ----------
   document.getElementById('regPhilhealthPin').addEventListener('input', function() {
     this.value = this.value.replace(/[^0-9]/g, '');
@@ -1547,10 +1815,33 @@
     const msg = document.getElementById('registerMsg');
     msg.style.display = 'none';
 
+    const currentEmailValue = document.getElementById('regEmail').value.trim().toLowerCase();
+    if (!regEmailVerified || currentEmailValue !== regVerifiedEmailValue) {
+      msg.className = "msg error";
+      msg.innerText = "Please verify your email address before submitting.";
+      msg.style.display = 'block';
+      return;
+    }
+
+    if (!isPasswordStrong(document.getElementById('regPassword').value)) {
+      msg.className = "msg error";
+      msg.innerText = "Please make sure your password meets all the requirements listed above.";
+      msg.style.display = 'block';
+      return;
+    }
+
     const fileInput = document.getElementById('regAttachment');
     if (!fileInput.files || fileInput.files.length === 0) {
       msg.className = "msg error";
       msg.innerText = "Please attach a supporting document.";
+      msg.style.display = 'block';
+      return;
+    }
+
+    const regFileSizeCheck = checkFileSize(fileInput.files[0], MAX_ATTACHMENT_MB);
+    if (!regFileSizeCheck.ok) {
+      msg.className = "msg error";
+      msg.innerText = regFileSizeCheck.message;
       msg.style.display = 'block';
       return;
     }
@@ -1612,6 +1903,10 @@
     msg.innerText = "Registration submitted. Please wait for admin approval before signing in.";
     msg.style.display = 'block';
     document.getElementById('registerForm').reset();
+    regEmailVerified = false;
+    regVerifiedEmailValue = "";
+    document.getElementById('regEmailVerifiedNote').style.display = 'none';
+    document.getElementById('regOtpSection').style.display = 'none';
   });
 
   // ---------- ADMIN: LOAD PENDING USERS (NOTIFICATION-FIRST) ----------
@@ -1738,7 +2033,8 @@
       p_username: username,
       p_decision: decision,
       p_decline_reason: declineReason,
-      p_role: selectedRole
+      p_role: selectedRole,
+      p_performed_by: currentUser.username
     });
 
     if (error) {
@@ -2005,6 +2301,14 @@
     if (!fileInput.files || fileInput.files.length === 0) {
       msg.className = "msg error";
       msg.innerText = "Please choose a file to upload.";
+      msg.style.display = 'block';
+      return;
+    }
+
+    const refileFileSizeCheck = checkFileSize(fileInput.files[0], MAX_ATTACHMENT_MB);
+    if (!refileFileSizeCheck.ok) {
+      msg.className = "msg error";
+      msg.innerText = refileFileSizeCheck.message;
       msg.style.display = 'block';
       return;
     }
@@ -2479,7 +2783,8 @@
       p_username: username,
       p_decision: decision,
       p_decline_reason: declineReason,
-      p_accreditation_no: currentUser.accreditation_no
+      p_accreditation_no: currentUser.accreditation_no,
+      p_performed_by: currentUser.username
     });
 
     if (error || !data.success) {
@@ -3345,7 +3650,93 @@
     document.getElementById('trailDownloadBtn').style.display = 'none';
     lastTrailData = [];
     trailPageNum = 1;
+    // I-reset palagi sa "GATN Activity" view tuwing bubuksan ang tab
+    document.getElementById('trailViewFilter').value = 'gatn';
+    document.getElementById('trailGatnSection').style.display = 'block';
+    document.getElementById('trailAccountsSection').style.display = 'none';
   }
+
+  document.getElementById('trailViewFilter').addEventListener('change', function() {
+    if (this.value === 'accounts') {
+      document.getElementById('trailGatnSection').style.display = 'none';
+      document.getElementById('trailAccountsSection').style.display = 'block';
+      loadAccountAuditTrail();
+    } else {
+      document.getElementById('trailAccountsSection').style.display = 'none';
+      document.getElementById('trailGatnSection').style.display = 'block';
+    }
+  });
+
+  // ---------- ACCOUNT APPROVALS AUDIT LOG ----------
+  let lastAccountTrailData = [];
+  let currentAccountTrailFiltered = [];
+  let accountTrailPageNum = 1;
+
+  async function loadAccountAuditTrail() {
+    const container = document.getElementById('accountTrailList');
+    container.innerHTML = '<p style="font-size:13px; color:var(--muted);">Loading...</p>';
+
+    const branchRestriction = currentUser.role === 'ADMIN' ? null : currentUser.branch;
+
+    const { data, error } = await sb.rpc('get_account_audit_trail', { p_branch: branchRestriction });
+
+    if (error) {
+      container.innerHTML = '<p style="font-size:13px; color:#a02b1f;">Error loading account approval log.</p>';
+      lastAccountTrailData = [];
+      return;
+    }
+
+    lastAccountTrailData = data || [];
+    currentAccountTrailFiltered = lastAccountTrailData;
+    accountTrailPageNum = 1;
+    document.getElementById('accountTrailSearch').value = '';
+    renderAccountTrailList(lastAccountTrailData);
+  }
+
+  function renderAccountTrailList(data) {
+    const container = document.getElementById('accountTrailList');
+
+    if (!data || data.length === 0) {
+      container.innerHTML = '<p style="font-size:13px; color:var(--muted);">No account approval activity found.</p>';
+      return;
+    }
+
+    const pageData = pageSlice(data, accountTrailPageNum);
+    const actionColors = { APPROVED: 'RESOLVED', REJECTED: 'RTF' };
+
+    let rows = pageData.map(function(t) {
+      const when = t.performed_at ? new Date(t.performed_at).toLocaleString() : '—';
+      const badgeClass = actionColors[t.action] || 'PENDING';
+      return '<tr>' +
+        '<td>' + t.username_affected + '</td>' +
+        '<td><span class="status-pill ' + badgeClass + '">' + t.action + '</span></td>' +
+        '<td>' + (t.performed_by_employee_id || '—') + '<br><span style="color:var(--muted); font-size:11px;">' + t.performed_by_username + '</span></td>' +
+        '<td>' + when + '</td>' +
+        '<td>' + (t.details || '—') + '</td>' +
+        '</tr>';
+    }).join('');
+
+    container.innerHTML =
+      '<div class="data-table-wrap"><table class="data-table"><thead><tr>' +
+      '<th>Account</th><th>Action</th><th>Performed By</th><th>Date/Time</th><th>Details</th>' +
+      '</tr></thead><tbody>' + rows + '</tbody></table></div>' +
+      buildPaginationBar(data.length, accountTrailPageNum, 'goToAccountTrailPage');
+  }
+
+  function goToAccountTrailPage(p) {
+    accountTrailPageNum = p;
+    renderAccountTrailList(currentAccountTrailFiltered);
+  }
+  window.goToAccountTrailPage = goToAccountTrailPage;
+
+  document.getElementById('accountTrailSearch').addEventListener('input', function() {
+    accountTrailPageNum = 1;
+    const term = this.value.trim().toUpperCase();
+    currentAccountTrailFiltered = term
+      ? lastAccountTrailData.filter(function(t) { return (t.username_affected || '').toUpperCase().includes(term); })
+      : lastAccountTrailData;
+    renderAccountTrailList(currentAccountTrailFiltered);
+  });
 
   function renderTrailList(data) {
     const container = document.getElementById('trailList');

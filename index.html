@@ -2539,6 +2539,8 @@
             'onclick="editStaffEmail(\'' + u.username + '\', \'' + (u.email || '').replace(/'/g, "\\'") + '\')">Edit Email</button>' +
           '<button type="button" style="width:auto; margin:0 4px 4px 0; padding:6px 12px; font-size:12px; background:var(--gold); color:var(--ph-blue-dark);" ' +
             'onclick="editStaffPin(\'' + u.username + '\', \'' + (u.philhealth_pin || '') + '\')">Edit PIN</button>' +
+          '<button type="button" style="width:auto; margin:0 4px 4px 0; padding:6px 12px; font-size:12px; background:#6366f1;" ' +
+            'onclick="pharmacyResetPassword(\'' + u.username + '\')">Reset Password</button>' +
           '<button type="button" style="width:auto; margin:0; padding:6px 12px; font-size:12px; background:' + btnColor + '; color:#fff;" ' +
             'onclick="toggleStaffActive(\'' + u.username + '\', ' + !isActive + ')">' + btnLabel + '</button>' +
         '</td>' +
@@ -2665,6 +2667,38 @@
     loadMyStaff();
   }
   window.editStaffPin = editStaffPin;
+
+  async function pharmacyResetPassword(username) {
+    const { value: newPassword } = await Swal.fire({
+      title: 'Reset Password',
+      input: 'text',
+      inputLabel: 'New password for ' + username + ':',
+      inputPlaceholder: 'Enter new password',
+      inputValidator: function(value) {
+        if (!value || value.trim().length < 6) return 'Password must be at least 6 characters.';
+      },
+      showCancelButton: true,
+      confirmButtonText: 'Reset Password',
+      cancelButtonText: 'Cancel',
+      confirmButtonColor: '#6366f1'
+    });
+
+    if (!newPassword) return;
+
+    const { data, error } = await sb.rpc('pharmacy_admin_reset_password', {
+      p_username: username,
+      p_accreditation_no: currentUser.accreditation_no,
+      p_new_password: newPassword.trim()
+    });
+
+    if (error || !data.success) {
+      Swal.fire('Error', error ? error.message : data.message, 'error');
+      return;
+    }
+
+    Swal.fire('Done', 'Password has been reset. Please inform the account holder of their new password securely.', 'success');
+  }
+  window.pharmacyResetPassword = pharmacyResetPassword;
 
   window.toggleStaffActive = toggleStaffActive;
 
@@ -3067,6 +3101,8 @@
               'onclick="editAdminStaffEmail(\'' + u.username + '\', \'' + (u.email || '').replace(/'/g, "\\'") + '\')">Edit Email</button>' +
             '<button type="button" style="width:auto; margin:0 4px 4px 0; padding:6px 12px; font-size:12px; background:var(--gold); color:var(--ph-blue-dark);" ' +
               'onclick="editAdminStaffId(\'' + u.username + '\', \'' + (u.employee_id_no || '').replace(/'/g, "\\'") + '\')">Edit ID No.</button>' +
+            '<button type="button" style="width:auto; margin:0 4px 4px 0; padding:6px 12px; font-size:12px; background:#6366f1;" ' +
+              'onclick="adminResetPassword(\'' + u.username + '\')">Reset Password</button>' +
             '<button type="button" style="width:auto; margin:0; padding:6px 12px; font-size:12px; background:' + activeBtnColor + '; color:#fff;" ' +
               'onclick="toggleAdminStaffActive(\'' + u.username + '\', ' + !isActive + ')">' + activeBtnLabel + '</button>' +
           '</td>' +
@@ -3097,6 +3133,8 @@
           '<td>' +
             '<button type="button" style="width:auto; margin:0 4px 4px 0; padding:6px 12px; font-size:12px; background:var(--ph-blue);" ' +
               'onclick="editAdminStaffEmail(\'' + u.username + '\', \'' + (u.email || '').replace(/'/g, "\\'") + '\')">Edit Email</button>' +
+            '<button type="button" style="width:auto; margin:0 4px 4px 0; padding:6px 12px; font-size:12px; background:#6366f1;" ' +
+              'onclick="adminResetPassword(\'' + u.username + '\')">Reset Password</button>' +
             '<button type="button" style="width:auto; margin:0; padding:6px 12px; font-size:12px; background:' + activeBtnColor + '; color:#fff;" ' +
               'onclick="toggleAdminStaffActive(\'' + u.username + '\', ' + !isActive + ')">' + activeBtnLabel + '</button>' +
           '</td>' +
@@ -3262,6 +3300,40 @@
     loadManageAdmins();
   }
   window.editAdminStaffId = editAdminStaffId;
+
+  async function adminResetPassword(username) {
+    const { value: newPassword } = await Swal.fire({
+      title: 'Reset Password',
+      input: 'text',
+      inputLabel: 'New password for ' + username + ':',
+      inputPlaceholder: 'Enter new password',
+      inputValidator: function(value) {
+        if (!value || value.trim().length < 6) return 'Password must be at least 6 characters.';
+      },
+      showCancelButton: true,
+      confirmButtonText: 'Reset Password',
+      cancelButtonText: 'Cancel',
+      confirmButtonColor: '#6366f1'
+    });
+
+    if (!newPassword) return;
+
+    const branchRestriction = currentUser.role === 'ADMIN' ? null : currentUser.branch;
+
+    const { data, error } = await sb.rpc('admin_reset_password', {
+      p_username: username,
+      p_requesting_branch: branchRestriction,
+      p_new_password: newPassword.trim()
+    });
+
+    if (error || !data.success) {
+      Swal.fire('Error', error ? error.message : data.message, 'error');
+      return;
+    }
+
+    Swal.fire('Done', 'Password has been reset. Please inform the account holder of their new password securely.', 'success');
+  }
+  window.adminResetPassword = adminResetPassword;
 
   // ---------- AUDIT TRAIL ----------
   let lastTrailData = [];

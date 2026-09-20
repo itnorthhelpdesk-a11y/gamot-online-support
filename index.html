@@ -277,11 +277,30 @@
     header .tag { font-size: 8.5px; }
     header .session {
       width: 100%;
-      justify-content: space-between;
+      flex-direction: column;
+      align-items: stretch;
       font-size: 11px;
-      flex-wrap: wrap;
-      padding: 8px 12px;
+      padding: 12px 14px;
+      gap: 10px;
     }
+    #sessionText {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      width: 100%;
+    }
+    #sessionText .session-segment {
+      align-items: center;
+      text-align: center;
+      background: rgba(255,255,255,0.08);
+      border-radius: 10px;
+      padding: 6px 4px;
+    }
+    #sessionText .session-segment .seg-value {
+      font-size: 11px; word-break: break-word;
+    }
+    #sessionText .session-divider { display: none; }
+    header .logout { width: 100%; }
 
     /* Main content: bawasan ang side padding para mas malawak ang gamit na espasyo */
     main, main.wide { max-width: 100%; padding: 6px 12px 40px; }
@@ -471,6 +490,15 @@
         </div>
       </div>
       <div id="regAccreditationWrap" style="display:none;">
+        <div style="background:#fffbeb; border:1px solid #fde68a; border-radius:12px; padding:14px 16px; margin-bottom:18px;">
+          <p style="font-size:13px; font-weight:700; color:var(--ph-blue-dark); margin:0 0 6px;">📋 Required: Pharmacy Admin Registration Form &amp; NDA</p>
+          <p style="font-size:12px; color:var(--muted); margin:0 0 10px;">
+            Download, print, fill out, and sign this form. Upload the signed copy as your Supporting Document below.
+          </p>
+          <a href="https://ukdiibumagfqngqkqmom.supabase.co/storage/v1/object/public/document-templates/Pharmacy_Admin_Registration_NDA.pdf" target="_blank" style="display:inline-block; font-size:12px; font-weight:700; color:#fff; background:var(--ph-blue); padding:8px 14px; border-radius:8px; text-decoration:none;">
+            📥 Download Form
+          </a>
+        </div>
         <label for="regAccreditationNo">Facility Accreditation No.</label>
         <input type="text" id="regAccreditationNo" placeholder="e.g. P91034561" maxlength="9">
         <label for="regPhilhealthPin">PhilHealth Identification Number (PIN)</label>
@@ -480,8 +508,9 @@
         <label for="regEmployeeIdNo">PhilHealth Employee I.D. No.</label>
         <input type="text" id="regEmployeeIdNo" placeholder="Enter your PhilHealth Employee ID Number">
       </div>
-      <label for="regAttachment">Supporting Document (ID, Accreditation Certificate, etc.) — Max 10 MB</label>
-      <input type="file" id="regAttachment" accept="image/*,.pdf" required>
+      <label for="regAttachment">Supporting Documents (ID, Accreditation Certificate, Signed NDA, etc.) — Up to 5 files, Max 10 MB each</label>
+      <input type="file" id="regAttachment" accept="image/jpeg,image/png,.pdf" multiple required>
+      <p style="font-size:11px; color:var(--muted); margin:6px 0 16px; line-height:1.5;">JPG, PNG, or PDF only. All files you select will be combined into a single PDF automatically.</p>
       <button type="submit" id="registerBtn">Submit Registration</button>
       <div class="msg" id="registerMsg"></div>
     </form>
@@ -659,8 +688,9 @@
         <div class="resolution-box" id="refileInfoBox" style="display:block;"></div>
 
         <form id="refileForm" style="margin-top:14px;">
-          <label for="refileFile">Upload Corrected Document — Max 10 MB</label>
-          <input type="file" id="refileFile" required>
+          <label for="refileFile">Upload Corrected Document(s) — Up to 5 files, Max 10 MB each</label>
+          <input type="file" id="refileFile" accept="image/jpeg,image/png,.pdf" multiple required>
+          <p style="font-size:11px; color:var(--muted); margin:6px 0 16px; line-height:1.5;">JPG, PNG, or PDF only. All files you select will be combined into a single PDF automatically.</p>
 
           <label for="refileNotes">Notes (optional)</label>
           <textarea id="refileNotes" rows="3" placeholder="Any remarks about the correction you made..."></textarea>
@@ -1021,6 +1051,64 @@
     if (!window.Chart) {
       await loadScriptOnce('https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js');
     }
+  }
+
+  // ---------- MULTI-FILE UPLOAD: i-merge ang hanggang 5 files (JPG/PNG/PDF) papuntang isang PDF ----------
+  const MAX_MERGE_FILES = 5;
+
+  async function ensurePdfLibMergeLoaded() {
+    if (!window.PDFLib) {
+      await loadScriptOnce('https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js');
+    }
+  }
+
+  async function mergeFilesToPdf(files) {
+    await ensurePdfLibMergeLoaded();
+    const { PDFDocument } = PDFLib;
+    const mergedPdf = await PDFDocument.create();
+    const PAGE_W = 612, PAGE_H = 792; // Letter size sa points
+
+    for (const file of files) {
+      const bytes = await file.arrayBuffer();
+
+      if (file.type === 'application/pdf') {
+        const srcPdf = await PDFDocument.load(bytes);
+        const copiedPages = await mergedPdf.copyPages(srcPdf, srcPdf.getPageIndices());
+        copiedPages.forEach(function(page) { mergedPdf.addPage(page); });
+      } else if (file.type === 'image/jpeg' || file.type === 'image/jpg') {
+        const img = await mergedPdf.embedJpg(bytes);
+        const page = mergedPdf.addPage([PAGE_W, PAGE_H]);
+        const scale = Math.min(PAGE_W / img.width, PAGE_H / img.height, 1);
+        const w = img.width * scale, h = img.height * scale;
+        page.drawImage(img, { x: (PAGE_W - w) / 2, y: (PAGE_H - h) / 2, width: w, height: h });
+      } else if (file.type === 'image/png') {
+        const img = await mergedPdf.embedPng(bytes);
+        const page = mergedPdf.addPage([PAGE_W, PAGE_H]);
+        const scale = Math.min(PAGE_W / img.width, PAGE_H / img.height, 1);
+        const w = img.width * scale, h = img.height * scale;
+        page.drawImage(img, { x: (PAGE_W - w) / 2, y: (PAGE_H - h) / 2, width: w, height: h });
+      } else {
+        throw new Error('Unsupported file type: "' + file.name + '". Only JPG, PNG, and PDF files can be merged.');
+      }
+    }
+
+    const mergedBytes = await mergedPdf.save();
+    return new Blob([mergedBytes], { type: 'application/pdf' });
+  }
+
+  function checkMultipleFiles(fileList, maxMB) {
+    if (fileList.length > MAX_MERGE_FILES) {
+      return { ok: false, message: 'You may upload up to ' + MAX_MERGE_FILES + ' files at a time.' };
+    }
+    for (let i = 0; i < fileList.length; i++) {
+      const sizeCheck = checkFileSize(fileList[i], maxMB);
+      if (!sizeCheck.ok) return sizeCheck;
+      const t = fileList[i].type;
+      if (t !== 'application/pdf' && t !== 'image/jpeg' && t !== 'image/jpg' && t !== 'image/png') {
+        return { ok: false, message: 'File "' + fileList[i].name + '" is not supported. Only JPG, PNG, and PDF files can be uploaded.' };
+      }
+    }
+    return { ok: true };
   }
 
   // ---------- SHARED PAGINATION HELPER ----------
@@ -1833,29 +1921,42 @@
     const fileInput = document.getElementById('regAttachment');
     if (!fileInput.files || fileInput.files.length === 0) {
       msg.className = "msg error";
-      msg.innerText = "Please attach a supporting document.";
+      msg.innerText = "Please attach at least one supporting document.";
       msg.style.display = 'block';
       return;
     }
 
-    const regFileSizeCheck = checkFileSize(fileInput.files[0], MAX_ATTACHMENT_MB);
-    if (!regFileSizeCheck.ok) {
+    const regFilesCheck = checkMultipleFiles(fileInput.files, MAX_ATTACHMENT_MB);
+    if (!regFilesCheck.ok) {
       msg.className = "msg error";
-      msg.innerText = regFileSizeCheck.message;
+      msg.innerText = regFilesCheck.message;
       msg.style.display = 'block';
       return;
     }
 
     btn.disabled = true;
-    btn.innerText = "Uploading document...";
+    btn.innerText = "Merging document(s)...";
 
     const usernameForFile = document.getElementById('regUsername').value.trim();
-    const file = fileInput.files[0];
-    const filePath = usernameForFile + "_" + Date.now() + "_" + file.name;
+    let mergedFile;
+    try {
+      mergedFile = await mergeFilesToPdf(Array.from(fileInput.files));
+    } catch (mergeErr) {
+      btn.disabled = false;
+      btn.innerText = "Submit Registration";
+      msg.className = "msg error";
+      msg.innerText = mergeErr.message || "Could not combine the selected documents.";
+      msg.style.display = 'block';
+      return;
+    }
+
+    btn.innerText = "Uploading document...";
+
+    const filePath = usernameForFile + "_" + Date.now() + "_merged.pdf";
 
     const { error: uploadError } = await sb.storage
       .from('registration-attachments')
-      .upload(filePath, file);
+      .upload(filePath, mergedFile);
 
     if (uploadError) {
       btn.disabled = false;
@@ -2300,15 +2401,15 @@
     const fileInput = document.getElementById('refileFile');
     if (!fileInput.files || fileInput.files.length === 0) {
       msg.className = "msg error";
-      msg.innerText = "Please choose a file to upload.";
+      msg.innerText = "Please choose at least one file to upload.";
       msg.style.display = 'block';
       return;
     }
 
-    const refileFileSizeCheck = checkFileSize(fileInput.files[0], MAX_ATTACHMENT_MB);
-    if (!refileFileSizeCheck.ok) {
+    const refileFilesCheck = checkMultipleFiles(fileInput.files, MAX_ATTACHMENT_MB);
+    if (!refileFilesCheck.ok) {
       msg.className = "msg error";
-      msg.innerText = refileFileSizeCheck.message;
+      msg.innerText = refileFilesCheck.message;
       msg.style.display = 'block';
       return;
     }
@@ -2330,14 +2431,27 @@
     }
 
     btn.disabled = true;
+    btn.innerText = "Merging document(s)...";
+
+    let mergedFile;
+    try {
+      mergedFile = await mergeFilesToPdf(Array.from(fileInput.files));
+    } catch (mergeErr) {
+      btn.disabled = false;
+      btn.innerText = "Submit Refile";
+      msg.className = "msg error";
+      msg.innerText = mergeErr.message || "Could not combine the selected documents.";
+      msg.style.display = 'block';
+      return;
+    }
+
     btn.innerText = "Uploading...";
 
-    const file = fileInput.files[0];
-    const filePath = currentRefileGatn + "_" + Date.now() + "_" + file.name;
+    const filePath = currentRefileGatn + "_" + Date.now() + "_merged.pdf";
 
     const { error: uploadError } = await sb.storage
       .from('refile-attachments')
-      .upload(filePath, file);
+      .upload(filePath, mergedFile);
 
     if (uploadError) {
       btn.disabled = false;

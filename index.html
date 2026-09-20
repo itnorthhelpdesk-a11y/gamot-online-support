@@ -388,6 +388,15 @@
     .analytics-chart-row { grid-template-columns: 1fr; }
     .analytics-stat-card .stat-value { font-size: 1.3rem; }
   }
+
+  /* REVIEW REFILED SUBMISSIONS: stable grid layout, hindi natin problema kahit mahaba ang text */
+  .review-card-body { display: grid; grid-template-columns: 1fr 180px; gap: 18px; align-items: start; }
+  .review-card-text { min-width: 0; overflow-wrap: break-word; word-break: break-word; line-height: 1.6; }
+  .review-card-actions { display: flex; flex-direction: column; gap: 8px; }
+  .review-card-actions button { margin: 0; }
+  @media (max-width: 768px) {
+    .review-card-body { grid-template-columns: 1fr; }
+  }
 </style>
 </head>
 <body>
@@ -817,6 +826,17 @@
     <div class="card" id="reviewCard" style="display:none;">
       <h2>Review Refiled Submissions</h2>
       <p style="font-size:12px; color:var(--muted); margin-bottom:12px;">Pharmacies that have submitted corrected documents, awaiting your review.</p>
+      <input type="text" id="reviewSearch" placeholder="Search by GATN No..." style="margin-bottom:12px;">
+      <div class="row2">
+        <div>
+          <label for="reviewDateFrom">Refiled From</label>
+          <input type="date" id="reviewDateFrom">
+        </div>
+        <div>
+          <label for="reviewDateTo">Refiled To</label>
+          <input type="date" id="reviewDateTo">
+        </div>
+      </div>
       <div id="reviewList"><p style="font-size:13px; color:var(--muted);">Loading...</p></div>
     </div>
 
@@ -4426,9 +4446,38 @@
     }
 
     lastReviewData = data || [];
+    currentReviewFiltered = lastReviewData;
     reviewPageNum = 1;
+    document.getElementById('reviewSearch').value = '';
+    document.getElementById('reviewDateFrom').value = '';
+    document.getElementById('reviewDateTo').value = '';
     renderReviewList(lastReviewData);
   }
+
+  let currentReviewFiltered = [];
+
+  function applyReviewFilters() {
+    reviewPageNum = 1;
+    const term = document.getElementById('reviewSearch').value.trim().toUpperCase();
+    const dateFrom = document.getElementById('reviewDateFrom').value;
+    const dateTo = document.getElementById('reviewDateTo').value;
+
+    currentReviewFiltered = lastReviewData.filter(function(r) {
+      const matchesTerm = !term || (r.gatn_no || '').toUpperCase().includes(term);
+
+      const recordDate = r.refile_timestamp ? r.refile_timestamp.slice(0, 10) : null;
+      const matchesFrom = !dateFrom || (recordDate && recordDate >= dateFrom);
+      const matchesTo = !dateTo || (recordDate && recordDate <= dateTo);
+
+      return matchesTerm && matchesFrom && matchesTo;
+    });
+
+    renderReviewList(currentReviewFiltered);
+  }
+
+  document.getElementById('reviewSearch').addEventListener('input', applyReviewFilters);
+  document.getElementById('reviewDateFrom').addEventListener('change', applyReviewFilters);
+  document.getElementById('reviewDateTo').addEventListener('change', applyReviewFilters);
 
   function renderReviewList(data) {
     const container = document.getElementById('reviewList');
@@ -4450,8 +4499,8 @@
         : '';
 
       return '<div class="card" style="margin-bottom:12px; padding:18px;">' +
-        '<div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px;">' +
-          '<div>' +
+        '<div class="review-card-body">' +
+          '<div class="review-card-text">' +
             '<strong>GATN:</strong> ' + r.gatn_no + ' &nbsp; <strong>GACN:</strong> ' + r.gacn_no + lateBadge + '<br>' +
             '<strong>Facility Accred.:</strong> ' + (r.facility_accreditation_no || '') + '<br>' +
             '<strong>Issue:</strong> ' + (r.issue_category || '').replace(/_/g, ' ') + ' — ' + r.specific_issue + '<br>' +
@@ -4459,9 +4508,9 @@
             '<strong>Notes from Facility:</strong> ' + (r.refile_notes || '—') + '<br>' +
             fileLink +
           '</div>' +
-          '<div style="display:flex; flex-direction:column; gap:8px; min-width:160px;">' +
-            '<button type="button" style="margin:0; background:var(--ok);" onclick="resolveSubmission(\'' + r.gatn_no + '\', \'RESOLVED\')">✓ Mark Resolved</button>' +
-            '<button type="button" style="margin:0; background:var(--amber);" onclick="resolveSubmission(\'' + r.gatn_no + '\', \'RTF\')">↺ Request Re-correction</button>' +
+          '<div class="review-card-actions">' +
+            '<button type="button" style="background:var(--ok);" onclick="resolveSubmission(\'' + r.gatn_no + '\', \'RESOLVED\')">✓ Mark Resolved</button>' +
+            '<button type="button" style="background:var(--amber);" onclick="resolveSubmission(\'' + r.gatn_no + '\', \'RTF\')">↺ Request Re-correction</button>' +
           '</div>' +
         '</div>' +
       '</div>';

@@ -403,6 +403,17 @@
     0%, 100% { transform: scale(1); box-shadow: 0 8px 20px rgba(0,0,0,0.25); }
     50% { transform: scale(1.06); box-shadow: 0 8px 24px rgba(0,84,166,0.5); }
   }
+
+  /* Ayusin ang SweetAlert2 dropdown (input:'select') para hindi lumagpas sa modal kahit mahaba ang option text */
+  .swal2-select {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    text-overflow: ellipsis !important;
+    overflow: hidden !important;
+    white-space: nowrap !important;
+  }
+  .swal2-popup { overflow-wrap: break-word !important; }
 </style>
 </head>
 <body>
@@ -432,7 +443,7 @@
     </div>
     <h2>Staff Sign In</h2>
     <form id="loginForm">
-      <label for="loginUser">Username</label>
+      <label for="loginUser">Username (PhilHealth PIN or Employee ID No.)</label>
       <input type="text" id="loginUser" required>
       <label for="loginPass">Password</label>
       <input type="password" id="loginPass" required>
@@ -451,8 +462,6 @@
   <div class="card" id="registerSection" style="display:none;">
     <h2>Create an Account</h2>
     <form id="registerForm">
-      <label for="regUsername">Username</label>
-      <input type="text" id="regUsername" required>
       <label for="regPassword">Password</label>
       <input type="password" id="regPassword" required>
       <div id="passwordRequirements" style="font-size:11px; margin:6px 0 14px; padding:10px 12px; background:#f8fafc; border-radius:8px;">
@@ -518,10 +527,12 @@
         <input type="text" id="regAccreditationNo" placeholder="e.g. P91034561" maxlength="9">
         <label for="regPhilhealthPin">PhilHealth Identification Number (PIN)</label>
         <input type="text" id="regPhilhealthPin" placeholder="Enter your 12-digit PIN (numbers only)" inputmode="numeric" pattern="[0-9]*" maxlength="12">
+        <p style="font-size:11px; color:var(--muted); margin:6px 0 16px; line-height:1.5;">⚠ This PIN will also be your login username. Please double-check it before submitting.</p>
       </div>
       <div id="regEmployeeIdWrap" style="display:none;">
         <label for="regEmployeeIdNo">PhilHealth Employee I.D. No.</label>
         <input type="text" id="regEmployeeIdNo" placeholder="Enter your PhilHealth Employee ID Number">
+        <p style="font-size:11px; color:var(--muted); margin:6px 0 16px; line-height:1.5;">⚠ This Employee ID will also be your login username. Please double-check it before submitting.</p>
         <div style="background:#fffbeb; border:1px solid #fde68a; border-radius:12px; padding:14px 16px; margin-bottom:18px;">
           <p style="font-size:13px; font-weight:700; color:var(--ph-blue-dark); margin:0 0 6px;">📋 Required: PhilHealth Internal Staff Registration Form &amp; NDA</p>
           <p style="font-size:12px; color:var(--muted); margin:0 0 10px;">
@@ -547,7 +558,7 @@
   <div class="card" id="forgotPasswordSection" style="display:none;">
     <h2>Forgot Password</h2>
     <form id="forgotPasswordForm">
-      <label for="fpUsername">Username</label>
+      <label for="fpUsername">Username (PhilHealth PIN or Employee ID No.)</label>
       <input type="text" id="fpUsername" required>
       <button type="submit" id="fpRequestBtn">Send Reset Code</button>
       <div class="msg" id="fpRequestMsg"></div>
@@ -2007,7 +2018,22 @@
     btn.disabled = true;
     btn.innerText = "Merging document(s)...";
 
-    const usernameForFile = document.getElementById('regUsername').value.trim();
+    const accountTypeForUsername = document.getElementById('regAccountType').value;
+    const usernameForFile = accountTypeForUsername === 'STAFF'
+      ? document.getElementById('regEmployeeIdNo').value.trim()
+      : document.getElementById('regPhilhealthPin').value.trim();
+
+    if (!usernameForFile) {
+      btn.disabled = false;
+      btn.innerText = "Submit Registration";
+      msg.className = "msg error";
+      msg.innerText = accountTypeForUsername === 'STAFF'
+        ? "Please enter your PhilHealth Employee ID No. — this will be your login username."
+        : "Please enter your PhilHealth Identification Number (PIN) — this will be your login username.";
+      msg.style.display = 'block';
+      return;
+    }
+
     let mergedFile;
     try {
       mergedFile = await mergeFilesToPdf(Array.from(fileInput.files));
@@ -3077,7 +3103,8 @@
     const { data, error } = await sb.rpc('set_staff_active_status', {
       p_username: username,
       p_accreditation_no: currentUser.accreditation_no,
-      p_active: makeActive
+      p_active: makeActive,
+      p_performed_by: currentUser.username
     });
 
     if (error || !data.success) {
@@ -3109,7 +3136,8 @@
     const { data, error } = await sb.rpc('update_staff_email', {
       p_username: username,
       p_accreditation_no: currentUser.accreditation_no,
-      p_new_email: newEmail.trim()
+      p_new_email: newEmail.trim(),
+      p_performed_by: currentUser.username
     });
 
     if (error || !data.success) {
@@ -3144,7 +3172,8 @@
     const { data, error } = await sb.rpc('update_staff_pin', {
       p_username: username,
       p_accreditation_no: currentUser.accreditation_no,
-      p_new_pin: newPin.trim()
+      p_new_pin: newPin.trim(),
+      p_performed_by: currentUser.username
     });
 
     if (error || !data.success) {
@@ -3177,7 +3206,8 @@
     const { data, error } = await sb.rpc('pharmacy_admin_reset_password', {
       p_username: username,
       p_accreditation_no: currentUser.accreditation_no,
-      p_new_password: newPassword.trim()
+      p_new_password: newPassword.trim(),
+      p_performed_by: currentUser.username
     });
 
     if (error || !data.success) {
@@ -3674,7 +3704,8 @@
 
     const { data, error } = await sb.rpc('set_branch_admin', {
       p_username: username,
-      p_make_admin: makeAdmin
+      p_make_admin: makeAdmin,
+      p_performed_by: currentUser.username
     });
 
     if (error || !data.success) {
@@ -3710,7 +3741,8 @@
     const { data, error } = await sb.rpc('update_staff_email_by_admin', {
       p_username: username,
       p_requesting_branch: branchRestriction,
-      p_new_email: newEmail.trim()
+      p_new_email: newEmail.trim(),
+      p_performed_by: currentUser.username
     });
 
     if (error || !data.success) {
@@ -3724,25 +3756,109 @@
   window.editAdminStaffEmail = editAdminStaffEmail;
 
   async function toggleAdminStaffActive(username, makeActive) {
-    const actionLabel = makeActive ? 'reactivate' : 'deactivate';
-    const result = await Swal.fire({
-      title: 'Confirm action',
-      text: 'Are you sure you want to ' + actionLabel + ' the account for ' + username + '?',
-      icon: 'question',
-      showCancelButton: true,
-      confirmButtonText: 'Yes, confirm',
-      cancelButtonText: 'Cancel',
-      confirmButtonColor: '#0054a6'
-    });
+    const targetUser = lastManageAdminsData.find(function(u) { return u.username === username; });
+    console.log('toggleAdminStaffActive debug:', { username: username, makeActive: makeActive, targetUser: targetUser });
+    const isDeactivatingPharmacyAdmin = !makeActive && targetUser && targetUser.role === 'PHARMACY_ADMIN';
+    let successorUsername = null;
 
-    if (!result.isConfirmed) return;
+    if (isDeactivatingPharmacyAdmin) {
+      const { data: staffList, error: staffErr } = await sb.rpc('get_my_pharmacy_staff', {
+        p_accreditation_no: targetUser.accreditation_no
+      });
+
+      if (staffErr) {
+        Swal.fire('Error', 'Could not load the staff list for this facility: ' + staffErr.message, 'error');
+        return;
+      }
+
+      const candidates = (staffList || []).filter(function(u) { return u.status === 'APPROVED'; });
+
+      if (candidates.length > 0) {
+        function escHtml(s) {
+          return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+
+        const rowsHtml = candidates.map(function(u, i) {
+          return '<div class="successor-row" data-value="' + escHtml(u.username) + '" style="padding:10px 12px; border:2px solid ' + (i === 0 ? '#0054a6' : '#e2e8f0') + '; background:' + (i === 0 ? '#eaf2fb' : '#fff') + '; border-radius:10px; margin-bottom:8px; cursor:pointer; text-align:left; overflow-wrap:break-word; word-break:break-word; white-space:normal;">' +
+            '<div style="font-size:12px; color:#1e293b; overflow-wrap:break-word; word-break:break-word;"><b>PhilHealth Number:</b> ' + escHtml(u.username) + '</div>' +
+            '<div style="font-size:12px; color:#1e293b; overflow-wrap:break-word; word-break:break-word;"><b>Email:</b> ' + escHtml(u.email || 'No email on file') + '</div>' +
+          '</div>';
+        }).join('') +
+        '<div class="successor-row" data-value="__none__" style="padding:10px 12px; border:2px solid #e2e8f0; background:#fff; border-radius:10px; cursor:pointer; text-align:left;">' +
+          '<div style="font-size:12px; color:#64748b;">Don\'t assign a new admin yet</div>' +
+        '</div>';
+
+        const pickResult = await Swal.fire({
+          title: 'Deactivating the Pharmacy Admin',
+          html: 'This will deactivate <b>' + username + '</b>, the current Pharmacy Admin for <b>' + (targetUser.facility || 'this facility') + '</b>.<br><br>Who should become the new Pharmacy Admin?' +
+                '<div id="successorList" style="max-height:280px; overflow-y:auto; overflow-x:hidden; margin-top:14px; width:100%; box-sizing:border-box;">' + rowsHtml + '</div>',
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonText: 'Continue',
+          cancelButtonText: 'Cancel',
+          confirmButtonColor: '#0054a6',
+          width: 480,
+          focusConfirm: false,
+          didOpen: function() {
+            const popup = Swal.getPopup();
+            if (popup) { popup.style.maxWidth = '92vw'; popup.style.overflow = 'hidden'; }
+
+            let selected = candidates.length > 0 ? candidates[0].username : '__none__';
+            const rows = popup.querySelectorAll('.successor-row');
+            rows.forEach(function(row) {
+              row.addEventListener('click', function() {
+                selected = row.getAttribute('data-value');
+                rows.forEach(function(r) {
+                  r.style.border = '2px solid #e2e8f0';
+                  r.style.background = '#fff';
+                });
+                row.style.border = '2px solid #0054a6';
+                row.style.background = '#eaf2fb';
+              });
+            });
+            Swal.getPopup()._getSuccessorSelection = function() { return selected; };
+          },
+          preConfirm: function() {
+            const popup = Swal.getPopup();
+            return popup._getSuccessorSelection ? popup._getSuccessorSelection() : '__none__';
+          }
+        });
+
+        if (!pickResult.isConfirmed) return;
+        successorUsername = (pickResult.value && pickResult.value !== '__none__') ? pickResult.value : null;
+      } else {
+        const warnResult = await Swal.fire({
+          title: 'Deactivating the Pharmacy Admin',
+          html: 'This will deactivate <b>' + username + '</b>, the current Pharmacy Admin for <b>' + (targetUser.facility || 'this facility') + '</b>.<br><br>There are no other active staff at this facility to take over. The facility will have no Pharmacy Admin until you assign one later.',
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonText: 'Deactivate Anyway',
+          cancelButtonText: 'Cancel',
+          confirmButtonColor: '#dc2626'
+        });
+        if (!warnResult.isConfirmed) return;
+      }
+    } else {
+      const actionLabel = makeActive ? 'reactivate' : 'deactivate';
+      const result = await Swal.fire({
+        title: 'Confirm action',
+        text: 'Are you sure you want to ' + actionLabel + ' the account for ' + username + '?',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, confirm',
+        cancelButtonText: 'Cancel',
+        confirmButtonColor: '#0054a6'
+      });
+      if (!result.isConfirmed) return;
+    }
 
     const branchRestriction = currentUser.role === 'ADMIN' ? null : currentUser.branch;
 
     const { data, error } = await sb.rpc('set_staff_active_status_by_admin', {
       p_username: username,
       p_requesting_branch: branchRestriction,
-      p_active: makeActive
+      p_active: makeActive,
+      p_performed_by: currentUser.username
     });
 
     if (error || !data.success) {
@@ -3750,7 +3866,22 @@
       return;
     }
 
-    Swal.fire('Done', 'Staff status updated.', 'success');
+    if (successorUsername) {
+      const { data: promoData, error: promoErr } = await sb.rpc('set_pharmacy_admin', {
+        p_username: successorUsername,
+        p_make_admin: true,
+        p_requesting_branch: branchRestriction,
+        p_performed_by: currentUser.username
+      });
+
+      if (promoErr || !promoData.success) {
+        Swal.fire('Partial Success', 'The account was deactivated, but promoting the new admin failed: ' + (promoErr ? promoErr.message : promoData.message), 'warning');
+        loadManageAdmins();
+        return;
+      }
+    }
+
+    Swal.fire('Done', successorUsername ? ('Staff status updated. ' + successorUsername + ' is now the Pharmacy Admin.') : 'Staff status updated.', 'success');
     loadManageAdmins();
   }
   window.toggleAdminStaffActive = toggleAdminStaffActive;
@@ -3777,7 +3908,8 @@
     const { data, error } = await sb.rpc('update_staff_employee_id_by_admin', {
       p_username: username,
       p_requesting_branch: branchRestriction,
-      p_new_employee_id: newId.trim()
+      p_new_employee_id: newId.trim(),
+      p_performed_by: currentUser.username
     });
 
     if (error || !data.success) {
@@ -3812,7 +3944,8 @@
     const { data, error } = await sb.rpc('admin_reset_password', {
       p_username: username,
       p_requesting_branch: branchRestriction,
-      p_new_password: newPassword.trim()
+      p_new_password: newPassword.trim(),
+      p_performed_by: currentUser.username
     });
 
     if (error || !data.success) {
@@ -3834,6 +3967,12 @@
     document.getElementById('trailDownloadBtn').style.display = 'none';
     lastTrailData = [];
     trailPageNum = 1;
+
+    // "Account Approvals" view: Branch Admin at Super Admin lang ang makakakita nito
+    const canViewAccountApprovals = (currentUser.role === 'BRANCH_ADMIN' || currentUser.role === 'ADMIN');
+    const accountsOption = document.querySelector('#trailViewFilter option[value="accounts"]');
+    if (accountsOption) accountsOption.style.display = canViewAccountApprovals ? '' : 'none';
+
     // I-reset palagi sa "GATN Activity" view tuwing bubuksan ang tab
     document.getElementById('trailViewFilter').value = 'gatn';
     document.getElementById('trailGatnSection').style.display = 'block';
@@ -3841,6 +3980,11 @@
   }
 
   document.getElementById('trailViewFilter').addEventListener('change', function() {
+    // Depensa: kahit pilitin baguhin ng user ang dropdown value gamit ang dev tools, hindi pa rin makikita ang Account Approvals kung hindi Branch Admin/Super Admin
+    if (this.value === 'accounts' && !(currentUser.role === 'BRANCH_ADMIN' || currentUser.role === 'ADMIN')) {
+      this.value = 'gatn';
+      return;
+    }
     if (this.value === 'accounts') {
       document.getElementById('trailGatnSection').style.display = 'none';
       document.getElementById('trailAccountsSection').style.display = 'block';
@@ -4636,13 +4780,10 @@
     document.getElementById('askAiWindow').style.display = 'none';
   });
 
-  // I-hindi matakpan ang footer: palaging tumpak, gamit ang scroll position (hindi IntersectionObserver dahil hindi ito tuluy-tuloy mag-update)
+  // I-hindi matakpan ang footer: TULUY-TUloy na pag-check sa bawat frame, hindi lang pag may scroll event (walang delay kahit gaano kabilis mag-scroll)
   const footerEl = document.querySelector('footer.footer-gamot');
   if (footerEl) {
-    let footerCheckTicking = false;
-
     function updateAskAiPosition() {
-      footerCheckTicking = false;
       const footerRect = footerEl.getBoundingClientRect();
       const viewportHeight = window.innerHeight;
       const fab = document.getElementById('askAiFab');
@@ -4662,17 +4803,11 @@
         win.style.bottom = '96px';
         tooltip.style.bottom = '82px';
       }
+
+      requestAnimationFrame(updateAskAiPosition);
     }
 
-    window.addEventListener('scroll', function() {
-      if (!footerCheckTicking) {
-        footerCheckTicking = true;
-        requestAnimationFrame(updateAskAiPosition);
-      }
-    }, { passive: true });
-    window.addEventListener('resize', updateAskAiPosition);
-
-    updateAskAiPosition();
+    requestAnimationFrame(updateAskAiPosition);
   }
 
   // Ipakita ang one-time na tooltip 1.5 segundo pagka-login, itago pagkalipas ng 7 segundo o pag-click

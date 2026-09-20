@@ -397,6 +397,12 @@
   @media (max-width: 768px) {
     .review-card-body { grid-template-columns: 1fr; }
   }
+
+  /* ASK AI: subtle na paulit-ulit na pulse (3x lang) para mapansin agad */
+  @keyframes askAiPulse {
+    0%, 100% { transform: scale(1); box-shadow: 0 8px 20px rgba(0,0,0,0.25); }
+    50% { transform: scale(1.06); box-shadow: 0 8px 24px rgba(0,84,166,0.5); }
+  }
 </style>
 </head>
 <body>
@@ -961,6 +967,34 @@
 
 </main>
 
+<!-- ASK AI: floating help chat widget -->
+<button type="button" id="askAiFab" style="display:none; align-items:center; justify-content:center; gap:9px; position:fixed; bottom:24px; right:24px; height:54px; border-radius:27px; background:linear-gradient(135deg, var(--ph-blue) 0%, var(--ph-blue-dark) 100%); color:#fff; font-size:15px; font-weight:700; letter-spacing:0.2px; box-shadow:0 8px 24px rgba(0,84,166,0.4), 0 0 0 3px rgba(253,185,19,0.35); z-index:9998; margin:0; padding:0 22px; white-space:nowrap; width:auto; border:none; transition:bottom 0.08s linear, transform 0.15s ease; animation:askAiPulse 2.5s ease-in-out 3;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+  <span style="font-size:19px;">🤖</span> Ask AI
+</button>
+
+<div id="askAiTooltip" style="display:none; position:fixed; bottom:82px; right:24px; background:#fff; color:var(--ink); padding:10px 14px; border-radius:12px; border-bottom-right-radius:2px; box-shadow:0 8px 20px rgba(0,0,0,0.2); font-size:12px; max-width:210px; z-index:9997; transition:bottom 0.08s linear;">
+  👋 Need help using GAMOT? Click here to ask AI anytime!
+</div>
+
+<div id="askAiWindow" style="display:none; position:fixed; bottom:96px; right:24px; width:340px; max-width:calc(100vw - 32px); height:460px; max-height:calc(100vh - 140px); background:#fff; border-radius:16px; box-shadow:0 12px 32px rgba(0,0,0,0.25); z-index:9999; flex-direction:column; overflow:hidden; transition:bottom 0.08s linear;">
+  <div style="background:var(--ph-blue); color:#fff; padding:14px 16px; display:flex; justify-content:space-between; align-items:center;">
+    <div>
+      <div style="font-weight:700; font-size:14px;">🤖 Ask AI</div>
+      <div style="font-size:10px; color:#cfe0f0;">GAMOT Help Assistant</div>
+    </div>
+    <button type="button" id="askAiCloseBtn" style="width:auto; margin:0; background:transparent; padding:4px 8px; font-size:18px; box-shadow:none;">✕</button>
+  </div>
+  <div id="askAiMessages" style="flex:1; overflow-y:auto; padding:14px; display:flex; flex-direction:column; gap:10px; background:#f8fafc;">
+    <div style="background:#e8f0fb; color:var(--ink); padding:10px 12px; border-radius:12px; border-bottom-left-radius:2px; font-size:13px; max-width:85%; align-self:flex-start;">
+      Hi! I'm here to help you navigate GAMOT — how to encode, refile, use the Tracker, and more. I can't see any patient or claim data, so please ask general "how do I..." questions. How can I help?
+    </div>
+  </div>
+  <div style="padding:10px; border-top:1px solid var(--line); display:flex; gap:8px; align-items:flex-end;">
+    <textarea id="askAiInput" placeholder="Ask a question..." rows="1" style="flex:1; resize:none; border:1px solid #cbd5e1; border-radius:10px; padding:9px 12px; font-size:13px; font-family:inherit; max-height:80px;"></textarea>
+    <button type="button" id="askAiSendBtn" style="width:auto; margin:0; padding:10px 14px; background:var(--ph-blue);">➤</button>
+  </div>
+</div>
+
 <script>
   // ⚙️ SUPABASE CONFIG
   const SUPABASE_URL = "https://ukdiibumagfqngqkqmom.supabase.co";
@@ -1251,6 +1285,8 @@
     };
 
     resetInactivityTimers();
+    document.getElementById('askAiFab').style.display = 'flex';
+    showAskAiTooltipOnce();
 
     const thirdSegmentLabel = currentUser.account_type === 'PHARMACY' ? 'Pharmacy' : 'Department';
     document.getElementById('sessionText').innerHTML =
@@ -1360,6 +1396,11 @@
     }
 
     clearInactivityTimers();
+
+    document.getElementById('askAiFab').style.display = 'none';
+    document.getElementById('askAiWindow').style.display = 'none';
+    document.getElementById('askAiTooltip').style.display = 'none';
+    askAiTooltipShown = false;
 
     currentUser = { username: "", role: "", facility: "", branch: "", id_no: "", account_type: "", accreditation_no: "" };
     document.getElementById('sessionText').innerText = "";
@@ -4577,6 +4618,144 @@
     loadReviewSubmissions();
   }
   window.resolveSubmission = resolveSubmission;
+
+  // ---------- ASK AI: floating help chat widget ----------
+  let askAiHistory = [];
+  let askAiOpen = false;
+  let askAiTooltipShown = false;
+
+  document.getElementById('askAiFab').addEventListener('click', function() {
+    askAiOpen = !askAiOpen;
+    document.getElementById('askAiWindow').style.display = askAiOpen ? 'flex' : 'none';
+    document.getElementById('askAiTooltip').style.display = 'none';
+    if (askAiOpen) document.getElementById('askAiInput').focus();
+  });
+
+  document.getElementById('askAiCloseBtn').addEventListener('click', function() {
+    askAiOpen = false;
+    document.getElementById('askAiWindow').style.display = 'none';
+  });
+
+  // I-hindi matakpan ang footer: palaging tumpak, gamit ang scroll position (hindi IntersectionObserver dahil hindi ito tuluy-tuloy mag-update)
+  const footerEl = document.querySelector('footer.footer-gamot');
+  if (footerEl) {
+    let footerCheckTicking = false;
+
+    function updateAskAiPosition() {
+      footerCheckTicking = false;
+      const footerRect = footerEl.getBoundingClientRect();
+      const viewportHeight = window.innerHeight;
+      const fab = document.getElementById('askAiFab');
+      const win = document.getElementById('askAiWindow');
+      const tooltip = document.getElementById('askAiTooltip');
+
+      // Gaano karaming footer ang "sumasagabal" sa ibaba ng screen ngayon
+      const overlapIntoFooter = viewportHeight - footerRect.top;
+
+      if (overlapIntoFooter > 0) {
+        const clearance = overlapIntoFooter + 28;
+        fab.style.bottom = clearance + 'px';
+        win.style.bottom = (clearance + 72) + 'px';
+        tooltip.style.bottom = (clearance + 58) + 'px';
+      } else {
+        fab.style.bottom = '24px';
+        win.style.bottom = '96px';
+        tooltip.style.bottom = '82px';
+      }
+    }
+
+    window.addEventListener('scroll', function() {
+      if (!footerCheckTicking) {
+        footerCheckTicking = true;
+        requestAnimationFrame(updateAskAiPosition);
+      }
+    }, { passive: true });
+    window.addEventListener('resize', updateAskAiPosition);
+
+    updateAskAiPosition();
+  }
+
+  // Ipakita ang one-time na tooltip 1.5 segundo pagka-login, itago pagkalipas ng 7 segundo o pag-click
+  function showAskAiTooltipOnce() {
+    if (askAiTooltipShown) return;
+    askAiTooltipShown = true;
+    setTimeout(function() {
+      document.getElementById('askAiTooltip').style.display = 'block';
+      setTimeout(function() {
+        document.getElementById('askAiTooltip').style.display = 'none';
+      }, 7000);
+    }, 1500);
+  }
+
+
+  function appendAskAiMessage(text, isUser) {
+    const messagesEl = document.getElementById('askAiMessages');
+    const bubble = document.createElement('div');
+    bubble.style.cssText = isUser
+      ? 'background:var(--ph-blue); color:#fff; padding:10px 12px; border-radius:12px; border-bottom-right-radius:2px; font-size:13px; max-width:85%; align-self:flex-end; white-space:pre-wrap;'
+      : 'background:#e8f0fb; color:var(--ink); padding:10px 12px; border-radius:12px; border-bottom-left-radius:2px; font-size:13px; max-width:85%; align-self:flex-start; white-space:pre-wrap;';
+    bubble.textContent = text;
+    messagesEl.appendChild(bubble);
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+    return bubble;
+  }
+
+  async function sendAskAiMessage() {
+    const input = document.getElementById('askAiInput');
+    const message = input.value.trim();
+    if (!message) return;
+
+    const sendBtn = document.getElementById('askAiSendBtn');
+    input.value = '';
+    input.disabled = true;
+    sendBtn.disabled = true;
+
+    appendAskAiMessage(message, true);
+    const thinkingBubble = appendAskAiMessage('Typing...', false);
+
+    try {
+      const res = await fetch("https://ukdiibumagfqngqkqmom.supabase.co/functions/v1/ask-gamot-ai", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer " + SUPABASE_KEY,
+          "apikey": SUPABASE_KEY
+        },
+        body: JSON.stringify({
+          username: currentUser.username,
+          message: message,
+          history: askAiHistory
+        })
+      });
+
+      const result = await res.json();
+
+      thinkingBubble.remove();
+
+      if (!result.success) {
+        appendAskAiMessage('⚠ ' + (result.error || 'Something went wrong. Please try again.'), false);
+      } else {
+        appendAskAiMessage(result.answer, false);
+        askAiHistory.push({ role: 'user', text: message });
+        askAiHistory.push({ role: 'model', text: result.answer });
+      }
+    } catch (err) {
+      thinkingBubble.remove();
+      appendAskAiMessage('⚠ Network error. Please try again.', false);
+    }
+
+    input.disabled = false;
+    sendBtn.disabled = false;
+    input.focus();
+  }
+
+  document.getElementById('askAiSendBtn').addEventListener('click', sendAskAiMessage);
+  document.getElementById('askAiInput').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendAskAiMessage();
+    }
+  });
 </script>
 
 <footer class="footer-gamot">

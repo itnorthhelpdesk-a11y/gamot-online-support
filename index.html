@@ -502,11 +502,12 @@
           <input type="text" id="regFacility">
         </div>
         <div id="regDepartmentWrap" style="display:none;">
-          <label for="regDepartment">PhilHealth Department</label>
+          <label for="regDepartment">Position</label>
           <select id="regDepartment">
-            <option value="">-- Select Department --</option>
+            <option value="">-- Select Position --</option>
             <option value="GAMOT Processor">GAMOT Processor</option>
             <option value="Accounting">Accounting</option>
+            <option value="YAKAP IT">YAKAP IT</option>
           </select>
         </div>
         <div>
@@ -1325,7 +1326,7 @@
     document.getElementById('askAiFab').style.display = 'flex';
     showAskAiTooltipOnce();
 
-    const thirdSegmentLabel = currentUser.account_type === 'PHARMACY' ? 'Pharmacy' : 'Department';
+    const thirdSegmentLabel = currentUser.account_type === 'PHARMACY' ? 'Pharmacy' : 'Position';
     document.getElementById('sessionText').innerHTML =
       '<div class="session-segment"><span class="seg-label">Branch</span><span class="seg-value">' + (currentUser.branch || '—') + '</span></div>' +
       '<span class="session-divider">|</span>' +
@@ -3640,14 +3641,17 @@
     if (viewingType === 'STAFF') {
       let rows = pageData.map(function(u) {
         const isBranchAdmin = u.role === 'BRANCH_ADMIN';
+        const isYakapIT = (u.facility || '').toUpperCase() === 'YAKAP IT';
         const btnLabel = isBranchAdmin ? 'Revoke Branch Admin' : 'Make Branch Admin';
         const btnColor = isBranchAdmin ? 'var(--amber)' : 'var(--ok)';
         const isActive = u.status !== 'DEACTIVATED';
         const activeBtnLabel = isActive ? 'Deactivate' : 'Reactivate';
         const activeBtnColor = isActive ? '#dc2626' : 'var(--ok)';
 
-        // Ang promote/revoke ay EKSKLUSIBO lang sa global ADMIN, hindi BRANCH_ADMIN
-        const adminActionBtn = (currentUser.role === 'ADMIN')
+        // Ang promote/revoke ay EKSKLUSIBO lang sa global ADMIN, hindi BRANCH_ADMIN.
+        // Ang "Make Branch Admin" ay makikita lang kung YAKAP IT ang department (napagkasunduan sa PhilHealth).
+        // Ang "Revoke" ay palaging makikita kung existing Branch Admin na (kahit legacy, di-YAKAP IT na naitalaga bago ang patakarang ito).
+        const adminActionBtn = (currentUser.role === 'ADMIN' && (isBranchAdmin || isYakapIT))
           ? '<button type="button" style="width:auto; margin:0 4px 4px 0; padding:6px 12px; font-size:12px; background:' + btnColor + ';" ' +
               'onclick="toggleBranchAdmin(\'' + u.username + '\', ' + !isBranchAdmin + ')">' + btnLabel + '</button>'
           : '';

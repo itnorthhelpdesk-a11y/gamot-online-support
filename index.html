@@ -2467,6 +2467,8 @@
     document.getElementById('autofillDocument').value = '';
     document.getElementById('autofillDocument2').value = '';
     document.getElementById('autofillMsg').style.display = 'none';
+    // PRO Region ay dapat manatiling naka-lock sa branch ng account (hindi dapat mawala pagkatapos ng save)
+    document.getElementById('proRegion').value = currentUser.branch;
   });
 
   // ---------- REFILE: SEARCH GATN ----------

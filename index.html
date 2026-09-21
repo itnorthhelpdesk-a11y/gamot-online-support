@@ -2964,11 +2964,7 @@
     const container = document.getElementById('pendingStaffList');
     container.innerHTML = '<p style="font-size:13px; color:var(--muted);">Loading...</p>';
 
-    console.log('loadPendingStaff debug — accreditation_no being sent:', JSON.stringify(currentUser.accreditation_no));
-
     const { data, error } = await sb.rpc('get_pending_pharmacy_staff', { p_accreditation_no: currentUser.accreditation_no });
-
-    console.log('loadPendingStaff debug — result:', { data: data, error: error });
 
     if (error) {
       container.innerHTML = '<p style="font-size:13px; color:#a02b1f;">Error loading pending staff.</p>';

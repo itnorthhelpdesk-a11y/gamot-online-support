@@ -786,6 +786,10 @@
         <option value="REFILED">REFILED</option>
         <option value="RESOLVED">RESOLVED</option>
       </select>
+      <label style="display:flex; align-items:center; gap:8px; margin:10px 0 16px; font-weight:600; cursor:pointer;">
+        <input type="checkbox" id="historyOverdueOnly" style="width:auto; margin:0;">
+        ⏰ Show Overdue Only (RTF records past the 60-day compliance deadline)
+      </label>
       <div style="display:flex; gap:10px;">
         <button type="button" id="historySearchBtn" style="margin-top:22px; flex:1;">Search</button>
         <button type="button" id="historyDownloadBtn" style="margin-top:22px; flex:1; background:var(--ok);">⬇ Download CSV</button>
@@ -841,6 +845,10 @@
           <input type="text" id="adminHistAccredFilter" placeholder="Leave blank for all facilities">
         </div>
       </div>
+      <label style="display:flex; align-items:center; gap:8px; margin:10px 0 16px; font-weight:600; cursor:pointer;">
+        <input type="checkbox" id="adminHistOverdueOnly" style="width:auto; margin:0;">
+        ⏰ Show Overdue Only (RTF records past the 60-day compliance deadline)
+      </label>
       <div style="display:flex; gap:10px;">
         <button type="button" id="adminHistSearchBtn" style="margin-top:22px; flex:1;">Search</button>
         <button type="button" id="adminHistDownloadBtn" style="margin-top:22px; flex:1; background:var(--ok);">⬇ Download CSV</button>
@@ -949,7 +957,11 @@
       </label>
       <input type="text" id="gamotTrackerSearch" placeholder="Search by GATN, GACN, or Accreditation No..." style="margin-bottom:16px;">
       <div id="gamotTrackerList"><p style="font-size:13px; color:var(--muted);">Loading...</p></div>
-      <button type="button" id="gamotTrackerDownloadBtn" style="margin-top:16px; background:var(--ok);">⬇ Download CSV</button>
+      <div style="display:flex; gap:10px; margin-top:16px;">
+        <button type="button" id="gamotTrackerDownloadBtn" style="background:var(--ok); flex:1;">⬇ Download CSV</button>
+        <button type="button" id="importNewGacnBtn" style="background:var(--gold); color:var(--ph-blue-dark); flex:1;">📤 Import New GACN (PDF)</button>
+      </div>
+      <input type="file" id="newGacnPdfInput" accept="application/pdf" style="display:none;">
     </div>
 
     <!-- ANALYTICS DASHBOARD -->
@@ -1153,6 +1165,121 @@
       await loadScriptOnce('https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js');
     }
   }
+
+  // ---------- NEW GACN PDF IMPORT (mula sa PhilHealth Head Office) ----------
+  async function ensurePdfJsLoaded() {
+    if (!window.pdfjsLib) {
+      await loadScriptOnce('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js');
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    }
+  }
+
+  async function extractTextFromPdf(file) {
+    await ensurePdfJsLoaded();
+    const arrayBuffer = await file.arrayBuffer();
+    const pdf = await window.pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+    let fullText = '';
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i);
+      const content = await page.getTextContent();
+      fullText += content.items.map(function(it) { return it.str; }).join(' ') + '\n';
+    }
+    return fullText;
+  }
+
+  function parseNewGacnPdfText(text) {
+    // Sadyang STRIKTO ito (walang tolerance sa internal whitespace) — kung mag-mismatch dahil
+    // nahati ang isang numero, mas ligtas na MAKALIGTAAN natin ito (makikita sa preview bago i-confirm)
+    // kaysa tahimik na magsanib ito sa katabing PIN number at bumuo ng maling GATN.
+    const gacnMatch = text.match(/GACN\s*No\.?\s*:?\s*(GACN\d{6,12})/i);
+    const newGacnNo = gacnMatch ? gacnMatch[1].toUpperCase() : null;
+
+    const gatnMatches = text.match(/GATN\d{6,12}/gi) || [];
+    const gatnList = Array.from(new Set(gatnMatches.map(function(g) { return g.toUpperCase(); })));
+
+    return { newGacnNo, gatnList };
+  }
+
+  document.getElementById('importNewGacnBtn').addEventListener('click', function() {
+    document.getElementById('newGacnPdfInput').click();
+  });
+
+  document.getElementById('newGacnPdfInput').addEventListener('change', async function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    e.target.value = ''; // para pwedeng piliin ulit ang parehong file sa susunod
+
+    Swal.fire({
+      title: 'Reading PDF...',
+      html: 'Please wait while we extract the GACN and GATN details.',
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+      didOpen: function() { Swal.showLoading(); }
+    });
+
+    let text;
+    try {
+      text = await extractTextFromPdf(file);
+    } catch (err) {
+      Swal.fire('Error', 'Could not read this PDF file: ' + err.message, 'error');
+      return;
+    }
+
+    const { newGacnNo, gatnList } = parseNewGacnPdfText(text);
+
+    if (!newGacnNo || gatnList.length === 0) {
+      Swal.fire('Could Not Parse PDF', 'We could not find a GACN No. and/or GATN list in this PDF. Please check that this is the correct Head Office report.', 'warning');
+      return;
+    }
+
+    const gatnRowsHtml = gatnList.map(function(g) {
+      return '<div style="padding:4px 0; font-size:12px; border-bottom:1px solid #f1f5f9;">' + g + '</div>';
+    }).join('');
+
+    const confirmResult = await Swal.fire({
+      title: 'Confirm New GACN Assignment',
+      html: 'New GACN No.: <b>' + newGacnNo + '</b><br>' +
+            'Found <b>' + gatnList.length + '</b> GATN(s) in this report:' +
+            '<div style="max-height:220px; overflow-y:auto; text-align:left; margin-top:10px; border:1px solid #e2e8f0; border-radius:8px; padding:8px 12px;">' + gatnRowsHtml + '</div>' +
+            '<p style="font-size:12px; color:#64748b; margin-top:10px;">This will mark all GATN(s) above with this new GACN, while keeping their original GACN visible as reference. The assigned pharmacy will see a notification badge.</p>',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Confirm & Assign',
+      cancelButtonText: 'Cancel',
+      confirmButtonColor: '#0054a6',
+      width: 480
+    });
+
+    if (!confirmResult.isConfirmed) return;
+
+    Swal.fire({
+      title: 'Assigning New GACN...',
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+      didOpen: function() { Swal.showLoading(); }
+    });
+
+    const { data, error } = await sb.rpc('assign_new_gacn_batch', {
+      p_gatn_list: gatnList,
+      p_new_gacn_no: newGacnNo,
+      p_performed_by: currentUser.username
+    });
+
+    if (error || !data.success) {
+      Swal.fire('Error', error ? error.message : 'Something went wrong.', 'error');
+      return;
+    }
+
+    let resultHtml = '<b>' + data.updated_count + '</b> GATN(s) successfully updated with New GACN <b>' + newGacnNo + '</b>.';
+    if (data.not_found && data.not_found.length > 0) {
+      resultHtml += '<br><br><span style="color:#dc2626;">' + data.not_found.length + ' GATN(s) were not found in the system:</span><br>' +
+        '<div style="font-size:12px; margin-top:6px;">' + data.not_found.join(', ') + '</div>';
+    }
+
+    Swal.fire({ title: 'Done', html: resultHtml, icon: 'success' });
+
+    if (typeof loadGamotTracker === 'function') loadGamotTracker();
+  });
 
   // ---------- MULTI-FILE UPLOAD: i-merge ang hanggang 5 files (JPG/PNG/PDF) papuntang isang PDF ----------
   const MAX_MERGE_FILES = 5;
@@ -2840,10 +2967,13 @@
       const returnNote = r.review_remarks
         ? '<br><span style="color:#dc2626; font-size:11px; font-weight:700;">↺ Returned: ' + r.review_remarks + '</span>'
         : '';
+      const newGacnBadge = r.new_gacn_no
+        ? '<br><span style="display:inline-block; margin-top:4px; background:#fef3c7; color:#92400e; font-size:10px; font-weight:800; padding:2px 8px; border-radius:10px;">🔔 New GACN: ' + r.new_gacn_no + '</span>'
+        : '';
       return '<tr class="urgency-row ' + urgency + '">' +
         '<td><span class="urgency-badge ' + urgency + '">' + (urgencyLabels[urgency] || urgency) + '</span></td>' +
         '<td>' + r.gatn_no + '</td>' +
-        '<td>' + r.gacn_no + '</td>' +
+        '<td>' + r.gacn_no + newGacnBadge + '</td>' +
         '<td>' + (r.issue_category || '').replace(/_/g, ' ') + '<br><span style="color:var(--muted); font-size:11px;">' + r.specific_issue + '</span>' + returnNote + '</td>' +
         '<td>' + deadline + '</td>' +
         '</tr>';
@@ -2889,8 +3019,21 @@
 
     lastHistoryData = data || [];
     pharmacyHistoryPageNum = 1;
-    renderPharmacyHistoryList(lastHistoryData);
+    applyPharmacyHistOverdueFilter();
   }
+
+  let currentPharmacyHistoryFiltered = [];
+
+  function applyPharmacyHistOverdueFilter() {
+    pharmacyHistoryPageNum = 1;
+    const overdueOnly = document.getElementById('historyOverdueOnly').checked;
+    currentPharmacyHistoryFiltered = lastHistoryData.filter(function(r) {
+      return !overdueOnly || isRecordOverdue(r);
+    });
+    renderPharmacyHistoryList(currentPharmacyHistoryFiltered);
+  }
+
+  document.getElementById('historyOverdueOnly').addEventListener('change', applyPharmacyHistOverdueFilter);
 
   let pharmacyHistoryPageNum = 1;
 
@@ -2907,10 +3050,13 @@
     let rows = pageData.map(function(r) {
       const created = r.created_at ? new Date(r.created_at).toLocaleDateString() : '—';
       const deadline = r.compliance_deadline ? new Date(r.compliance_deadline).toLocaleDateString() : '—';
+      const newGacnBadge = r.new_gacn_no
+        ? '<br><span style="display:inline-block; margin-top:4px; background:#fef3c7; color:#92400e; font-size:10px; font-weight:800; padding:2px 8px; border-radius:10px;">🔔 New GACN: ' + r.new_gacn_no + '</span>'
+        : '';
       return '<tr>' +
         '<td>' + created + '</td>' +
         '<td>' + r.gatn_no + '</td>' +
-        '<td>' + r.gacn_no + '</td>' +
+        '<td>' + r.gacn_no + newGacnBadge + '</td>' +
         '<td>' + (r.issue_category || '').replace(/_/g, ' ') + '<br><span style="color:var(--muted); font-size:11px;">' + r.specific_issue + '</span></td>' +
         '<td><span class="status-pill ' + r.status + '">' + r.status + '</span></td>' +
         '<td>' + deadline + '</td>' +
@@ -2926,7 +3072,7 @@
 
   function goToPharmacyHistoryPage(p) {
     pharmacyHistoryPageNum = p;
-    renderPharmacyHistoryList(lastHistoryData);
+    renderPharmacyHistoryList(currentPharmacyHistoryFiltered);
   }
   window.goToPharmacyHistoryPage = goToPharmacyHistoryPage;
 
@@ -2934,14 +3080,14 @@
 
   // ---------- HISTORY: DOWNLOAD AS CSV ----------
   function downloadHistoryCSV() {
-    if (!lastHistoryData || lastHistoryData.length === 0) {
+    if (!currentPharmacyHistoryFiltered || currentPharmacyHistoryFiltered.length === 0) {
       Swal.fire('No data', 'Please search for records first before downloading.', 'info');
       return;
     }
 
     const headers = ['Date', 'GATN', 'GACN', 'Issue Category', 'Specific Issue', 'Required Resolution', 'Status', 'RTF Date', 'Compliance Deadline', 'Refile Timestamp'];
 
-    const rows = lastHistoryData.map(function(r) {
+    const rows = currentPharmacyHistoryFiltered.map(function(r) {
       const created = r.created_at ? new Date(r.created_at).toLocaleDateString() : '';
       const rtf = r.rtf_date ? new Date(r.rtf_date).toLocaleDateString() : '';
       const deadline = r.compliance_deadline ? new Date(r.compliance_deadline).toLocaleDateString() : '';
@@ -3299,8 +3445,21 @@
 
     lastAdminHistoryData = data || [];
     adminHistoryPageNum = 1;
-    renderAdminHistoryList(lastAdminHistoryData);
+    applyAdminHistOverdueFilter();
   }
+
+  let currentAdminHistoryFiltered = [];
+
+  function applyAdminHistOverdueFilter() {
+    adminHistoryPageNum = 1;
+    const overdueOnly = document.getElementById('adminHistOverdueOnly').checked;
+    currentAdminHistoryFiltered = lastAdminHistoryData.filter(function(r) {
+      return !overdueOnly || isRecordOverdue(r);
+    });
+    renderAdminHistoryList(currentAdminHistoryFiltered);
+  }
+
+  document.getElementById('adminHistOverdueOnly').addEventListener('change', applyAdminHistOverdueFilter);
 
   let adminHistoryPageNum = 1;
 
@@ -3343,7 +3502,7 @@
 
   function goToAdminHistoryPage(p) {
     adminHistoryPageNum = p;
-    renderAdminHistoryList(lastAdminHistoryData);
+    renderAdminHistoryList(currentAdminHistoryFiltered);
   }
   window.goToAdminHistoryPage = goToAdminHistoryPage;
 
@@ -3457,14 +3616,14 @@
   document.getElementById('adminHistSearchBtn').addEventListener('click', searchAdminHistory);
 
   function downloadAdminHistoryCSV() {
-    if (!lastAdminHistoryData || lastAdminHistoryData.length === 0) {
+    if (!currentAdminHistoryFiltered || currentAdminHistoryFiltered.length === 0) {
       Swal.fire('No data', 'Please search for records first before downloading.', 'info');
       return;
     }
 
     const headers = ['Date', 'Facility Accreditation No.', 'GATN', 'GACN', 'Issue Category', 'Specific Issue', 'Required Resolution', 'Claimant Name', 'Contact No.', 'Status', 'RTF Date', 'Compliance Deadline', 'Refile Timestamp'];
 
-    const rows = lastAdminHistoryData.map(function(r) {
+    const rows = currentAdminHistoryFiltered.map(function(r) {
       const created = r.created_at ? new Date(r.created_at).toLocaleDateString() : '';
       const rtf = r.rtf_date ? new Date(r.rtf_date).toLocaleDateString() : '';
       const deadline = r.compliance_deadline ? new Date(r.compliance_deadline).toLocaleDateString() : '';
@@ -3486,14 +3645,14 @@
 
   // ---------- ADMIN: DOWNLOAD ANNEX B FORMAT (NO, PRO, GACN, GATN, ISSUE CATEGORY, SPECIFIC ISSUE) ----------
   function downloadAnnexBFormat() {
-    if (!lastAdminHistoryData || lastAdminHistoryData.length === 0) {
+    if (!currentAdminHistoryFiltered || currentAdminHistoryFiltered.length === 0) {
       Swal.fire('No data', 'Please search for records first before downloading.', 'info');
       return;
     }
 
     const headers = ['NO', 'PRO', 'GACN', 'GATN', 'ISSUE CATEGORY', 'SPECIFIC ISSUE'];
 
-    const rows = lastAdminHistoryData.map(function(r, index) {
+    const rows = currentAdminHistoryFiltered.map(function(r, index) {
       return [
         index + 1,
         r.pro_region || '',
@@ -4329,12 +4488,15 @@
       const displayActionTaken = (r.tracker_action_taken !== null && r.tracker_action_taken !== undefined && r.tracker_action_taken !== '') ? r.tracker_action_taken : (r.required_resolution || '—');
       const isPaid = r.paid === true;
       const overdueClass = isRecordOverdue(r) ? 'urgency-row OVERDUE' : '';
+      const newGacnBadge = r.new_gacn_no
+        ? '<br><span style="display:inline-block; margin-top:2px; background:#fef3c7; color:#92400e; font-size:9px; font-weight:800; padding:2px 6px; border-radius:8px; white-space:nowrap;">🔔 ' + r.new_gacn_no + '</span>'
+        : '';
 
       return '<tr class="' + overdueClass + '">' +
         '<td>' + (startNo + idx + 1) + '</td>' +
         '<td>' + (r.facility_accreditation_no || '—') + '</td>' +
         '<td>' + (r.facility || '—') + '</td>' +
-        '<td>' + (r.gacn_no || '—') + '</td>' +
+        '<td>' + (r.gacn_no || '—') + newGacnBadge + '</td>' +
         '<td>' + (r.gatn_no || '—') + (isRecordOverdue(r) ? ' <span class="urgency-badge OVERDUE">⚠ OVERDUE</span>' : '') + '</td>' +
         '<td>' + (r.claim_amount != null ? r.claim_amount : '—') + '</td>' +
         '<td>' + (r.issue_category || '').replace(/_/g, ' ') + '</td>' +

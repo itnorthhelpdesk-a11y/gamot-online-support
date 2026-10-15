@@ -801,6 +801,21 @@
     /* Teksto sa loob ng button: babalot nang maayos sa halip na maipit */
     button { white-space: normal; line-height: 1.25; }
 
+    /* Tab strip: HINDI nakadikit sa cellphone (sasama sa scroll) para hindi matakpan ang form */
+    .sidebar { position: relative; top: auto; }
+    .sidebar button { white-space: nowrap; }
+
+    /* Ask AI: maliit na bilog na button lang; walang tooltip na tumatakip sa mga button */
+    #askAiFab {
+      width: 52px !important; height: 52px !important; padding: 0 !important; font-size: 0 !important;
+      bottom: 16px !important; right: 16px !important; gap: 0 !important;
+    }
+    #askAiFab span { font-size: 22px !important; }
+    #askAiTooltip { display: none !important; }
+
+    /* Espasyo sa ibaba para hindi matakpan ng Ask AI button ang huling button ng form */
+    main, main.wide { padding-bottom: 96px; }
+
     /* Iwas zoom sa iPhone kapag nagta-type (kailangan ng 16px pataas) */
     input, select, textarea { font-size: 16px; }
   }

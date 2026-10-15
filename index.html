@@ -810,6 +810,39 @@
     .gamot-tagline { font-size: 0.8rem; padding: 4px 18px; }
   }
 
+  /* ========================================================================
+     PERFORMANCE MODE (cellphone, tablet, at touch devices): parehong kulay at
+     itsura, pero walang mabibigat na epekto para hindi mag-lag habang nag-i-scroll.
+     Nasa desktop pa rin ang buong glass design.
+     ======================================================================== */
+  @media (max-width: 1024px), (hover: none) {
+    /* Walang blur: halos solid na puting salamin */
+    .card, .sidebar, header, .footer-gamot, .data-table-wrap,
+    .analytics-stat-card, .analytics-chart-box, .urgency-legend, .egos-loader, .egos-loader-box,
+    #loginSection, #registerSection, #forgotPasswordSection, #resetPasswordSection {
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+    }
+    .card, .sidebar, #loginSection, #registerSection, #forgotPasswordSection, #resetPasswordSection {
+      background: rgba(255, 255, 255, 0.94) !important;
+      box-shadow: 0 6px 18px rgba(30, 58, 138, 0.10) !important;
+    }
+    .egos-loader { background: rgba(245, 247, 250, 0.96); }
+    header { background: linear-gradient(90deg, #1e3a8a 0%, #3b82f6 50%, #4f46e5 100%); }
+    header .session { backdrop-filter: none; -webkit-backdrop-filter: none; }
+
+    /* Ilaw sa likod: nandoon pa rin pero hindi gumagalaw at mas magaan ang blur */
+    body::before, body::after { animation: none !important; filter: blur(40px); opacity: .35; }
+
+    /* Watermark: hiwalay na layer para hindi i-repaint habang nag-i-scroll */
+    .watermark-wrap { will-change: transform; contain: strict; }
+
+    /* Walang paulit-ulit na animation habang nag-i-scroll */
+    .urgency-badge.OVERDUE, .status-pill.FOR_MR { animation: none !important; }
+    .card { animation-duration: .2s; }
+    .card:hover, .analytics-stat-card:hover, .promo-banner-btn:hover { transform: none; }
+  }
+
   /* Para sa mga user na naka-off ang animation sa computer nila */
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation: none !important; transition: none !important; }

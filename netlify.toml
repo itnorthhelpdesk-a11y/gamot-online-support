@@ -1,0 +1,8 @@
+# Netlify: index.html LANG ang ipa-publish sa website.
+# Ang sql/, CLAUDE.md at iba pang file sa repo ay para sa developers lang
+# at hindi na makikita sa live site (anumang capitalization ng URL).
+# Kapag nagdagdag ng bagong file na kailangan sa website (hal. larawan),
+# idagdag ito sa `cp` command sa ibaba.
+[build]
+  publish = "dist"
+  command = "rm -rf dist && mkdir dist && cp index.html dist/"

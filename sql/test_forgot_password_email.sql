@@ -4,6 +4,6 @@
 -- Mabubura ito ng test_accounts_cleanup.sql (kasama ang TESTEGOS-STAFF).
 -- =====================================================================
 
-UPDATE users SET email = 'itnorthhelpdesk@gmail.com' WHERE username = 'TESTEGOS-STAFF';
+UPDATE users SET email = 'itnorthhelpdesk@gmail.com' WHERE username IN ('TESTEGOS-STAFF', 'TESTEGOS-PHARMA');
 
-SELECT username, email FROM users WHERE username = 'TESTEGOS-STAFF';
+SELECT username, email FROM users WHERE username IN ('TESTEGOS-STAFF', 'TESTEGOS-PHARMA');

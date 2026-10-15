@@ -35,6 +35,11 @@ WHERE a.performed_by_username ILIKE 'TESTEGOS%'
 -- ---------- BURAHIN ----------
 BEGIN;
 
+-- Payagan ang pagbura ng DENIED test records (frozen ang DENIED; sa transaction na ito lang)
+SELECT set_config('egos.allow_denied_change', 'on', true);
+
+DELETE FROM mr_notice_queue WHERE gatn_no ILIKE 'TESTEGOS%';
+
 DELETE FROM audit_trail
   WHERE gatn_no ILIKE 'TESTEGOS%' OR performed_by_username ILIKE 'TESTEGOS%';
 DELETE FROM account_audit_trail

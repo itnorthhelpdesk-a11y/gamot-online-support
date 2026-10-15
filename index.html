@@ -760,8 +760,10 @@
   }
   .login-tab {
     margin: 0; padding: 10px 8px; border-radius: 11px; background: transparent; color: var(--muted);
-    font-size: 12.5px; font-weight: 800; text-transform: none; letter-spacing: .1px; box-shadow: none;
-    white-space: nowrap; transition: background .2s ease, color .2s ease, box-shadow .2s ease;
+    font-family: 'Fredoka', 'Nunito', sans-serif; font-size: 15px; font-weight: 600; letter-spacing: .3px;
+    text-transform: none; box-shadow: none; white-space: nowrap;
+    display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+    transition: background .2s ease, color .2s ease, box-shadow .2s ease;
   }
   .login-tab:hover:not(.active) { background: rgba(255, 255, 255, 0.6); color: var(--ph-blue-dark); transform: none; box-shadow: none; }
   .login-tab.active {
@@ -778,8 +780,8 @@
   #loginSection.login-pharmacy input:focus { border-color: #f59e0b; box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.15); }
   #loginSection.login-pharmacy::before { background: linear-gradient(90deg, transparent, #f59e0b, var(--gold), transparent); }
 
-  @media (max-width: 380px) {
-    .login-tab { font-size: 11.5px; padding: 9px 4px; }
+  @media (max-width: 420px) {
+    .login-tab { font-size: 13px; padding: 9px 4px; gap: 5px; }
   }
 
   /* ========================================================================

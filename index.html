@@ -1032,7 +1032,32 @@
   // ⚙️ SUPABASE CONFIG
   const SUPABASE_URL = "https://ukdiibumagfqngqkqmom.supabase.co";
   const SUPABASE_KEY = "sb_publishable_kTDrhXTzmYq2yvXPgrdfiw_QmhoKXwQ";
-  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  const sbPublic = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  // Bago mag-login: sbPublic. Pagkatapos mag-login: client na may session token (tingnan ang createSessionClient).
+  let sb = sbPublic;
+
+  // ---------- SESSION CLIENT: ipinapadala ang session token sa bawat tawag (header na x-egos-session) ----------
+  // Ang server ang tumitingin sa token para malaman kung sino ang user, anong role, at anong branch.
+  function createSessionClient(token) {
+    const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+      global: { headers: { 'x-egos-session': token } },
+      auth: { persistSession: false, autoRefreshToken: false }
+    });
+    const originalRpc = client.rpc.bind(client);
+    client.rpc = function(fn, args, options) {
+      return originalRpc(fn, args, options).then(function(res) {
+        const errMsg = (res.error && res.error.message) || '';
+        if (errMsg.indexOf('SESSION_EXPIRED') !== -1) {
+          res.error.message = 'Your session has expired. Please log in again.';
+          if (currentUser.username) performLogout();
+        } else if (errMsg.indexOf('NOT_AUTHORIZED') !== -1) {
+          res.error.message = 'You are not authorized to perform this action.';
+        }
+        return res;
+      });
+    };
+    return client;
+  }
 
   // 🎨 WATERMARK PATTERN GENERATOR (repeating tiled background)
   (function generateWatermark() {
@@ -1046,7 +1071,7 @@
     wrap.innerHTML = html;
   })();
 
-  let currentUser = { username: "", role: "", facility: "", branch: "", id_no: "", account_type: "" };
+  let currentUser = { username: "", token: "", role: "", facility: "", branch: "", id_no: "", account_type: "" };
 
   // ---------- SESSION TIMEOUT: auto-logout pagkatapos ng ilang minutong walang aktibidad ----------
   const INACTIVITY_TIMEOUT_MS = 30 * 60 * 1000; // 30 minuto
@@ -1441,6 +1466,7 @@
 
     currentUser = {
       username: username.toUpperCase(),
+      token: data.token || "",
       role: data.role,
       facility: data.facility,
       branch: data.branch,
@@ -1448,6 +1474,10 @@
       account_type: data.account_type,
       accreditation_no: data.accreditation_no
     };
+
+    if (currentUser.token) {
+      sb = createSessionClient(currentUser.token);
+    }
 
     resetInactivityTimers();
     document.getElementById('askAiFab').style.display = 'flex';
@@ -1552,6 +1582,12 @@
 
   // ---------- LOGOUT ----------
   function performLogout() {
+    // Patayin ang session token sa server (hindi na hinihintay ang sagot)
+    if (currentUser.token) {
+      sb.rpc('logout', { p_token: currentUser.token }).then(function() {}, function() {});
+    }
+    sb = sbPublic;
+
     sessionStorage.removeItem('draft_searchGatn');
     sessionStorage.removeItem('draft_refileNotes');
 
@@ -1567,7 +1603,7 @@
     document.getElementById('askAiTooltip').style.display = 'none';
     askAiTooltipShown = false;
 
-    currentUser = { username: "", role: "", facility: "", branch: "", id_no: "", account_type: "", accreditation_no: "" };
+    currentUser = { username: "", token: "", role: "", facility: "", branch: "", id_no: "", account_type: "", accreditation_no: "" };
     document.getElementById('sessionText').innerText = "";
     document.getElementById('logoutBtn').style.display = 'none';
     document.getElementById('mainSection').style.display = 'none';

@@ -661,6 +661,57 @@
   }
 
   /* ========================================================================
+     LOGIN LOADING SCREEN: kapsula ng gamot (asul = PhilHealth, dilaw = GAMOT)
+     ======================================================================== */
+  .egos-loader {
+    position: fixed; inset: 0; z-index: 9999; display: flex; align-items: center; justify-content: center;
+    background: rgba(245, 247, 250, 0.55);
+    backdrop-filter: blur(16px) saturate(140%); -webkit-backdrop-filter: blur(16px) saturate(140%);
+    opacity: 0; visibility: hidden; transition: opacity .3s ease, visibility .3s ease;
+  }
+  .egos-loader.show { opacity: 1; visibility: visible; }
+  .egos-loader-box {
+    text-align: center; padding: 36px 48px 30px; border-radius: 28px; min-width: 300px;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.6));
+    border: 1px solid rgba(255, 255, 255, 0.85);
+    box-shadow: 0 30px 60px -15px rgba(30, 58, 138, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.95);
+    transform: scale(.96); transition: transform .3s ease;
+  }
+  .egos-loader.show .egos-loader-box { transform: scale(1); }
+
+  .egos-capsule {
+    width: 78px; height: 32px; margin: 4px auto 0; display: flex; border-radius: 20px; overflow: hidden;
+    box-shadow: 0 8px 18px rgba(0, 84, 166, 0.3), inset 0 2px 0 rgba(255, 255, 255, 0.4);
+    animation: egosCapsule 1.6s ease-in-out infinite;
+  }
+  .egos-capsule span:first-child { flex: 1; background: linear-gradient(180deg, var(--navy-light), var(--ph-blue)); }
+  .egos-capsule span:last-child  { flex: 1; background: linear-gradient(180deg, #ffd25a, var(--gold)); }
+  @keyframes egosCapsule {
+    0%, 100% { transform: translateY(0) rotate(-30deg); }
+    50%      { transform: translateY(-16px) rotate(150deg); }
+  }
+  .egos-capsule-shadow {
+    width: 56px; height: 8px; margin: 10px auto 0; border-radius: 50%;
+    background: rgba(30, 58, 138, 0.18); animation: egosCapsuleShadow 1.6s ease-in-out infinite;
+  }
+  @keyframes egosCapsuleShadow { 0%, 100% { transform: scaleX(1); opacity: .9; } 50% { transform: scaleX(.6); opacity: .4; } }
+
+  .egos-loader .logo-text-group { justify-content: center; font-size: 2rem; margin-top: 18px; }
+  .egos-loader .gamot-tagline { display: inline-block; font-size: 0.8rem; padding: 4px 20px; }
+
+  .egos-loader-bar {
+    width: 220px; height: 6px; margin: 22px auto 0; border-radius: 6px; overflow: hidden;
+    background: rgba(148, 163, 184, 0.25); position: relative;
+  }
+  .egos-loader-bar span {
+    position: absolute; top: 0; bottom: 0; width: 40%; border-radius: 6px;
+    background: linear-gradient(90deg, var(--ph-blue), var(--navy-light), var(--gold));
+    animation: egosBar 1.2s ease-in-out infinite;
+  }
+  @keyframes egosBar { 0% { left: -40%; } 100% { left: 100%; } }
+  .egos-loader-text { margin-top: 12px; font-size: 13px; font-weight: 700; color: var(--ph-blue-dark); letter-spacing: .2px; }
+
+  /* ========================================================================
      RESPONSIVE: maayos sa desktop, tablet at cellphone
      ======================================================================== */
 
@@ -719,6 +770,18 @@
 <body>
 
 <div class="watermark-wrap" id="watermarkWrap"></div>
+
+<!-- LOGIN LOADING SCREEN: lumalabas pagka-click ng Sign In -->
+<div id="egosLoader" class="egos-loader" aria-hidden="true">
+  <div class="egos-loader-box" role="status" aria-live="polite">
+    <div class="egos-capsule"><span></span><span></span></div>
+    <div class="egos-capsule-shadow"></div>
+    <div class="logo-text-group"><span class="text-philhealth">PhilHealth</span><span class="text-gamot">GAMOT</span></div>
+    <div class="gamot-tagline">Online Support</div>
+    <div class="egos-loader-bar"><span></span></div>
+    <div class="egos-loader-text" id="egosLoaderText">Verifying credentials…</div>
+  </div>
+</div>
 
 <header>
   <div>
@@ -1359,6 +1422,31 @@
   const SUPABASE_KEY = "sb_publishable_kTDrhXTzmYq2yvXPgrdfiw_QmhoKXwQ";
   const sbPublic = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+  // ---------- LOGIN LOADING SCREEN (kapsula ng gamot + progress) ----------
+  let loginLoaderShownAt = 0;
+  let loginLoaderTimer = null;
+  function showLoginLoader(text) {
+    const el = document.getElementById('egosLoader');
+    if (loginLoaderTimer) { clearTimeout(loginLoaderTimer); loginLoaderTimer = null; }
+    document.getElementById('egosLoaderText').textContent = text || '';
+    el.classList.add('show');
+    el.setAttribute('aria-hidden', 'false');
+    loginLoaderShownAt = Date.now();
+  }
+  function setLoginLoaderText(text) {
+    document.getElementById('egosLoaderText').textContent = text;
+  }
+  // Itinatago pagkatapos ng hindi bababa sa minMs mula nang lumabas (para hindi kumurap)
+  function hideLoginLoader(minMs) {
+    const el = document.getElementById('egosLoader');
+    const wait = Math.max(0, (minMs || 0) - (Date.now() - loginLoaderShownAt));
+    loginLoaderTimer = setTimeout(function() {
+      el.classList.remove('show');
+      el.setAttribute('aria-hidden', 'true');
+      loginLoaderTimer = null;
+    }, wait);
+  }
+
   // ---------- TOAST: ang simpleng "success" na popup ay nagiging maliit na mensahe sa sulok ----------
   // Para lang sa Swal.fire('Pamagat', 'Mensahe', 'success'). Popup pa rin ang mga kumpirmasyon at error.
   const egosToast = Swal.mixin({
@@ -1792,6 +1880,7 @@
 
     loginBtn.disabled = true;
     loginBtn.innerText = "Verifying...";
+    showLoginLoader('Verifying credentials…');
 
     const username = document.getElementById('loginUser').value.trim();
     const password = document.getElementById('loginPass').value.trim();
@@ -1805,6 +1894,7 @@
     loginBtn.innerText = "Sign In";
 
     if (error || !data.success) {
+      hideLoginLoader(0);
       msg.className = "msg error";
       msg.innerText = error ? error.message : data.message;
       msg.style.display = 'block';
@@ -1826,6 +1916,7 @@
       sb = createSessionClient(currentUser.token);
     }
     document.body.classList.add('logged-in');
+    setLoginLoaderText('Securing your session…');
 
     resetInactivityTimers();
     document.getElementById('askAiFab').style.display = 'flex';
@@ -1926,6 +2017,10 @@
       loadIssueCategories();
       document.getElementById('proRegion').value = currentUser.branch;
     }
+
+    // LOADING SCREEN: handa na ang dashboard
+    setLoginLoaderText('Loading your dashboard…');
+    hideLoginLoader(1200);
   });
 
   // ---------- LOGOUT ----------

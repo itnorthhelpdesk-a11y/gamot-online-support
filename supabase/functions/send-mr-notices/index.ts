@@ -53,7 +53,7 @@ Deno.serve(async (req) => {
   for (const item of queue || []) {
     const { data: rec } = await supabaseAdmin
       .from("deficiency_records")
-      .select("gatn_no, gacn_no, facility, facility_accreditation_no, specific_issue, pro_region, rtf_date, compliance_deadline, mr_deadline, status")
+      .select("gatn_no, gacn_no, facility, facility_accreditation_no, specific_issue, required_resolution, pro_region, rtf_date, compliance_deadline, mr_deadline, status")
       .eq("gatn_no", item.gatn_no)
       .maybeSingle();
 
@@ -106,8 +106,11 @@ Deno.serve(async (req) => {
       `Issue: ${rec.specific_issue || "N/A"}\n` +
       `Return-to-Facility (RTF) date: ${formatDate(rec.rtf_date)}\n` +
       `Original compliance deadline: ${formatDate(rec.compliance_deadline)}\n\n` +
-      `You are given until ${formatDate(rec.mr_deadline)} to file a Motion for Reconsideration / Appeal. ` +
-      `To do so, log in to Easy GAMOT Online Support, open Refile Deficiency, upload the corrected documents, and attach your MR letter.\n\n` +
+      `You are given until ${formatDate(rec.mr_deadline)} to file a Motion for Reconsideration / Appeal.\n\n` +
+      `WHAT TO SUBMIT (log in to Easy GAMOT Online Support, open "Refile Deficiency", and search GATN ${rec.gatn_no}):\n` +
+      `1. Corrected document(s): ${rec.required_resolution || "the document(s) that correct the deficiency stated above"}\n` +
+      `2. Signed MR / Appeal letter: on the same Refile page, click "Download MR Letter Template" ` +
+      `(already filled in with this claim's details), print it, write your reason and corrective action, sign it, and upload it.\n\n` +
       `IF NO MOTION FOR RECONSIDERATION / APPEAL IS FILED ON OR BEFORE ${formatDate(rec.mr_deadline).toUpperCase()}, ` +
       `THE CLAIM WILL BE DENIED WITH FINALITY AND CAN NO LONGER BE REFILED.\n\n` +
       `This notice was sent to all registered accounts of your facility.\n\n` +

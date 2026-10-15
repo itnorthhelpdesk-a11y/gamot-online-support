@@ -691,6 +691,10 @@
     background: linear-gradient(90deg, var(--ph-blue), var(--navy-light)); color: #fff;
     font-weight: 800; text-transform: uppercase; letter-spacing: .4px;
   }
+  /* File viewer (sa gitna ng screen) */
+  .swal2-popup.egos-file-viewer { max-width: min(1100px, 94vw) !important; }
+  @media (max-width: 640px) { .egos-file-viewer iframe { height: 70vh !important; } }
+
   /* MR letter: lila, tugma sa kulay ng MR / Appeal */
   #mrLetterFile { border-color: rgba(109, 40, 217, 0.4); background: linear-gradient(135deg, rgba(237, 233, 254, 0.9), rgba(255, 255, 255, 0.7)); }
   #mrLetterFile:hover, #mrLetterFile:focus { border-color: #6d28d9; box-shadow: 0 0 0 4px rgba(109, 40, 217, 0.12); }
@@ -3347,9 +3351,13 @@
   }
 
   async function openSecureFile(link) {
-    // Buksan agad ang bagong tab (habang click pa) para hindi ma-block ng browser
-    const win = window.open('', '_blank');
-    if (win) win.document.write('<p style="font-family:sans-serif; padding:24px; color:#1e3a8a;">Opening file…</p>');
+    // Viewer sa gitna ng screen: "Opening file…" habang kinukuha ang pansamantalang link
+    Swal.fire({
+      title: 'Opening file…',
+      allowOutsideClick: false,
+      showConfirmButton: false,
+      didOpen: function() { Swal.showLoading(); }
+    });
 
     try {
       const res = await fetch(SUPABASE_URL + "/functions/v1/get-file-url", {
@@ -3368,9 +3376,23 @@
           ? 'Your session has expired. Please log in again.'
           : (result.error || 'Could not open the file.'));
       }
-      if (win) win.location.href = result.url; else window.location.href = result.url;
+      const safeUrl = String(result.url).replace(/"/g, '&quot;');
+      Swal.fire({
+        width: '92vw',
+        padding: '10px',
+        showCloseButton: true,
+        showConfirmButton: false,
+        customClass: { popup: 'egos-file-viewer' },
+        html:
+          '<iframe src="' + safeUrl + '" title="Attachment" ' +
+            'style="width:100%; height:78vh; border:none; border-radius:12px; background:#f1f5f9;"></iframe>' +
+          '<div style="margin-top:8px; display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;">' +
+            '<span style="font-size:12px; color:var(--muted);">🔒 Secure link — expires in 10 minutes.</span>' +
+            '<a href="' + safeUrl + '" target="_blank" rel="noopener" ' +
+              'style="font-size:13px; font-weight:800; color:var(--ph-blue);">↗ Open in new tab</a>' +
+          '</div>'
+      });
     } catch (e) {
-      if (win) win.close();
       Swal.fire('Error', e.message, 'error');
     }
   }

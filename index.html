@@ -3211,7 +3211,7 @@
         '<td>' + r.gatn_no + '</td>' +
         '<td>' + r.gacn_no + newGacnBadge + '</td>' +
         '<td>' + (r.issue_category || '').replace(/_/g, ' ') + '<br><span style="color:var(--muted); font-size:11px;">' + r.specific_issue + '</span></td>' +
-        '<td><span class="status-pill ' + r.status + '">' + r.status + '</span></td>' +
+        '<td><span class="status-pill ' + r.status + '">' + statusDisplayLabel(r) + '</span></td>' +
         '<td>' + deadline + '</td>' +
         '</tr>';
     }).join('');
@@ -3249,7 +3249,7 @@
       return [
         created, r.gatn_no || '', r.gacn_no || '',
         (r.issue_category || '').replace(/_/g, ' '), r.specific_issue || '',
-        r.required_resolution || '', r.status || '', rtf, deadline, refiled
+        r.required_resolution || '', statusDisplayLabel(r), rtf, deadline, refiled
       ];
     });
 
@@ -3634,7 +3634,7 @@
         : r.status === 'DENIED' && r.denied_at
         ? 'Denied ' + new Date(r.denied_at).toLocaleDateString()
         : (r.compliance_deadline ? new Date(r.compliance_deadline).toLocaleDateString() : '—');
-      const statusLabel = r.status === 'FOR_MR' ? 'FOR MR / APPEAL' : r.status;
+      const statusLabel = statusDisplayLabel(r);
       // DENIED = frozen: walang Edit/Delete; ADMIN lang ang may Reopen
       const actions = r.status === 'DENIED'
         ? (currentUser.role === 'ADMIN'
@@ -3832,7 +3832,7 @@
         created, r.facility_accreditation_no || '', r.gatn_no || '', r.gacn_no || '',
         (r.issue_category || '').replace(/_/g, ' '), r.specific_issue || '',
         r.required_resolution || '', claimantName || '', r.claimant_contact || '',
-        r.status || '', rtf, deadline, refiled
+        statusDisplayLabel(r), rtf, deadline, refiled
       ];
     });
 
@@ -4684,7 +4684,7 @@
       const additionalRemarks = (r.tracker_remarks !== null && r.tracker_remarks !== undefined && r.tracker_remarks !== '')
         ? r.tracker_remarks
         : (r.review_remarks || '');
-      const displayRemarks = r.status + (additionalRemarks ? (' — ' + additionalRemarks) : '');
+      const displayRemarks = statusDisplayLabel(r) + (additionalRemarks ? (' — ' + additionalRemarks) : '');
       const displayActionTaken = (r.tracker_action_taken !== null && r.tracker_action_taken !== undefined && r.tracker_action_taken !== '') ? r.tracker_action_taken : (r.required_resolution || '—');
       const isPaid = r.paid === true;
       const overdueClass = isRecordOverdue(r) ? 'urgency-row OVERDUE' : '';
@@ -4728,6 +4728,13 @@
     renderGamotTrackerList(currentGamotTrackerFiltered);
   }
   window.goToGamotTrackerPage = goToGamotTrackerPage;
+
+  // MR / APPEAL: label ng status na ipinapakita (hindi binabago ang status sa database)
+  function statusDisplayLabel(r) {
+    if (r.status === 'FOR_MR') return 'FOR MR / APPEAL';
+    if (r.status === 'REFILED' && r.is_mr_filing) return 'REFILED (MR)';
+    return r.status || '';
+  }
 
   function isRecordOverdue(r) {
     return r.status === 'RTF' && r.compliance_deadline && new Date(r.compliance_deadline) < new Date();
@@ -4862,7 +4869,7 @@
       const additionalRemarks = (r.tracker_remarks !== null && r.tracker_remarks !== undefined && r.tracker_remarks !== '')
         ? r.tracker_remarks
         : (r.review_remarks || '');
-      const displayRemarks = r.status + (additionalRemarks ? (' - ' + additionalRemarks) : '');
+      const displayRemarks = statusDisplayLabel(r) + (additionalRemarks ? (' - ' + additionalRemarks) : '');
       const displayActionTaken = (r.tracker_action_taken !== null && r.tracker_action_taken !== undefined && r.tracker_action_taken !== '') ? r.tracker_action_taken : (r.required_resolution || '');
 
       return [

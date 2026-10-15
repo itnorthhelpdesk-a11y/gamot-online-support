@@ -2811,7 +2811,7 @@
       const row = document.createElement('div');
       row.style.cssText = "display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid var(--line); gap:12px; flex-wrap:wrap;";
       const attachmentHtml = u.attachment_link
-        ? '<a href="' + u.attachment_link + '" target="_blank" style="color:var(--ph-blue); font-weight:700;">📎 View Document</a>'
+        ? secureFileLink(u.attachment_link, '📎 View Document', 'var(--ph-blue)')
         : '<span style="color:var(--muted);">No document</span>';
 
       const roleDropdownHtml = (u.account_type === 'PHARMACY')
@@ -3291,6 +3291,42 @@
     tableLabelPending = true;
     requestAnimationFrame(labelTableCells);
   }).observe(document.getElementById('mainSection'), { childList: true, subtree: true });
+
+  // ---------- SECURE FILES: pansamantalang link (10 minuto) mula sa server, pagkatapos i-check ang karapatan ----------
+  function secureFileLink(link, label, color) {
+    return '<a href="#" data-file="' + String(link).replace(/"/g, '&quot;') + '" onclick="openSecureFile(this.dataset.file); return false;" ' +
+      'style="color:' + color + '; font-weight:700;">' + label + '</a>';
+  }
+
+  async function openSecureFile(link) {
+    // Buksan agad ang bagong tab (habang click pa) para hindi ma-block ng browser
+    const win = window.open('', '_blank');
+    if (win) win.document.write('<p style="font-family:sans-serif; padding:24px; color:#1e3a8a;">Opening file…</p>');
+
+    try {
+      const res = await fetch(SUPABASE_URL + "/functions/v1/get-file-url", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer " + SUPABASE_KEY,
+          "apikey": SUPABASE_KEY,
+          "x-egos-session": currentUser.token
+        },
+        body: JSON.stringify({ url: link })
+      });
+      const result = await res.json();
+      if (!result.success) {
+        throw new Error(result.error === 'SESSION_EXPIRED'
+          ? 'Your session has expired. Please log in again.'
+          : (result.error || 'Could not open the file.'));
+      }
+      if (win) win.location.href = result.url; else window.location.href = result.url;
+    } catch (e) {
+      if (win) win.close();
+      Swal.fire('Error', e.message, 'error');
+    }
+  }
+  window.openSecureFile = openSecureFile;
 
   // ---------- PHILHEALTH YAKAP: buong poster kapag na-click ang banner sa kanan ----------
   function openYakapPoster() {
@@ -3973,7 +4009,7 @@
 
     let rows = pageData.map(function(u) {
       const attachmentHtml = u.attachment_link
-        ? '<a href="' + u.attachment_link + '" target="_blank" style="color:var(--ph-blue); font-weight:700;">📎 View Document</a>'
+        ? secureFileLink(u.attachment_link, '📎 View Document', 'var(--ph-blue)')
         : '<span style="color:var(--muted);">No document</span>';
       return '<div style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid var(--line);">' +
         '<div>' +
@@ -5785,7 +5821,7 @@
     let cardsHtml = pageData.map(function(r) {
       const refiled = r.refile_timestamp ? new Date(r.refile_timestamp).toLocaleString() : '—';
       const fileLink = r.refile_file_link
-        ? '<a href="' + r.refile_file_link + '" target="_blank" style="color:var(--ph-blue); font-weight:700;">View Corrected Document</a>'
+        ? secureFileLink(r.refile_file_link, 'View Corrected Document', 'var(--ph-blue)')
         : '<span style="color:var(--muted);">No file attached</span>';
       const lateBadge = r.is_late_submission
         ? ' <span class="status-pill RTF" style="background:#dc2626; color:#fff;">⚠ LATE</span>'
@@ -5795,7 +5831,7 @@
         : '';
       const mrLetterLink = r.is_mr_filing
         ? '<br>' + (r.mr_letter_link
-            ? '<a href="' + r.mr_letter_link + '" target="_blank" style="color:#6d28d9; font-weight:700;">View MR / Appeal Letter</a>'
+            ? secureFileLink(r.mr_letter_link, 'View MR / Appeal Letter', '#6d28d9')
             : '<span style="color:var(--muted);">No MR letter attached</span>') +
           (r.mr_deadline ? ' <span style="color:var(--muted); font-size:12px;">(MR deadline: ' + new Date(r.mr_deadline).toLocaleDateString() + ')</span>' : '')
         : '';

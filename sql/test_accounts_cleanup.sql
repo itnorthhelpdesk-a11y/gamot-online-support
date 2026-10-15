@@ -16,6 +16,7 @@ UNION ALL SELECT 'audit_trail', count(*) FROM audit_trail
   WHERE gatn_no ILIKE 'TESTEGOS%' OR performed_by_username ILIKE 'TESTEGOS%'
 UNION ALL SELECT 'account_audit_trail', count(*) FROM account_audit_trail
   WHERE username_affected ILIKE 'TESTEGOS%' OR performed_by_username ILIKE 'TESTEGOS%'
+UNION ALL SELECT 'login_audit', count(*) FROM login_audit WHERE username ILIKE 'TESTEGOS%'
 UNION ALL SELECT 'password_reset_requests', count(*) FROM password_reset_requests WHERE username ILIKE 'TESTEGOS%'
 UNION ALL SELECT 'ai_chat_requests', count(*) FROM ai_chat_requests WHERE username ILIKE 'TESTEGOS%'
 UNION ALL SELECT 'registration_attempts', count(*) FROM registration_attempts WHERE email ILIKE 'testegos%@example.invalid'
@@ -37,10 +38,11 @@ DELETE FROM account_audit_trail
   WHERE username_affected ILIKE 'TESTEGOS%' OR performed_by_username ILIKE 'TESTEGOS%';
 DELETE FROM deficiency_records
   WHERE gatn_no ILIKE 'TESTEGOS%' OR facility_accreditation_no = 'P91999999';
+DELETE FROM login_audit WHERE username ILIKE 'TESTEGOS%';
 DELETE FROM password_reset_requests WHERE username ILIKE 'TESTEGOS%';
 DELETE FROM ai_chat_requests WHERE username ILIKE 'TESTEGOS%';
 DELETE FROM registration_attempts WHERE email ILIKE 'testegos%@example.invalid';
 DELETE FROM registration_email_verifications WHERE email ILIKE 'testegos%@example.invalid';
-DELETE FROM users WHERE username ILIKE 'TESTEGOS%';
+DELETE FROM users WHERE username ILIKE 'TESTEGOS%';   -- kasama nang mabubura ang sessions (ON DELETE CASCADE)
 
 COMMIT;

@@ -1046,7 +1046,7 @@
     wrap.innerHTML = html;
   })();
 
-  let currentUser = { username: "", role: "", facility: "", branch: "", id_no: "", account_type: "" };
+  let currentUser = { username: "", token: "", role: "", facility: "", branch: "", id_no: "", account_type: "" };
 
   // ---------- SESSION TIMEOUT: auto-logout pagkatapos ng ilang minutong walang aktibidad ----------
   const INACTIVITY_TIMEOUT_MS = 30 * 60 * 1000; // 30 minuto
@@ -1441,6 +1441,7 @@
 
     currentUser = {
       username: username.toUpperCase(),
+      token: data.token || "",
       role: data.role,
       facility: data.facility,
       branch: data.branch,
@@ -1552,6 +1553,11 @@
 
   // ---------- LOGOUT ----------
   function performLogout() {
+    // Patayin ang session token sa server (hindi na hinihintay ang sagot)
+    if (currentUser.token) {
+      sb.rpc('logout', { p_token: currentUser.token }).then(function() {}, function() {});
+    }
+
     sessionStorage.removeItem('draft_searchGatn');
     sessionStorage.removeItem('draft_refileNotes');
 
@@ -1567,7 +1573,7 @@
     document.getElementById('askAiTooltip').style.display = 'none';
     askAiTooltipShown = false;
 
-    currentUser = { username: "", role: "", facility: "", branch: "", id_no: "", account_type: "", accreditation_no: "" };
+    currentUser = { username: "", token: "", role: "", facility: "", branch: "", id_no: "", account_type: "", accreditation_no: "" };
     document.getElementById('sessionText').innerText = "";
     document.getElementById('logoutBtn').style.display = 'none';
     document.getElementById('mainSection').style.display = 'none';

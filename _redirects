@@ -1,6 +1,0 @@
-# Netlify: itago sa live site ang mga file na para lang sa developers
-# (nasa GitHub pa rin sila; hindi lang ma-access sa website)
-/sql        /404.html  404!
-/sql/*      /404.html  404!
-/CLAUDE.md  /404.html  404!
-/_redirects /404.html  404!

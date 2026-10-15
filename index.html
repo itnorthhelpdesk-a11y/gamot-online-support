@@ -531,7 +531,7 @@
           </a>
         </div>
         <label for="regAccreditationNo">Facility Accreditation No.</label>
-        <input type="text" id="regAccreditationNo" placeholder="e.g. P91034561" maxlength="9">
+        <input type="text" id="regAccreditationNo" placeholder="e.g. P91034561 or H91034561" maxlength="9">
         <label for="regPhilhealthPin">PhilHealth Identification Number (PIN)</label>
         <input type="text" id="regPhilhealthPin" placeholder="Enter your 12-digit PIN (numbers only)" inputmode="numeric" pattern="[0-9]*" maxlength="12">
         <p style="font-size:11px; color:var(--muted); margin:6px 0 16px; line-height:1.5;">⚠ This PIN will also be your login username. Please double-check it before submitting.</p>
@@ -699,7 +699,7 @@
         <div class="row2">
           <div>
             <label for="facilityAccreditationNo">Facility Accreditation No.</label>
-            <input type="text" id="facilityAccreditationNo" placeholder="e.g. P91034561" maxlength="9" required>
+            <input type="text" id="facilityAccreditationNo" placeholder="e.g. P91034561 or H91034561" maxlength="9" required>
           </div>
           <div>
             <label for="claimantContact">Claimant Contact No.</label>
@@ -1937,10 +1937,10 @@
 
       // ---------- MAAGANG BABALA: kung mukhang ibang branch ang accreditation number na nakuha ----------
       const detectedAccred = (d.facility_accreditation_no || '').toUpperCase().trim();
-      const branchPrefixMap = { 'PRONCR NORTH': 'P91', 'PRONCR SOUTH': 'P92', 'PRONCR CENTRAL': 'P93' };
-      const expectedPrefix = branchPrefixMap[currentUser.branch];
+      const branchPrefixMap = { 'PRONCR NORTH': ['P91', 'H91'], 'PRONCR SOUTH': ['P92', 'H92'], 'PRONCR CENTRAL': ['P93', 'H93'] };
+      const expectedPrefixes = branchPrefixMap[currentUser.branch];
 
-      if (detectedAccred && expectedPrefix && !detectedAccred.startsWith(expectedPrefix)) {
+      if (detectedAccred && expectedPrefixes && !expectedPrefixes.some(p => detectedAccred.startsWith(p))) {
         await Swal.fire({
           title: '⚠ Possible Branch Mismatch',
           html: 'The Facility Accreditation No. detected from the document (<strong>' + detectedAccred + '</strong>) ' +

@@ -19,8 +19,11 @@ UNION ALL SELECT 'account_audit_trail', count(*) FROM account_audit_trail
 UNION ALL SELECT 'login_audit', count(*) FROM login_audit WHERE username ILIKE 'TESTEGOS%'
 UNION ALL SELECT 'password_reset_requests', count(*) FROM password_reset_requests WHERE username ILIKE 'TESTEGOS%'
 UNION ALL SELECT 'ai_chat_requests', count(*) FROM ai_chat_requests WHERE username ILIKE 'TESTEGOS%'
-UNION ALL SELECT 'registration_attempts', count(*) FROM registration_attempts WHERE email ILIKE 'testegos%@example.invalid'
-UNION ALL SELECT 'registration_email_verifications', count(*) FROM registration_email_verifications WHERE email ILIKE 'testegos%@example.invalid';
+UNION ALL SELECT 'registration_attempts', count(*) FROM registration_attempts
+  WHERE email ILIKE 'testegos%@example.invalid' OR email ILIKE 'itnorthhelpdesk+egos%@gmail.com'
+UNION ALL SELECT 'registration_email_verifications', count(*) FROM registration_email_verifications
+  WHERE email ILIKE 'testegos%@example.invalid' OR email ILIKE 'itnorthhelpdesk+egos%@gmail.com'
+UNION ALL SELECT 'users (test email)', count(*) FROM users WHERE email ILIKE 'itnorthhelpdesk+egos%@gmail.com';
 
 -- Records na in-encode ng test staff pero HINDI nagsimula sa TESTEGOS ang GATN
 -- (hindi ito buburahin nang awtomatiko; dapat walang row dito):
@@ -41,8 +44,16 @@ DELETE FROM deficiency_records
 DELETE FROM login_audit WHERE username ILIKE 'TESTEGOS%';
 DELETE FROM password_reset_requests WHERE username ILIKE 'TESTEGOS%';
 DELETE FROM ai_chat_requests WHERE username ILIKE 'TESTEGOS%';
-DELETE FROM registration_attempts WHERE email ILIKE 'testegos%@example.invalid';
-DELETE FROM registration_email_verifications WHERE email ILIKE 'testegos%@example.invalid';
+DELETE FROM registration_attempts
+  WHERE email ILIKE 'testegos%@example.invalid' OR email ILIKE 'itnorthhelpdesk+egos%@gmail.com';
+DELETE FROM registration_email_verifications
+  WHERE email ILIKE 'testegos%@example.invalid' OR email ILIKE 'itnorthhelpdesk+egos%@gmail.com';
+-- Test registration na gumamit ng itnorthhelpdesk+egos...@gmail.com (kasama ang audit nila)
+DELETE FROM account_audit_trail WHERE username_affected IN
+  (SELECT username FROM users WHERE email ILIKE 'itnorthhelpdesk+egos%@gmail.com');
+DELETE FROM login_audit WHERE username IN
+  (SELECT username FROM users WHERE email ILIKE 'itnorthhelpdesk+egos%@gmail.com');
+DELETE FROM users WHERE email ILIKE 'itnorthhelpdesk+egos%@gmail.com';
 DELETE FROM users WHERE username ILIKE 'TESTEGOS%';   -- kasama nang mabubura ang sessions (ON DELETE CASCADE)
 
 COMMIT;

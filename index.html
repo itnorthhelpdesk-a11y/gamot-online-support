@@ -661,6 +661,42 @@
   }
 
   /* ========================================================================
+     FILE UPLOAD: "Choose File" bilang upload box (putol-putol na border)
+     ======================================================================== */
+  input[type="file"] {
+    cursor: pointer; padding: 14px 14px; font-family: 'Nunito', 'Segoe UI', sans-serif; font-size: 13px;
+    color: var(--muted); border: 2px dashed rgba(0, 84, 166, 0.35); border-radius: 14px;
+    background: linear-gradient(135deg, rgba(238, 245, 255, 0.9), rgba(255, 255, 255, 0.7));
+    transition: border-color .2s ease, background .2s ease, box-shadow .2s ease;
+  }
+  input[type="file"]:hover, input[type="file"]:focus {
+    border-color: var(--ph-blue); background: #eef5ff; box-shadow: 0 0 0 4px rgba(0, 84, 166, 0.10);
+  }
+  input[type="file"].egos-drag {
+    border-color: var(--gold); border-style: solid; background: #fffbea;
+    box-shadow: 0 0 0 5px rgba(253, 185, 19, 0.25);
+  }
+  input[type="file"]::file-selector-button {
+    margin-right: 14px; padding: 9px 16px; border: none; border-radius: 10px; cursor: pointer;
+    background: linear-gradient(90deg, var(--ph-blue), var(--navy-light)); color: #fff;
+    font-family: 'Nunito', 'Segoe UI', sans-serif; font-size: 12px; font-weight: 800;
+    text-transform: uppercase; letter-spacing: .4px; box-shadow: 0 4px 10px rgba(0, 84, 166, 0.25);
+    transition: filter .2s ease, transform .1s ease;
+  }
+  input[type="file"]::file-selector-button:hover { filter: brightness(1.1); }
+  input[type="file"]::file-selector-button:active { transform: scale(.97); }
+  /* Mas lumang Chrome/Edge */
+  input[type="file"]::-webkit-file-upload-button {
+    margin-right: 14px; padding: 9px 16px; border: none; border-radius: 10px; cursor: pointer;
+    background: linear-gradient(90deg, var(--ph-blue), var(--navy-light)); color: #fff;
+    font-weight: 800; text-transform: uppercase; letter-spacing: .4px;
+  }
+  /* MR letter: lila, tugma sa kulay ng MR / Appeal */
+  #mrLetterFile { border-color: rgba(109, 40, 217, 0.4); background: linear-gradient(135deg, rgba(237, 233, 254, 0.9), rgba(255, 255, 255, 0.7)); }
+  #mrLetterFile:hover, #mrLetterFile:focus { border-color: #6d28d9; box-shadow: 0 0 0 4px rgba(109, 40, 217, 0.12); }
+  #mrLetterFile::file-selector-button { background: linear-gradient(90deg, #6d28d9, #8b5cf6); box-shadow: 0 4px 10px rgba(109, 40, 217, 0.3); }
+
+  /* ========================================================================
      LOGIN LOADING SCREEN: kapsula ng gamot (asul = PhilHealth, dilaw = GAMOT)
      ======================================================================== */
   .egos-loader {
@@ -3291,6 +3327,18 @@
     tableLabelPending = true;
     requestAnimationFrame(labelTableCells);
   }).observe(document.getElementById('mainSection'), { childList: true, subtree: true });
+
+  // ---------- FILE UPLOAD: kumikinang ang upload box habang hinihila ang file papasok ----------
+  ['dragenter', 'dragover'].forEach(function(evt) {
+    document.addEventListener(evt, function(e) {
+      if (e.target && e.target.matches && e.target.matches('input[type="file"]')) e.target.classList.add('egos-drag');
+    });
+  });
+  ['dragleave', 'drop'].forEach(function(evt) {
+    document.addEventListener(evt, function(e) {
+      if (e.target && e.target.matches && e.target.matches('input[type="file"]')) e.target.classList.remove('egos-drag');
+    });
+  });
 
   // ---------- SECURE FILES: pansamantalang link (10 minuto) mula sa server, pagkatapos i-check ang karapatan ----------
   function secureFileLink(link, label, color) {

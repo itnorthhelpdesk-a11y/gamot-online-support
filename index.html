@@ -1032,7 +1032,32 @@
   // ⚙️ SUPABASE CONFIG
   const SUPABASE_URL = "https://ukdiibumagfqngqkqmom.supabase.co";
   const SUPABASE_KEY = "sb_publishable_kTDrhXTzmYq2yvXPgrdfiw_QmhoKXwQ";
-  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  const sbPublic = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  // Bago mag-login: sbPublic. Pagkatapos mag-login: client na may session token (tingnan ang createSessionClient).
+  let sb = sbPublic;
+
+  // ---------- SESSION CLIENT: ipinapadala ang session token sa bawat tawag (header na x-egos-session) ----------
+  // Ang server ang tumitingin sa token para malaman kung sino ang user, anong role, at anong branch.
+  function createSessionClient(token) {
+    const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+      global: { headers: { 'x-egos-session': token } },
+      auth: { persistSession: false, autoRefreshToken: false }
+    });
+    const originalRpc = client.rpc.bind(client);
+    client.rpc = function(fn, args, options) {
+      return originalRpc(fn, args, options).then(function(res) {
+        const errMsg = (res.error && res.error.message) || '';
+        if (errMsg.indexOf('SESSION_EXPIRED') !== -1) {
+          res.error.message = 'Your session has expired. Please log in again.';
+          if (currentUser.username) performLogout();
+        } else if (errMsg.indexOf('NOT_AUTHORIZED') !== -1) {
+          res.error.message = 'You are not authorized to perform this action.';
+        }
+        return res;
+      });
+    };
+    return client;
+  }
 
   // 🎨 WATERMARK PATTERN GENERATOR (repeating tiled background)
   (function generateWatermark() {
@@ -1450,6 +1475,10 @@
       accreditation_no: data.accreditation_no
     };
 
+    if (currentUser.token) {
+      sb = createSessionClient(currentUser.token);
+    }
+
     resetInactivityTimers();
     document.getElementById('askAiFab').style.display = 'flex';
     showAskAiTooltipOnce();
@@ -1557,6 +1586,7 @@
     if (currentUser.token) {
       sb.rpc('logout', { p_token: currentUser.token }).then(function() {}, function() {});
     }
+    sb = sbPublic;
 
     sessionStorage.removeItem('draft_searchGatn');
     sessionStorage.removeItem('draft_refileNotes');

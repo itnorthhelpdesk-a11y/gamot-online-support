@@ -22,7 +22,7 @@ BEGIN
     RAISE EXCEPTION 'Palitan muna ang password sa itaas bago patakbuhin.';
   END IF;
 
-  IF EXISTS (SELECT 1 FROM users WHERE username ILIKE 'TESTEGOS%') THEN
+  IF EXISTS (SELECT 1 FROM users WHERE username IN ('TESTEGOS-ADMIN', 'TESTEGOS-STAFF', 'TESTEGOS-PHARMA', 'TESTEGOS-PENDING1', 'TESTEGOS-PENDING2')) THEN
     RAISE EXCEPTION 'May TESTEGOS accounts na. Patakbuhin muna ang test_accounts_cleanup.sql.';
   END IF;
 

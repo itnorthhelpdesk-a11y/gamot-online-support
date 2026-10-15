@@ -793,6 +793,14 @@
     .card, .msg, .resolution-box, .review-card-text, .urgency-legend-text { overflow-wrap: anywhere; word-break: break-word; }
     header h1 { line-height: 1.25; }
 
+    /* Mga hanay ng button / input na naka-flex (inline style): bababa sa susunod na linya kapag kulang ang espasyo */
+    main div[style*="display:flex"] { flex-wrap: wrap; row-gap: 8px; }
+    main div[style*="display:flex"] > button[style*="flex:1"] { flex: 1 1 140px !important; }
+    main div[style*="display:flex"] > input[style*="flex:1"] { min-width: 0; flex: 1 1 160px !important; }
+
+    /* Teksto sa loob ng button: babalot nang maayos sa halip na maipit */
+    button { white-space: normal; line-height: 1.25; }
+
     /* Iwas zoom sa iPhone kapag nagta-type (kailangan ng 16px pataas) */
     input, select, textarea { font-size: 16px; }
   }

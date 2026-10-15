@@ -708,7 +708,7 @@
         </div>
 
         <label for="claimAmount">Claim Amount</label>
-        <input type="text" id="claimAmount" placeholder="e.g. 15000.00" inputmode="decimal">
+        <input type="text" id="claimAmount" placeholder="e.g. 15000.00" inputmode="decimal" required pattern="\d+(\.\d{1,2})?" title="Enter the claim amount, e.g. 15000.00">
 
         <div style="display:flex; gap:10px; flex-wrap:wrap;">
           <button type="submit" id="encodeBtn" style="flex:1 1 200px; width:auto;">Encode & Save</button>

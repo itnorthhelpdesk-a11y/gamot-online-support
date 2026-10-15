@@ -536,6 +536,89 @@
   .promo-banner-btn:hover .promo-banner-hint, .promo-banner-btn:focus-visible .promo-banner-hint { opacity: 1; }
 
   /* ========================================================================
+     GLASS DESIGN: modernong salamin (glassmorphism) sa login at dashboard,
+     parehong kulay ng EGOS (asul, dilaw, indigo)
+     ======================================================================== */
+
+  /* Gumagalaw na malalambot na ilaw sa likod (aurora), nasa likod ng watermark */
+  body::before, body::after {
+    content: ''; position: fixed; z-index: 0; pointer-events: none; border-radius: 50%;
+    filter: blur(80px); opacity: .55;
+  }
+  body::before {
+    width: 520px; height: 520px; top: -120px; left: -120px;
+    background: radial-gradient(circle, rgba(59, 130, 246, 0.75), rgba(79, 70, 229, 0.35) 60%, transparent 70%);
+    animation: egosFloatA 18s ease-in-out infinite alternate;
+  }
+  body::after {
+    width: 460px; height: 460px; bottom: -140px; right: -100px;
+    background: radial-gradient(circle, rgba(253, 185, 19, 0.65), rgba(253, 185, 19, 0.2) 60%, transparent 70%);
+    animation: egosFloatB 22s ease-in-out infinite alternate;
+  }
+  @keyframes egosFloatA { from { transform: translate(0, 0); } to { transform: translate(160px, 120px); } }
+  @keyframes egosFloatB { from { transform: translate(0, 0); } to { transform: translate(-140px, -160px); } }
+
+  /* Pinag-isang anyo ng salamin */
+  .card, .sidebar, #loginSection, #registerSection, #forgotPasswordSection, #resetPasswordSection {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.52)) !important;
+    backdrop-filter: blur(22px) saturate(160%);
+    -webkit-backdrop-filter: blur(22px) saturate(160%);
+    border: 1px solid rgba(255, 255, 255, 0.75) !important;
+    box-shadow: 0 10px 40px rgba(30, 58, 138, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  }
+
+  /* LOGIN / REGISTER / FORGOT: salaming card na may gold na ilaw sa itaas */
+  #loginSection, #registerSection, #forgotPasswordSection, #resetPasswordSection {
+    position: relative; overflow: hidden; border-radius: 28px;
+    box-shadow: 0 30px 60px -15px rgba(30, 58, 138, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.95);
+  }
+  #loginSection::before, #registerSection::before, #forgotPasswordSection::before, #resetPasswordSection::before {
+    content: ''; position: absolute; left: 12%; right: 12%; top: 0; height: 4px; border-radius: 0 0 6px 6px;
+    background: linear-gradient(90deg, transparent, var(--gold), var(--navy-light), transparent);
+  }
+  #loginSection .logo-text-group { filter: drop-shadow(0 4px 10px rgba(0, 84, 166, 0.18)); }
+  #loginSection .gamot-tagline { box-shadow: 0 6px 16px rgba(253, 185, 19, 0.4); }
+
+  /* Mga input sa loob ng salamin: semi-transparent na puti */
+  #loginSection input, #registerSection input, #registerSection select,
+  #forgotPasswordSection input, #resetPasswordSection input {
+    background: rgba(255, 255, 255, 0.7); border-color: rgba(148, 163, 184, 0.35);
+  }
+  #loginSection input:focus, #registerSection input:focus, #registerSection select:focus,
+  #forgotPasswordSection input:focus, #resetPasswordSection input:focus { background: #fff; }
+
+  /* Sign In button: asul-indigo na gradient na may kumikislap na ilaw kapag tinapatan */
+  #loginBtn {
+    position: relative; overflow: hidden;
+    background: linear-gradient(90deg, var(--ph-blue), var(--navy-light), #4f46e5);
+    box-shadow: 0 10px 24px rgba(0, 84, 166, 0.35);
+  }
+  #loginBtn::after {
+    content: ''; position: absolute; top: 0; left: -60%; width: 40%; height: 100%;
+    background: linear-gradient(120deg, transparent, rgba(255, 255, 255, 0.45), transparent);
+    transform: skewX(-20deg); transition: left .6s ease;
+  }
+  #loginBtn:hover:not(:disabled)::after { left: 120%; }
+
+  /* DASHBOARD: salaming header session, sidebar at cards */
+  header {
+    background: linear-gradient(90deg, rgba(30, 58, 138, 0.94) 0%, rgba(59, 130, 246, 0.92) 50%, rgba(79, 70, 229, 0.94) 100%);
+    backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  }
+  .sidebar { border-radius: 18px; }
+  .card { border-radius: 22px; }
+  .card h2 { text-shadow: 0 1px 0 rgba(255, 255, 255, 0.8); }
+  .data-table-wrap { background: rgba(255, 255, 255, 0.82); }
+  table.data-table th { background: rgba(238, 242, 248, 0.95); }
+  .analytics-stat-card, .analytics-chart-box, .urgency-legend {
+    background: rgba(255, 255, 255, 0.7) !important;
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  }
+  .analytics-chart-box, .urgency-legend { border-color: rgba(255, 255, 255, 0.8) !important; }
+  .analytics-stat-card { border-left-color: rgba(255, 255, 255, 0.8); border-right-color: rgba(255, 255, 255, 0.8); border-bottom-color: rgba(255, 255, 255, 0.8); }
+  .footer-gamot { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
+
+  /* ========================================================================
      RESPONSIVE: maayos sa desktop, tablet at cellphone
      ======================================================================== */
 

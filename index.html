@@ -511,6 +511,30 @@
   ::-webkit-scrollbar-thumb { background: #c3cfe2; border-radius: 10px; border: 2px solid transparent; background-clip: padding-box; }
   ::-webkit-scrollbar-thumb:hover { background: #94a3c4; background-clip: padding-box; }
 
+  /* Right panel: PhilHealth YAKAP banner (nakadikit habang nag-i-scroll; malalaking screen lang) */
+  .promo-panel { display: none; }
+  @media (min-width: 1280px) {
+    main.wide { max-width: 1340px; }
+    .promo-panel { display: block; width: 220px; flex-shrink: 0; position: sticky; top: 20px; }
+  }
+  .promo-banner-btn {
+    display: block; width: 100%; margin: 0; padding: 0; background: #fff; border-radius: 18px;
+    overflow: hidden; position: relative; text-transform: none; letter-spacing: 0;
+    box-shadow: 0 8px 24px rgba(31, 38, 135, 0.10); border: 1px solid rgba(255,255,255,0.6);
+  }
+  .promo-banner-btn:hover:not(:disabled) {
+    background: #fff; filter: none; transform: translateY(-3px);
+    box-shadow: 0 16px 34px rgba(31, 38, 135, 0.18);
+  }
+  .promo-banner-btn img { display: block; width: 100%; height: auto; max-height: calc(100vh - 60px); object-fit: cover; object-position: top; }
+  .promo-banner-hint {
+    position: absolute; left: 0; right: 0; bottom: 0; padding: 10px 8px;
+    font-size: 12px; font-weight: 700; color: #fff; text-align: center;
+    background: linear-gradient(transparent, rgba(30, 58, 138, 0.85));
+    opacity: 0; transition: opacity .2s ease;
+  }
+  .promo-banner-btn:hover .promo-banner-hint, .promo-banner-btn:focus-visible .promo-banner-hint { opacity: 1; }
+
   /* Para sa mga user na naka-off ang animation sa computer nila */
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation: none !important; transition: none !important; }
@@ -1118,6 +1142,14 @@
     </div>
 
       </div>
+
+      <!-- RIGHT PANEL: PhilHealth YAKAP banner (malalaking screen lang; i-click para makita ang buong poster) -->
+      <aside class="promo-panel" aria-label="PhilHealth YAKAP">
+        <button type="button" class="promo-banner-btn" onclick="openYakapPoster()" title="Click to view the full PhilHealth YAKAP poster">
+          <img src="assets/philhealth-yakap-strip.jpg" alt="PhilHealth YAKAP: Mga Dapat Malaman" loading="lazy">
+          <span class="promo-banner-hint">🔍 Click to view full poster</span>
+        </button>
+      </aside>
     </div>
   </div>
 
@@ -2908,6 +2940,19 @@
 
     doc.save('MR_Letter_' + currentRefileGatn.toUpperCase() + '.pdf');
   });
+
+  // ---------- PHILHEALTH YAKAP: buong poster kapag na-click ang banner sa kanan ----------
+  function openYakapPoster() {
+    Swal.fire({
+      imageUrl: 'assets/philhealth-yakap.jpg',
+      imageAlt: 'PhilHealth YAKAP: Mga Dapat Malaman',
+      width: 760,
+      padding: '12px',
+      showConfirmButton: false,
+      showCloseButton: true
+    });
+  }
+  window.openYakapPoster = openYakapPoster;
 
   // ---------- MR / APPEAL: ELECTRONIC APPEAL NOTICE (PDF, opisyal na header/footer ng branch; walang pirma) ----------
   async function downloadAppealNotice(gatnNo) {

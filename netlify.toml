@@ -1,8 +1,8 @@
-# Netlify: index.html at letterhead-assets.js LANG ang ipa-publish sa website.
+# Netlify: index.html, letterhead-assets.js at assets/ LANG ang ipa-publish sa website.
 # Ang sql/, CLAUDE.md at iba pang file sa repo ay para sa developers lang
 # at hindi na makikita sa live site (anumang capitalization ng URL).
 # Kapag nagdagdag ng bagong file na kailangan sa website (hal. larawan),
-# idagdag ito sa `cp` command sa ibaba.
+# ilagay ito sa assets/ o idagdag sa `cp` command sa ibaba.
 [build]
   publish = "dist"
-  command = "rm -rf dist && mkdir dist && cp index.html letterhead-assets.js dist/"
+  command = "rm -rf dist && mkdir dist && cp index.html letterhead-assets.js dist/ && cp -r assets dist/"

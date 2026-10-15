@@ -2803,6 +2803,108 @@
     doc.save('MR_Letter_' + currentRefileGatn.toUpperCase() + '.pdf');
   });
 
+  // ---------- MR / APPEAL: ELECTRONIC APPEAL NOTICE (PDF, opisyal na header/footer ng branch; walang pirma) ----------
+  async function downloadAppealNotice(gatnNo) {
+    const { data, error } = await sb.rpc('get_appeal_notice', { p_gatn_no: gatnNo });
+    if (error || !data.success) {
+      Swal.fire('Error', error ? error.message : data.message, 'error');
+      return;
+    }
+
+    try {
+      await ensurePdfLibsLoaded();
+      await loadScriptOnce('letterhead-assets.js');
+    } catch (e) {
+      Swal.fire('Error', 'Could not load the notice template. Please try again.', 'error');
+      return;
+    }
+
+    const lh = window.EGOS_LETTERHEAD || {};
+    const branchHeader = lh[(data.pro_region || '').toUpperCase()];
+    const branchName = (data.pro_region || '').toUpperCase().replace('PRONCR ', 'NCR ');
+    const officeName = 'PHILHEALTH REGIONAL OFFICE ' + branchName + ' BRANCH';
+    const fmt = function(v) {
+      return v ? new Date(v).toLocaleDateString('en-PH', { timeZone: 'Asia/Manila', year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A';
+    };
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+    const left = 20;
+    const width = 170;
+    const pageBottom = 262;
+    const addImg = function(img, x, y, w) {
+      if (!img) return 0;
+      const h = w * img.h / img.w;
+      doc.addImage(img.src, x, y, w, h);
+      return h;
+    };
+
+    // HEADER: logos sa kaliwa, header ng branch sa kanan (kagaya ng opisyal na sulat)
+    addImg(lh.philhealth, left, 14, 36);
+    addImg(lh.bagongPilipinas, left + 40, 11, 17);
+    const headerH = addImg(branchHeader, 98, 10, 92);
+    let y = Math.max(34, 10 + headerH) + 10;
+
+    const para = function(text, opts) {
+      opts = opts || {};
+      doc.setFont('helvetica', opts.bold ? 'bold' : 'normal');
+      doc.setFontSize(opts.size || 10.5);
+      const lines = doc.splitTextToSize(text, width);
+      const lineH = (opts.size || 10.5) * 0.43;
+      if (y + lines.length * lineH > pageBottom) { doc.addPage(); y = 20; }
+      doc.text(lines, left, y, { maxWidth: width, align: opts.justify === false ? 'left' : 'justify' });
+      y += lines.length * lineH + (opts.after === undefined ? 4 : opts.after);
+    };
+
+    para(fmt(data.mr_notice_at), { justify: false, after: 6 });
+    para((data.facility || '').toUpperCase() + ' (' + (data.facility_accreditation_no || '') + ')', { bold: true, justify: false, after: 6 });
+    para('Subject: Notice of Motion for Reconsideration / Appeal Period for GAMOT Claim', { bold: true, justify: false, after: 6 });
+    para('Dear Sir/Madam,', { justify: false });
+    para('Greetings in the spirit of Universal Health Care!', { justify: false });
+    para('This is to formally notify your institution that the GAMOT claim below, which was returned to your facility for compliance, ' +
+         'was not complied with within the prescribed sixty (60) day compliance period.');
+
+    doc.autoTable({
+      startY: y,
+      margin: { left: left, right: 20 },
+      styles: { fontSize: 8.5, cellPadding: 1.8, valign: 'middle' },
+      headStyles: { fillColor: [0, 84, 166], textColor: 255, fontStyle: 'bold' },
+      head: [['GATN No.', 'GACN No.', 'Deficiency', 'RTF Date', 'Compliance Deadline', 'MR / Appeal Deadline']],
+      body: [[
+        data.gatn_no || '', data.gacn_no || '',
+        (data.issue_category || '').replace(/_/g, ' ') + ' - ' + (data.specific_issue || ''),
+        fmt(data.rtf_date), fmt(data.compliance_deadline), fmt(data.mr_deadline)
+      ]]
+    });
+    y = doc.lastAutoTable.finalY + 6;
+
+    if (data.required_resolution) {
+      para('Required compliance: ' + data.required_resolution);
+    }
+    para('Your facility may file a Motion for Reconsideration / Appeal electronically through Easy GAMOT Online Support on or before ' +
+         fmt(data.mr_deadline) + '. Log in, open Refile Deficiency, search the GATN above, and upload (1) the corrected document(s) and ' +
+         '(2) your Motion for Reconsideration / Appeal letter using the template provided on the same page.');
+    para('Failure to file a Motion for Reconsideration / Appeal on or before ' + fmt(data.mr_deadline) +
+         ' will result in the DENIAL of the claim with finality, and the claim can no longer be refiled.', { bold: true });
+    para('For inquiries or further clarifications regarding this matter, you may contact our office through the contact details indicated above.');
+    para('Thank you for your usual cooperation and continued partnership in providing quality healthcare services to our members.', { after: 8 });
+    para('Very truly yours,', { justify: false, after: 6 });
+    para(officeName, { bold: true, justify: false, after: 2 });
+
+    // FOOTER: ISO logo sa kaliwang ibaba + paalala na electronic ang notice
+    const pages = doc.getNumberOfPages();
+    for (let p = 1; p <= pages; p++) {
+      doc.setPage(p);
+      addImg(lh.iso, left, 270, 18);
+      doc.setFont('helvetica', 'italic');
+      doc.setFontSize(8);
+      doc.text('This is a system-generated electronic notice from Easy GAMOT Online Support. No signature is required.', left + 22, 282);
+    }
+
+    doc.save('Appeal_Notice_' + (data.gatn_no || gatnNo) + '.pdf');
+  }
+  window.downloadAppealNotice = downloadAppealNotice;
+
   // ---------- REFILE: SUBMIT CORRECTED DOCUMENT ----------
   document.getElementById('refileForm').addEventListener('submit', async function(e) {
     e.preventDefault();
@@ -3184,7 +3286,9 @@
         ? '<br><span style="color:#dc2626; font-size:11px; font-weight:700;">↺ Returned: ' + r.review_remarks + '</span>'
         : '';
       const mrNote = isMr
-        ? '<br><span style="color:#6d28d9; font-size:11px; font-weight:700;">⚠ FOR MR / APPEAL — file your MR / Appeal on or before the deadline, or this claim will be DENIED with finality.</span>'
+        ? '<br><span style="color:#6d28d9; font-size:11px; font-weight:700;">⚠ FOR MR / APPEAL — file your MR / Appeal on or before the deadline, or this claim will be DENIED with finality.</span>' +
+          '<br><button type="button" style="width:auto; margin:6px 0 0; padding:4px 10px; font-size:11px; background:#6d28d9;" ' +
+            'onclick="downloadAppealNotice(\'' + r.gatn_no + '\')">📄 Appeal Notice</button>'
         : '';
       const newGacnBadge = r.new_gacn_no
         ? '<br><span style="display:inline-block; margin-top:4px; background:#fef3c7; color:#92400e; font-size:10px; font-weight:800; padding:2px 8px; border-radius:10px;">🔔 New GACN: ' + r.new_gacn_no + '</span>'
@@ -3721,6 +3825,11 @@
             'onclick="openEditRecordModal(\'' + r.gatn_no + '\')">Edit</button>' +
           '<button type="button" style="width:auto; margin:0; padding:6px 12px; font-size:12px; background:#dc2626; color:#fff;" ' +
             'onclick="deleteDeficiencyRecord(\'' + r.gatn_no + '\')">Delete</button>';
+      // MR / APPEAL: electronic Appeal Notice para sa mga record na dumaan na sa MR
+      const noticeBtn = (r.status === 'FOR_MR' || r.status === 'DENIED' || r.is_mr_filing)
+        ? '<br><button type="button" style="width:auto; margin:4px 0 0; padding:6px 12px; font-size:12px; background:#6d28d9;" ' +
+            'onclick="downloadAppealNotice(\'' + r.gatn_no + '\')">📄 Notice</button>'
+        : '';
       return '<tr>' +
         '<td>' + created + '</td>' +
         '<td>' + (r.facility_accreditation_no || '') + '</td>' +
@@ -3729,7 +3838,7 @@
         '<td>' + (r.issue_category || '').replace(/_/g, ' ') + '<br><span style="color:var(--muted); font-size:11px;">' + r.specific_issue + '</span></td>' +
         '<td><span class="status-pill ' + r.status + '">' + statusLabel + '</span></td>' +
         '<td>' + deadline + '</td>' +
-        '<td>' + actions + '</td>' +
+        '<td>' + actions + noticeBtn + '</td>' +
         '</tr>';
     }).join('');
 

@@ -708,7 +708,7 @@
         </div>
 
         <label for="claimAmount">Claim Amount</label>
-        <input type="text" id="claimAmount" placeholder="e.g. 15000.00" inputmode="decimal">
+        <input type="text" id="claimAmount" placeholder="e.g. 15000.00" inputmode="decimal" required pattern="\d+(\.\d{1,2})?" title="Enter the claim amount, e.g. 15000.00">
 
         <div style="display:flex; gap:10px; flex-wrap:wrap;">
           <button type="submit" id="encodeBtn" style="flex:1 1 200px; width:auto;">Encode & Save</button>
@@ -1470,7 +1470,7 @@
       role: data.role,
       facility: data.facility,
       branch: data.branch,
-      id_no: data.id_no,
+      id_no: data.idNo,
       account_type: data.account_type,
       accreditation_no: data.accreditation_no
     };
@@ -1907,7 +1907,8 @@
         headers: {
           "Content-Type": "application/json",
           "Authorization": "Bearer " + SUPABASE_KEY,
-          "apikey": SUPABASE_KEY
+          "apikey": SUPABASE_KEY,
+          "x-egos-session": currentUser.token
         },
         body: JSON.stringify({ images: images })
       });
@@ -2450,7 +2451,8 @@
         headers: {
           "Content-Type": "application/json",
           "Authorization": "Bearer " + SUPABASE_KEY,
-          "apikey": SUPABASE_KEY
+          "apikey": SUPABASE_KEY,
+          "x-egos-session": currentUser.token
         },
         body: JSON.stringify({ username: username, decision: decision, declineReason: declineReason })
       });
@@ -5102,7 +5104,8 @@
         headers: {
           "Content-Type": "application/json",
           "Authorization": "Bearer " + SUPABASE_KEY,
-          "apikey": SUPABASE_KEY
+          "apikey": SUPABASE_KEY,
+          "x-egos-session": currentUser.token
         },
         body: JSON.stringify({
           username: currentUser.username,

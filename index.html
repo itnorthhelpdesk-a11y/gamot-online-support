@@ -535,6 +535,51 @@
   }
   .promo-banner-btn:hover .promo-banner-hint, .promo-banner-btn:focus-visible .promo-banner-hint { opacity: 1; }
 
+  /* ========================================================================
+     RESPONSIVE: maayos sa desktop, tablet at cellphone
+     ======================================================================== */
+
+  /* Popups: hindi lalampas sa lapad ng screen kahit may nakatakdang width */
+  .swal2-popup { max-width: 94vw !important; }
+
+  /* Tablet: mas makitid na sidebar para may espasyo ang content */
+  @media (min-width: 769px) and (max-width: 1024px) {
+    .sidebar { width: 168px; }
+    .sidebar button { font-size: 13px; padding: 10px 12px; }
+    .card { padding: 22px; }
+  }
+
+  /* Cellphone: bawat row ng tabla ay nagiging card (label sa kaliwa, laman sa kanan) */
+  @media (max-width: 640px) {
+    .data-table-wrap { border: none; background: transparent; overflow: visible; max-height: none; }
+    table.data-table, table.data-table tbody, table.data-table tr, table.data-table td { display: block; width: 100%; }
+    table.data-table thead { display: none; }
+    table.data-table tbody tr {
+      background: #fff !important; border: 1px solid var(--line); border-radius: 14px;
+      padding: 6px 14px; margin-bottom: 12px; box-shadow: 0 4px 14px rgba(31, 38, 135, 0.06);
+    }
+    table.data-table tbody tr.urgency-row { padding-left: 14px !important; }
+    table.data-table td {
+      position: relative; padding: 8px 0 8px 40%; min-height: 34px;
+      border-bottom: 1px dashed var(--line); text-align: left; overflow-wrap: anywhere;
+    }
+    table.data-table td:last-child { border-bottom: none; }
+    table.data-table td::before {
+      content: attr(data-label); position: absolute; left: 0; top: 9px; width: 36%;
+      font-size: 11px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: .3px;
+    }
+    table.data-table td[data-label=""] { padding-left: 0; }
+    table.data-table td button { width: auto; }
+
+    /* Iwas zoom sa iPhone kapag nagta-type (kailangan ng 16px pataas) */
+    input, select, textarea { font-size: 16px; }
+  }
+
+  @media (max-width: 480px) {
+    #loginSection, #registerSection { padding: 30px 20px; margin: 20px auto; border-radius: 22px; }
+    .gamot-tagline { font-size: 0.8rem; padding: 4px 18px; }
+  }
+
   /* Para sa mga user na naka-off ang animation sa computer nila */
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation: none !important; transition: none !important; }
@@ -2940,6 +2985,26 @@
 
     doc.save('MR_Letter_' + currentRefileGatn.toUpperCase() + '.pdf');
   });
+
+  // ---------- RESPONSIVE: lagyan ng label (galing sa header ng tabla) ang bawat cell ----------
+  // Ginagamit ito ng CSS sa cellphone para gawing card ang bawat row. Awtomatiko para sa lahat ng tabla.
+  let tableLabelPending = false;
+  function labelTableCells() {
+    tableLabelPending = false;
+    document.querySelectorAll('#mainSection table.data-table').forEach(function(table) {
+      const heads = Array.from(table.querySelectorAll('thead th')).map(function(th) { return th.textContent.trim(); });
+      table.querySelectorAll('tbody tr').forEach(function(tr) {
+        Array.from(tr.children).forEach(function(td, i) {
+          if (!td.hasAttribute('data-label')) td.setAttribute('data-label', heads[i] || '');
+        });
+      });
+    });
+  }
+  new MutationObserver(function() {
+    if (tableLabelPending) return;
+    tableLabelPending = true;
+    requestAnimationFrame(labelTableCells);
+  }).observe(document.getElementById('mainSection'), { childList: true, subtree: true });
 
   // ---------- PHILHEALTH YAKAP: buong poster kapag na-click ang banner sa kanan ----------
   function openYakapPoster() {

@@ -6,7 +6,7 @@
 <title>Easy Online GAMOT Support - Deficiency Tracking System</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700;800&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700;800&family=Nunito:wght@400;600;700;800&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
   :root {
     --ph-blue: #0054a6;
@@ -416,6 +416,110 @@
     white-space: nowrap !important;
   }
   .swal2-popup { overflow-wrap: break-word !important; }
+
+  /* ========================================================================
+     LEVEL-UP DESIGN — parehong kulay at itsura ng EGOS, mas pinakinis lang.
+     Nasa dulo ito para ma-override ang mga naunang style. Para ibalik ang
+     dating itsura, burahin lang ang buong block na ito (at ang Nunito font).
+     ======================================================================== */
+
+  /* Font: Nunito (bilugan, bagay sa Fredoka) para sa mas madaling basahin na teksto;
+     Roboto Mono pa rin sa mga input para malinaw ang GATN / GACN / numero */
+  body { font-family: 'Nunito', 'Segoe UI', sans-serif; font-size: 15px; -webkit-font-smoothing: antialiased; }
+  input, select, textarea { font-family: 'Roboto Mono', monospace; }
+  table.data-table td { font-variant-numeric: tabular-nums; }
+
+  /* Watermark: mas malabo pagka-login para hindi makaistorbo sa datos */
+  body.logged-in .wm-item .wm-blue { color: rgba(30, 58, 138, 0.03); }
+  body.logged-in .wm-item .wm-gold { color: rgba(253, 185, 19, 0.05); }
+
+  /* Header: gold na guhit sa ilalim (kulay ng GAMOT) */
+  header { position: relative; overflow: hidden; }
+  header::after {
+    content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 4px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    opacity: .85;
+  }
+
+  /* Cards: makinis na paglabas kapag lumipat ng tab */
+  @keyframes egosFadeUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .card { animation: egosFadeUp .35s ease-out; transition: box-shadow .25s ease, transform .25s ease; }
+  .card:hover { box-shadow: 0 14px 40px 0 rgba(31, 38, 135, 0.12); }
+  .card h2 { letter-spacing: .3px; }
+
+  /* Sidebar: gold na indicator sa aktibong tab + makinis na hover */
+  .sidebar button {
+    position: relative; text-transform: none; letter-spacing: .2px; font-size: 14px;
+    transition: background .2s ease, color .2s ease, padding-left .2s ease, transform .1s ease;
+  }
+  .sidebar button:hover { background: #eef2fb; padding-left: 18px; transform: none; box-shadow: none; }
+  .sidebar button.active {
+    background: linear-gradient(90deg, var(--ph-blue), var(--navy-light));
+    box-shadow: 0 6px 14px rgba(0, 84, 166, 0.25);
+  }
+  .sidebar button.active::before {
+    content: ''; position: absolute; left: 0; top: 8px; bottom: 8px; width: 4px;
+    border-radius: 0 4px 4px 0; background: var(--gold);
+  }
+
+  /* Buttons: pindot na pakiramdam + malinaw na focus para sa keyboard */
+  button { transition: transform .12s ease, box-shadow .2s ease, filter .2s ease, background .2s ease; }
+  button:hover:not(:disabled) { filter: brightness(1.06); }
+  button:active:not(:disabled) { transform: translateY(0) scale(.98); }
+  button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+    outline: 3px solid rgba(253, 185, 19, 0.7); outline-offset: 2px;
+  }
+
+  /* Inputs: malambot na asul na glow kapag naka-focus */
+  input, select, textarea { transition: border-color .2s ease, box-shadow .2s ease, background .2s ease; }
+  input:focus, select:focus, textarea:focus { box-shadow: 0 0 0 4px rgba(0, 84, 166, 0.12); }
+
+  /* Tables: rounded na lalagyan, sticky header, salitan na kulay, highlight sa hover */
+  .data-table-wrap { border: 1px solid var(--line); border-radius: 14px; background: #fff; max-height: 70vh; overflow: auto; }
+  table.data-table th { position: sticky; top: 0; z-index: 1; background: #eef2f8; color: var(--ph-blue-dark); }
+  table.data-table tbody tr { transition: background .15s ease; }
+  table.data-table tbody tr:nth-child(even) { background: #fafbfd; }
+  table.data-table tbody tr:hover { background: #eef5ff; }
+  table.data-table tbody tr:last-child td { border-bottom: none; }
+
+  /* Status pills: may maliit na tuldok sa unahan para mas madaling makita */
+  .status-pill { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; letter-spacing: .3px; }
+  .status-pill::before {
+    content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; opacity: .85; flex-shrink: 0;
+  }
+
+  /* Stat cards (Analytics): gumagalaw nang bahagya kapag tinapatan */
+  .analytics-stat-card {
+    background: #fff; border-top: 4px solid var(--ph-blue);
+    transition: transform .2s ease, box-shadow .2s ease;
+  }
+  .analytics-stat-card:hover { transform: translateY(-3px); box-shadow: 0 10px 22px rgba(31, 38, 135, 0.10); }
+
+  /* Mensahe at resolution box: mas malambot ang anyo */
+  .msg { border-left: 4px solid currentColor; }
+  .resolution-box { border-radius: 10px; }
+
+  /* SweetAlert popups: kapareho ng font at kurba ng EGOS */
+  .swal2-popup { border-radius: 20px !important; font-family: 'Nunito', 'Segoe UI', sans-serif !important; }
+  .swal2-title { font-family: 'Fredoka', sans-serif !important; color: var(--ph-blue-dark) !important; }
+
+  /* Mas maayos na scrollbar */
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-thumb { background: #c3cfe2; border-radius: 10px; border: 2px solid transparent; background-clip: padding-box; }
+  ::-webkit-scrollbar-thumb:hover { background: #94a3c4; background-clip: padding-box; }
+
+  /* Para sa mga user na naka-off ang animation sa computer nila */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+  }
+
+  @media (max-width: 768px) {
+    .sidebar button:hover { padding-left: 14px; }
+    .data-table-wrap { max-height: none; }
+  }
 </style>
 </head>
 <body>
@@ -1497,6 +1601,7 @@
     if (currentUser.token) {
       sb = createSessionClient(currentUser.token);
     }
+    document.body.classList.add('logged-in');
 
     resetInactivityTimers();
     document.getElementById('askAiFab').style.display = 'flex';
@@ -1606,6 +1711,7 @@
       sb.rpc('logout', { p_token: currentUser.token }).then(function() {}, function() {});
     }
     sb = sbPublic;
+    document.body.classList.remove('logged-in');
 
     sessionStorage.removeItem('draft_searchGatn');
     sessionStorage.removeItem('draft_refileNotes');

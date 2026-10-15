@@ -661,6 +661,46 @@
   }
 
   /* ========================================================================
+     FILE UPLOAD: "Choose File" bilang upload box (putol-putol na border)
+     ======================================================================== */
+  input[type="file"] {
+    cursor: pointer; padding: 14px 14px; font-family: 'Nunito', 'Segoe UI', sans-serif; font-size: 13px;
+    color: var(--muted); border: 2px dashed rgba(0, 84, 166, 0.35); border-radius: 14px;
+    background: linear-gradient(135deg, rgba(238, 245, 255, 0.9), rgba(255, 255, 255, 0.7));
+    transition: border-color .2s ease, background .2s ease, box-shadow .2s ease;
+  }
+  input[type="file"]:hover, input[type="file"]:focus {
+    border-color: var(--ph-blue); background: #eef5ff; box-shadow: 0 0 0 4px rgba(0, 84, 166, 0.10);
+  }
+  input[type="file"].egos-drag {
+    border-color: var(--gold); border-style: solid; background: #fffbea;
+    box-shadow: 0 0 0 5px rgba(253, 185, 19, 0.25);
+  }
+  input[type="file"]::file-selector-button {
+    margin-right: 14px; padding: 9px 16px; border: none; border-radius: 10px; cursor: pointer;
+    background: linear-gradient(90deg, var(--ph-blue), var(--navy-light)); color: #fff;
+    font-family: 'Nunito', 'Segoe UI', sans-serif; font-size: 12px; font-weight: 800;
+    text-transform: uppercase; letter-spacing: .4px; box-shadow: 0 4px 10px rgba(0, 84, 166, 0.25);
+    transition: filter .2s ease, transform .1s ease;
+  }
+  input[type="file"]::file-selector-button:hover { filter: brightness(1.1); }
+  input[type="file"]::file-selector-button:active { transform: scale(.97); }
+  /* Mas lumang Chrome/Edge */
+  input[type="file"]::-webkit-file-upload-button {
+    margin-right: 14px; padding: 9px 16px; border: none; border-radius: 10px; cursor: pointer;
+    background: linear-gradient(90deg, var(--ph-blue), var(--navy-light)); color: #fff;
+    font-weight: 800; text-transform: uppercase; letter-spacing: .4px;
+  }
+  /* File viewer (sa gitna ng screen) */
+  .swal2-popup.egos-file-viewer { max-width: min(1100px, 94vw) !important; }
+  @media (max-width: 640px) { .egos-file-viewer iframe { height: 70vh !important; } }
+
+  /* MR letter: lila, tugma sa kulay ng MR / Appeal */
+  #mrLetterFile { border-color: rgba(109, 40, 217, 0.4); background: linear-gradient(135deg, rgba(237, 233, 254, 0.9), rgba(255, 255, 255, 0.7)); }
+  #mrLetterFile:hover, #mrLetterFile:focus { border-color: #6d28d9; box-shadow: 0 0 0 4px rgba(109, 40, 217, 0.12); }
+  #mrLetterFile::file-selector-button { background: linear-gradient(90deg, #6d28d9, #8b5cf6); box-shadow: 0 4px 10px rgba(109, 40, 217, 0.3); }
+
+  /* ========================================================================
      LOGIN LOADING SCREEN: kapsula ng gamot (asul = PhilHealth, dilaw = GAMOT)
      ======================================================================== */
   .egos-loader {
@@ -2811,7 +2851,7 @@
       const row = document.createElement('div');
       row.style.cssText = "display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid var(--line); gap:12px; flex-wrap:wrap;";
       const attachmentHtml = u.attachment_link
-        ? '<a href="' + u.attachment_link + '" target="_blank" style="color:var(--ph-blue); font-weight:700;">📎 View Document</a>'
+        ? secureFileLink(u.attachment_link, '📎 View Document', 'var(--ph-blue)')
         : '<span style="color:var(--muted);">No document</span>';
 
       const roleDropdownHtml = (u.account_type === 'PHARMACY')
@@ -3291,6 +3331,72 @@
     tableLabelPending = true;
     requestAnimationFrame(labelTableCells);
   }).observe(document.getElementById('mainSection'), { childList: true, subtree: true });
+
+  // ---------- FILE UPLOAD: kumikinang ang upload box habang hinihila ang file papasok ----------
+  ['dragenter', 'dragover'].forEach(function(evt) {
+    document.addEventListener(evt, function(e) {
+      if (e.target && e.target.matches && e.target.matches('input[type="file"]')) e.target.classList.add('egos-drag');
+    });
+  });
+  ['dragleave', 'drop'].forEach(function(evt) {
+    document.addEventListener(evt, function(e) {
+      if (e.target && e.target.matches && e.target.matches('input[type="file"]')) e.target.classList.remove('egos-drag');
+    });
+  });
+
+  // ---------- SECURE FILES: pansamantalang link (10 minuto) mula sa server, pagkatapos i-check ang karapatan ----------
+  function secureFileLink(link, label, color) {
+    return '<a href="#" data-file="' + String(link).replace(/"/g, '&quot;') + '" onclick="openSecureFile(this.dataset.file); return false;" ' +
+      'style="color:' + color + '; font-weight:700;">' + label + '</a>';
+  }
+
+  async function openSecureFile(link) {
+    // Viewer sa gitna ng screen: "Opening file…" habang kinukuha ang pansamantalang link
+    Swal.fire({
+      title: 'Opening file…',
+      allowOutsideClick: false,
+      showConfirmButton: false,
+      didOpen: function() { Swal.showLoading(); }
+    });
+
+    try {
+      const res = await fetch(SUPABASE_URL + "/functions/v1/get-file-url", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer " + SUPABASE_KEY,
+          "apikey": SUPABASE_KEY,
+          "x-egos-session": currentUser.token
+        },
+        body: JSON.stringify({ url: link })
+      });
+      const result = await res.json();
+      if (!result.success) {
+        throw new Error(result.error === 'SESSION_EXPIRED'
+          ? 'Your session has expired. Please log in again.'
+          : (result.error || 'Could not open the file.'));
+      }
+      const safeUrl = String(result.url).replace(/"/g, '&quot;');
+      Swal.fire({
+        width: '92vw',
+        padding: '10px',
+        showCloseButton: true,
+        showConfirmButton: false,
+        customClass: { popup: 'egos-file-viewer' },
+        html:
+          '<iframe src="' + safeUrl + '" title="Attachment" ' +
+            'style="width:100%; height:78vh; border:none; border-radius:12px; background:#f1f5f9;"></iframe>' +
+          '<div style="margin-top:8px; display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;">' +
+            '<span style="font-size:12px; color:var(--muted);">🔒 Secure link — expires in 10 minutes.</span>' +
+            '<a href="' + safeUrl + '" target="_blank" rel="noopener" ' +
+              'style="font-size:13px; font-weight:800; color:var(--ph-blue);">↗ Open in new tab</a>' +
+          '</div>'
+      });
+    } catch (e) {
+      Swal.fire('Error', e.message, 'error');
+    }
+  }
+  window.openSecureFile = openSecureFile;
 
   // ---------- PHILHEALTH YAKAP: buong poster kapag na-click ang banner sa kanan ----------
   function openYakapPoster() {
@@ -3973,7 +4079,7 @@
 
     let rows = pageData.map(function(u) {
       const attachmentHtml = u.attachment_link
-        ? '<a href="' + u.attachment_link + '" target="_blank" style="color:var(--ph-blue); font-weight:700;">📎 View Document</a>'
+        ? secureFileLink(u.attachment_link, '📎 View Document', 'var(--ph-blue)')
         : '<span style="color:var(--muted);">No document</span>';
       return '<div style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid var(--line);">' +
         '<div>' +
@@ -5785,7 +5891,7 @@
     let cardsHtml = pageData.map(function(r) {
       const refiled = r.refile_timestamp ? new Date(r.refile_timestamp).toLocaleString() : '—';
       const fileLink = r.refile_file_link
-        ? '<a href="' + r.refile_file_link + '" target="_blank" style="color:var(--ph-blue); font-weight:700;">View Corrected Document</a>'
+        ? secureFileLink(r.refile_file_link, 'View Corrected Document', 'var(--ph-blue)')
         : '<span style="color:var(--muted);">No file attached</span>';
       const lateBadge = r.is_late_submission
         ? ' <span class="status-pill RTF" style="background:#dc2626; color:#fff;">⚠ LATE</span>'
@@ -5795,7 +5901,7 @@
         : '';
       const mrLetterLink = r.is_mr_filing
         ? '<br>' + (r.mr_letter_link
-            ? '<a href="' + r.mr_letter_link + '" target="_blank" style="color:#6d28d9; font-weight:700;">View MR / Appeal Letter</a>'
+            ? secureFileLink(r.mr_letter_link, 'View MR / Appeal Letter', '#6d28d9')
             : '<span style="color:var(--muted);">No MR letter attached</span>') +
           (r.mr_deadline ? ' <span style="color:var(--muted); font-size:12px;">(MR deadline: ' + new Date(r.mr_deadline).toLocaleDateString() + ')</span>' : '')
         : '';

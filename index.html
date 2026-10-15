@@ -741,6 +741,8 @@
 
           <!-- MR / APPEAL: lumalabas lang kapag FOR_MR ang GATN -->
           <div id="mrLetterSection" style="display:none;">
+            <p style="font-size:12px; color:var(--muted); margin:0 0 8px; line-height:1.5;">Step 1: Download the MR letter template (already filled in with this GATN's details). Step 2: Print it, write your reason, sign it. Step 3: Upload the signed letter below.</p>
+            <button type="button" id="mrTemplateBtn" style="width:auto; margin:0 0 14px; padding:8px 14px; font-size:13px; background:#6d28d9;">📄 Download MR Letter Template</button>
             <label for="mrLetterFile">Motion for Reconsideration / Appeal Letter (required) — JPG, PNG, or PDF</label>
             <input type="file" id="mrLetterFile" accept="image/jpeg,image/png,.pdf" multiple>
             <p style="font-size:11px; color:var(--muted); margin:6px 0 16px; line-height:1.5;">Your signed MR / Appeal letter explaining why the deficiency was not complied with within the 60-day period.</p>
@@ -2658,6 +2660,7 @@
   let currentRefileGatn = "";
   let currentRefileDeadline = null;
   let currentRefileIsMr = false;
+  let currentRefileData = null;
   document.getElementById('searchGatnBtn').addEventListener('click', async function() {
     const btn = this;
     const searchMsg = document.getElementById('searchMsg');
@@ -2700,6 +2703,7 @@
     }
 
     currentRefileGatn = gatn;
+    currentRefileData = data;
     currentRefileIsMr = (data.status === 'FOR_MR');
     currentRefileDeadline = currentRefileIsMr ? null : (data.compliance_deadline || null);
 
@@ -2725,6 +2729,78 @@
     document.getElementById('mrLetterSection').style.display = currentRefileIsMr ? 'block' : 'none';
     document.getElementById('refileBtn').innerText = currentRefileIsMr ? "Submit MR / Appeal" : "Submit Refile";
     document.getElementById('refileDetails').style.display = 'block';
+  });
+
+  // ---------- MR / APPEAL: DOWNLOAD MR LETTER TEMPLATE (naka-fill na ang detalye ng GATN) ----------
+  document.getElementById('mrTemplateBtn').addEventListener('click', async function() {
+    const d = currentRefileData;
+    if (!d || !currentRefileGatn) return;
+
+    await ensurePdfLibsLoaded();
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+    const left = 20;
+    const width = 170;
+    const fmt = function(v) {
+      return v ? new Date(v).toLocaleDateString('en-PH', { year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A';
+    };
+    let y = 20;
+
+    const writeLines = function(text, size, bold) {
+      doc.setFont('helvetica', bold ? 'bold' : 'normal');
+      doc.setFontSize(size);
+      const lines = doc.splitTextToSize(text, width);
+      doc.text(lines, left, y);
+      y += lines.length * (size * 0.45) + 2;
+    };
+    const blankLines = function(count) {
+      for (let i = 0; i < count; i++) {
+        y += 8;
+        doc.line(left, y, left + width, y);
+      }
+      y += 6;
+    };
+
+    writeLines('MOTION FOR RECONSIDERATION / APPEAL', 14, true);
+    writeLines('GAMOT Claim Deficiency', 11, false);
+    y += 4;
+    writeLines('Date: ______________________', 10, false);
+    y += 2;
+    writeLines('To: PhilHealth Regional Office - ' + (currentUser.branch || ''), 10, false);
+    writeLines('Subject: Motion for Reconsideration / Appeal - GATN ' + currentRefileGatn.toUpperCase(), 10, true);
+    y += 4;
+
+    writeLines('Facility: ' + (d.facility || ''), 10, false);
+    writeLines('Facility Accreditation No.: ' + (currentUser.accreditation_no || ''), 10, false);
+    writeLines('GATN No.: ' + currentRefileGatn.toUpperCase() + '     GACN No.: ' + (d.gacn_no || ''), 10, false);
+    writeLines('Issue: ' + (d.issue_category || '').replace(/_/g, ' ') + ' - ' + (d.specific_issue || ''), 10, false);
+    writeLines('Original compliance deadline: ' + fmt(d.compliance_deadline) + '     MR / Appeal deadline: ' + fmt(d.mr_deadline), 10, false);
+    y += 4;
+
+    writeLines('We respectfully request the reconsideration of the above claim deficiency, which was not complied with within the 60-day compliance period, for the following reason(s):', 10, false);
+    blankLines(6);
+
+    writeLines('Corrective action taken / documents submitted:', 10, false);
+    blankLines(4);
+
+    writeLines('We certify that the information above and the attached documents are true and correct.', 10, false);
+    y += 18;
+
+    doc.line(left, y, left + 80, y);
+    doc.line(left + 95, y, left + width, y);
+    y += 5;
+    doc.setFontSize(9);
+    doc.text('Signature over Printed Name', left, y);
+    doc.text('Designation / Position', left + 95, y);
+    y += 16;
+    doc.line(left, y, left + 80, y);
+    doc.line(left + 95, y, left + width, y);
+    y += 5;
+    doc.text('Contact No.', left, y);
+    doc.text('Date Signed', left + 95, y);
+
+    doc.save('MR_Letter_' + currentRefileGatn.toUpperCase() + '.pdf');
   });
 
   // ---------- REFILE: SUBMIT CORRECTED DOCUMENT ----------

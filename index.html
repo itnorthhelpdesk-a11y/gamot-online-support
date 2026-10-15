@@ -154,6 +154,8 @@
   .status-pill.REFILED { background: #fff6da; color: #8a6d00; }
   .status-pill.RESOLVED { background: #e8f5ee; color: var(--ok); }
   .status-pill.PENDING { background: #e7ecf2; color: var(--muted); }
+  .status-pill.FOR_MR { background: #ede9fe; color: #6d28d9; }
+  .status-pill.DENIED { background: #1f2937; color: #fff; }
   .urgency-row { border-left: 4px solid transparent; padding-left: 10px !important; }
   .urgency-row.OVERDUE { border-left-color: #dc2626; background: #fef2f2; }
   .urgency-row.DUE_SOON { border-left-color: #f59e0b; background: #fffbeb; }
@@ -737,6 +739,15 @@
           <input type="file" id="refileFile" accept="image/jpeg,image/png,.pdf" multiple required>
           <p style="font-size:11px; color:var(--muted); margin:6px 0 16px; line-height:1.5;">JPG, PNG, or PDF only. All files you select will be combined into a single PDF automatically.</p>
 
+          <!-- MR / APPEAL: lumalabas lang kapag FOR_MR ang GATN -->
+          <div id="mrLetterSection" style="display:none;">
+            <p style="font-size:12px; color:var(--muted); margin:0 0 8px; line-height:1.5;">Step 1: Download the MR letter template (already filled in with this GATN's details). Step 2: Print it, write your reason, sign it. Step 3: Upload the signed letter below.</p>
+            <button type="button" id="mrTemplateBtn" style="width:auto; margin:0 0 14px; padding:8px 14px; font-size:13px; background:#6d28d9;">📄 Download MR Letter Template</button>
+            <label for="mrLetterFile">Motion for Reconsideration / Appeal Letter (required) — JPG, PNG, or PDF</label>
+            <input type="file" id="mrLetterFile" accept="image/jpeg,image/png,.pdf" multiple>
+            <p style="font-size:11px; color:var(--muted); margin:6px 0 16px; line-height:1.5;">Your signed MR / Appeal letter explaining why the deficiency was not complied with within the 60-day period.</p>
+          </div>
+
           <label for="refileNotes">Notes (optional)</label>
           <textarea id="refileNotes" rows="3" placeholder="Any remarks about the correction you made..."></textarea>
 
@@ -762,6 +773,10 @@
           <span class="urgency-badge ON_TRACK">✓ On Track</span>
           <span class="urgency-legend-text">More than 5 days remaining — still within the compliance window</span>
         </div>
+        <div class="urgency-legend-item">
+          <span class="status-pill FOR_MR">For MR / Appeal</span>
+          <span class="urgency-legend-text">Not complied within 60 days — you have 60 more days to file an MR / Appeal; after that the claim is DENIED with finality</span>
+        </div>
       </div>
       <div id="monitorList"><p style="font-size:13px; color:var(--muted);">Loading...</p></div>
     </div>
@@ -783,8 +798,10 @@
       <select id="historyStatusFilter">
         <option value="ALL">ALL</option>
         <option value="RTF">RTF</option>
+        <option value="FOR_MR">FOR MR / APPEAL</option>
         <option value="REFILED">REFILED</option>
         <option value="RESOLVED">RESOLVED</option>
+        <option value="DENIED">DENIED</option>
       </select>
       <label style="display:flex; align-items:center; gap:8px; margin:10px 0 16px; font-weight:600; cursor:pointer;">
         <input type="checkbox" id="historyOverdueOnly" style="width:auto; margin:0;">
@@ -836,8 +853,10 @@
             <option value="ALL">ALL</option>
             <option value="PROCESSING">PROCESSING</option>
             <option value="RTF">RTF</option>
+            <option value="FOR_MR">FOR MR / APPEAL</option>
             <option value="REFILED">REFILED</option>
             <option value="RESOLVED">RESOLVED</option>
+            <option value="DENIED">DENIED</option>
           </select>
         </div>
         <div>
@@ -2640,6 +2659,8 @@
   // ---------- REFILE: SEARCH GATN ----------
   let currentRefileGatn = "";
   let currentRefileDeadline = null;
+  let currentRefileIsMr = false;
+  let currentRefileData = null;
   document.getElementById('searchGatnBtn').addEventListener('click', async function() {
     const btn = this;
     const searchMsg = document.getElementById('searchMsg');
@@ -2671,20 +2692,115 @@
       return;
     }
 
+    // MR / APPEAL: final na ang DENIED, hindi na puwedeng i-refile
+    if (data.status === 'DENIED') {
+      searchMsg.className = "msg error";
+      searchMsg.innerText = "This claim was DENIED with finality on " +
+        (data.denied_at ? new Date(data.denied_at).toLocaleDateString() : "—") +
+        " because no Motion for Reconsideration / Appeal was filed within the deadline. It can no longer be refiled.";
+      searchMsg.style.display = 'block';
+      return;
+    }
+
     currentRefileGatn = gatn;
-    currentRefileDeadline = data.compliance_deadline || null;
+    currentRefileData = data;
+    currentRefileIsMr = (data.status === 'FOR_MR');
+    currentRefileDeadline = currentRefileIsMr ? null : (data.compliance_deadline || null);
 
     const deadline = data.compliance_deadline ? new Date(data.compliance_deadline).toLocaleDateString() : "N/A";
+    const mrDeadline = data.mr_deadline ? new Date(data.mr_deadline).toLocaleDateString() : "N/A";
     document.getElementById('refileInfoBox').innerHTML =
+      (currentRefileIsMr
+        ? '<div style="background:#ede9fe; border-left:4px solid #6d28d9; padding:10px 12px; margin-bottom:10px; color:#4c1d95;">' +
+            '<strong>⚠ FOR MOTION FOR RECONSIDERATION / APPEAL</strong><br>' +
+            'The 60-day compliance period has passed. You must file your MR / Appeal (corrected documents + MR letter) on or before <strong>' + mrDeadline + '</strong>.<br>' +
+            '<strong>If no MR / Appeal is filed by this date, the claim will be DENIED with finality.</strong>' +
+          '</div>'
+        : '') +
       "<strong>Claimant:</strong> " + data.claimant_name + "<br>" +
       "<strong>Facility:</strong> " + data.facility + "<br>" +
       "<strong>GACN:</strong> " + data.gacn_no + "<br>" +
       "<strong>Issue Category:</strong> " + (data.issue_category || "").replace(/_/g, ' ') + "<br>" +
       "<strong>Specific Issue:</strong> " + data.specific_issue + "<br>" +
       "<strong>Required Action:</strong> " + data.required_resolution + "<br>" +
-      "<strong>Compliance Deadline:</strong> " + deadline;
+      "<strong>Compliance Deadline:</strong> " + deadline +
+      (currentRefileIsMr ? "<br><strong>MR / Appeal Deadline:</strong> " + mrDeadline : "");
 
+    document.getElementById('mrLetterSection').style.display = currentRefileIsMr ? 'block' : 'none';
+    document.getElementById('refileBtn').innerText = currentRefileIsMr ? "Submit MR / Appeal" : "Submit Refile";
     document.getElementById('refileDetails').style.display = 'block';
+  });
+
+  // ---------- MR / APPEAL: DOWNLOAD MR LETTER TEMPLATE (naka-fill na ang detalye ng GATN) ----------
+  document.getElementById('mrTemplateBtn').addEventListener('click', async function() {
+    const d = currentRefileData;
+    if (!d || !currentRefileGatn) return;
+
+    await ensurePdfLibsLoaded();
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+    const left = 20;
+    const width = 170;
+    const fmt = function(v) {
+      return v ? new Date(v).toLocaleDateString('en-PH', { year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A';
+    };
+    let y = 20;
+
+    const writeLines = function(text, size, bold) {
+      doc.setFont('helvetica', bold ? 'bold' : 'normal');
+      doc.setFontSize(size);
+      const lines = doc.splitTextToSize(text, width);
+      doc.text(lines, left, y);
+      y += lines.length * (size * 0.45) + 2;
+    };
+    const blankLines = function(count) {
+      for (let i = 0; i < count; i++) {
+        y += 8;
+        doc.line(left, y, left + width, y);
+      }
+      y += 6;
+    };
+
+    writeLines('MOTION FOR RECONSIDERATION / APPEAL', 14, true);
+    writeLines('GAMOT Claim Deficiency', 11, false);
+    y += 4;
+    writeLines('Date: ______________________', 10, false);
+    y += 2;
+    writeLines('To: PhilHealth Regional Office - ' + (currentUser.branch || ''), 10, false);
+    writeLines('Subject: Motion for Reconsideration / Appeal - GATN ' + currentRefileGatn.toUpperCase(), 10, true);
+    y += 4;
+
+    writeLines('Facility: ' + (d.facility || ''), 10, false);
+    writeLines('Facility Accreditation No.: ' + (currentUser.accreditation_no || ''), 10, false);
+    writeLines('GATN No.: ' + currentRefileGatn.toUpperCase() + '     GACN No.: ' + (d.gacn_no || ''), 10, false);
+    writeLines('Issue: ' + (d.issue_category || '').replace(/_/g, ' ') + ' - ' + (d.specific_issue || ''), 10, false);
+    writeLines('Original compliance deadline: ' + fmt(d.compliance_deadline) + '     MR / Appeal deadline: ' + fmt(d.mr_deadline), 10, false);
+    y += 4;
+
+    writeLines('We respectfully request the reconsideration of the above claim deficiency, which was not complied with within the 60-day compliance period, for the following reason(s):', 10, false);
+    blankLines(6);
+
+    writeLines('Corrective action taken / documents submitted:', 10, false);
+    blankLines(4);
+
+    writeLines('We certify that the information above and the attached documents are true and correct.', 10, false);
+    y += 18;
+
+    doc.line(left, y, left + 80, y);
+    doc.line(left + 95, y, left + width, y);
+    y += 5;
+    doc.setFontSize(9);
+    doc.text('Signature over Printed Name', left, y);
+    doc.text('Designation / Position', left + 95, y);
+    y += 16;
+    doc.line(left, y, left + 80, y);
+    doc.line(left + 95, y, left + width, y);
+    y += 5;
+    doc.text('Contact No.', left, y);
+    doc.text('Date Signed', left + 95, y);
+
+    doc.save('MR_Letter_' + currentRefileGatn.toUpperCase() + '.pdf');
   });
 
   // ---------- REFILE: SUBMIT CORRECTED DOCUMENT ----------
@@ -2708,6 +2824,25 @@
       msg.innerText = refileFilesCheck.message;
       msg.style.display = 'block';
       return;
+    }
+
+    // MR / APPEAL: required ang MR letter
+    const submitLabel = currentRefileIsMr ? "Submit MR / Appeal" : "Submit Refile";
+    const mrLetterInput = document.getElementById('mrLetterFile');
+    if (currentRefileIsMr) {
+      if (!mrLetterInput.files || mrLetterInput.files.length === 0) {
+        msg.className = "msg error";
+        msg.innerText = "Please attach your Motion for Reconsideration / Appeal letter.";
+        msg.style.display = 'block';
+        return;
+      }
+      const mrLetterCheck = checkMultipleFiles(mrLetterInput.files, MAX_ATTACHMENT_MB);
+      if (!mrLetterCheck.ok) {
+        msg.className = "msg error";
+        msg.innerText = mrLetterCheck.message;
+        msg.style.display = 'block';
+        return;
+      }
     }
 
     // ---------- WARNING: kung lampas na sa 60-day compliance deadline ----------
@@ -2734,7 +2869,7 @@
       mergedFile = await mergeFilesToPdf(Array.from(fileInput.files));
     } catch (mergeErr) {
       btn.disabled = false;
-      btn.innerText = "Submit Refile";
+      btn.innerText = submitLabel;
       msg.className = "msg error";
       msg.innerText = mergeErr.message || "Could not combine the selected documents.";
       msg.style.display = 'block';
@@ -2751,7 +2886,7 @@
 
     if (uploadError) {
       btn.disabled = false;
-      btn.innerText = "Submit Refile";
+      btn.innerText = submitLabel;
       msg.className = "msg error";
       msg.innerText = "Upload failed: " + uploadError.message;
       msg.style.display = 'block';
@@ -2761,15 +2896,49 @@
     const { data: urlData } = sb.storage.from('refile-attachments').getPublicUrl(filePath);
     const fileLink = urlData.publicUrl;
 
+    // MR / APPEAL: i-upload din ang MR letter (hiwalay na PDF)
+    let mrLetterLink = null;
+    if (currentRefileIsMr) {
+      btn.innerText = "Uploading MR letter...";
+      let mrLetterFile;
+      try {
+        mrLetterFile = await mergeFilesToPdf(Array.from(mrLetterInput.files));
+      } catch (mergeErr) {
+        btn.disabled = false;
+        btn.innerText = submitLabel;
+        msg.className = "msg error";
+        msg.innerText = mergeErr.message || "Could not combine the MR letter file(s).";
+        msg.style.display = 'block';
+        return;
+      }
+
+      const mrLetterPath = currentRefileGatn + "_" + Date.now() + "_mr_letter.pdf";
+      const { error: mrUploadError } = await sb.storage
+        .from('refile-attachments')
+        .upload(mrLetterPath, mrLetterFile);
+
+      if (mrUploadError) {
+        btn.disabled = false;
+        btn.innerText = submitLabel;
+        msg.className = "msg error";
+        msg.innerText = "MR letter upload failed: " + mrUploadError.message;
+        msg.style.display = 'block';
+        return;
+      }
+
+      mrLetterLink = sb.storage.from('refile-attachments').getPublicUrl(mrLetterPath).data.publicUrl;
+    }
+
     const { data, error } = await sb.rpc('submit_refile', {
       p_gatn_no: currentRefileGatn,
       p_refile_file_link: fileLink,
       p_refile_notes: document.getElementById('refileNotes').value.trim(),
-      p_accreditation_no: currentUser.accreditation_no
+      p_accreditation_no: currentUser.accreditation_no,
+      p_mr_letter_link: mrLetterLink
     });
 
     btn.disabled = false;
-    btn.innerText = "Submit Refile";
+    btn.innerText = submitLabel;
 
     if (error || !data.success) {
       msg.className = "msg error";
@@ -2789,13 +2958,19 @@
     sessionStorage.removeItem('draft_refileNotes');
 
     const wasLate = currentRefileDeadline && new Date() > new Date(currentRefileDeadline);
+    const wasMr = currentRefileIsMr;
     currentRefileGatn = "";
     currentRefileDeadline = null;
+    currentRefileIsMr = false;
+    document.getElementById('mrLetterSection').style.display = 'none';
+    btn.innerText = "Submit Refile";
 
     Swal.fire({
       icon: wasLate ? 'warning' : 'success',
-      title: 'Refile Submitted!',
-      text: wasLate
+      title: wasMr ? 'MR / Appeal Submitted!' : 'Refile Submitted!',
+      text: wasMr
+        ? 'Your Motion for Reconsideration / Appeal and corrected documents have been sent to PhilHealth for review.'
+        : wasLate
         ? 'Your corrected document has been submitted, but it was marked as LATE (past the compliance deadline) and will be flagged for PhilHealth\'s review.'
         : 'Your corrected document has been sent to PhilHealth for review. You will see the updated status once it has been checked.',
       confirmButtonText: 'Okay',
@@ -3000,10 +3175,16 @@
     const pageData = pageSlice(data, myDeficienciesPageNum);
 
     let rows = pageData.map(function(r) {
-      const deadline = r.compliance_deadline ? new Date(r.compliance_deadline).toLocaleDateString() : '—';
+      const isMr = r.status === 'FOR_MR';
+      const deadlineValue = isMr ? r.mr_deadline : r.compliance_deadline;
+      const deadline = (deadlineValue ? new Date(deadlineValue).toLocaleDateString() : '—') +
+        (isMr ? '<br><span class="status-pill FOR_MR" style="margin-top:4px;">MR / Appeal deadline</span>' : '');
       const urgency = r.urgency || 'ON_TRACK';
       const returnNote = r.review_remarks
         ? '<br><span style="color:#dc2626; font-size:11px; font-weight:700;">↺ Returned: ' + r.review_remarks + '</span>'
+        : '';
+      const mrNote = isMr
+        ? '<br><span style="color:#6d28d9; font-size:11px; font-weight:700;">⚠ FOR MR / APPEAL — file your MR / Appeal on or before the deadline, or this claim will be DENIED with finality.</span>'
         : '';
       const newGacnBadge = r.new_gacn_no
         ? '<br><span style="display:inline-block; margin-top:4px; background:#fef3c7; color:#92400e; font-size:10px; font-weight:800; padding:2px 8px; border-radius:10px;">🔔 New GACN: ' + r.new_gacn_no + '</span>'
@@ -3012,12 +3193,22 @@
         '<td><span class="urgency-badge ' + urgency + '">' + (urgencyLabels[urgency] || urgency) + '</span></td>' +
         '<td>' + r.gatn_no + '</td>' +
         '<td>' + r.gacn_no + newGacnBadge + '</td>' +
-        '<td>' + (r.issue_category || '').replace(/_/g, ' ') + '<br><span style="color:var(--muted); font-size:11px;">' + r.specific_issue + '</span>' + returnNote + '</td>' +
+        '<td>' + (r.issue_category || '').replace(/_/g, ' ') + '<br><span style="color:var(--muted); font-size:11px;">' + r.specific_issue + '</span>' + returnNote + mrNote + '</td>' +
         '<td>' + deadline + '</td>' +
         '</tr>';
     }).join('');
 
+    const mrCount = data.filter(function(r) { return r.status === 'FOR_MR'; }).length;
+    const mrBanner = mrCount > 0
+      ? '<div style="background:#ede9fe; border-left:4px solid #6d28d9; padding:10px 12px; margin-bottom:12px; color:#4c1d95; font-size:13px;">' +
+          '<strong>⚠ ' + mrCount + ' claim(s) are now FOR MOTION FOR RECONSIDERATION / APPEAL.</strong> ' +
+          'The 60-day compliance period has passed. Use <strong>Refile Deficiency</strong> to submit the corrected documents and your MR letter before the MR / Appeal deadline. ' +
+          '<strong>Claims with no MR / Appeal by the deadline will be DENIED with finality.</strong>' +
+        '</div>'
+      : '';
+
     container.innerHTML =
+      mrBanner +
       '<p style="font-size:12px; color:var(--muted); margin-bottom:12px;">Showing active deficiencies that still need action, sorted by urgency.</p>' +
       '<div class="data-table-wrap"><table class="data-table"><thead><tr>' +
       '<th>Urgency</th><th>GATN</th><th>GACN</th><th>Issue</th><th>Deadline</th>' +
@@ -3096,7 +3287,7 @@
         '<td>' + r.gatn_no + '</td>' +
         '<td>' + r.gacn_no + newGacnBadge + '</td>' +
         '<td>' + (r.issue_category || '').replace(/_/g, ' ') + '<br><span style="color:var(--muted); font-size:11px;">' + r.specific_issue + '</span></td>' +
-        '<td><span class="status-pill ' + r.status + '">' + r.status + '</span></td>' +
+        '<td><span class="status-pill ' + r.status + '">' + statusDisplayLabel(r) + '</span></td>' +
         '<td>' + deadline + '</td>' +
         '</tr>';
     }).join('');
@@ -3134,7 +3325,7 @@
       return [
         created, r.gatn_no || '', r.gacn_no || '',
         (r.issue_category || '').replace(/_/g, ' '), r.specific_issue || '',
-        r.required_resolution || '', r.status || '', rtf, deadline, refiled
+        r.required_resolution || '', statusDisplayLabel(r), rtf, deadline, refiled
       ];
     });
 
@@ -3513,21 +3704,32 @@
 
     let rows = pageData.map(function(r) {
       const created = r.created_at ? new Date(r.created_at).toLocaleDateString() : '—';
-      const deadline = r.compliance_deadline ? new Date(r.compliance_deadline).toLocaleDateString() : '—';
+      // MR / APPEAL: FOR_MR = MR deadline; DENIED = petsa ng denial
+      const deadline = r.status === 'FOR_MR' && r.mr_deadline
+        ? new Date(r.mr_deadline).toLocaleDateString() + '<br><span style="color:#6d28d9; font-size:11px;">MR / Appeal</span>'
+        : r.status === 'DENIED' && r.denied_at
+        ? 'Denied ' + new Date(r.denied_at).toLocaleDateString()
+        : (r.compliance_deadline ? new Date(r.compliance_deadline).toLocaleDateString() : '—');
+      const statusLabel = statusDisplayLabel(r);
+      // DENIED = frozen: walang Edit/Delete; ADMIN lang ang may Reopen
+      const actions = r.status === 'DENIED'
+        ? (currentUser.role === 'ADMIN'
+            ? '<button type="button" style="width:auto; margin:0; padding:6px 12px; font-size:12px; background:#6d28d9;" ' +
+                'onclick="reopenDeniedRecord(\'' + r.gatn_no + '\')">Reopen</button>'
+            : '<span style="color:var(--muted); font-size:12px;">🔒 Frozen</span>')
+        : '<button type="button" style="width:auto; margin:0 4px 4px 0; padding:6px 12px; font-size:12px; background:var(--ph-blue);" ' +
+            'onclick="openEditRecordModal(\'' + r.gatn_no + '\')">Edit</button>' +
+          '<button type="button" style="width:auto; margin:0; padding:6px 12px; font-size:12px; background:#dc2626; color:#fff;" ' +
+            'onclick="deleteDeficiencyRecord(\'' + r.gatn_no + '\')">Delete</button>';
       return '<tr>' +
         '<td>' + created + '</td>' +
         '<td>' + (r.facility_accreditation_no || '') + '</td>' +
         '<td>' + r.gatn_no + '</td>' +
         '<td>' + r.gacn_no + '</td>' +
         '<td>' + (r.issue_category || '').replace(/_/g, ' ') + '<br><span style="color:var(--muted); font-size:11px;">' + r.specific_issue + '</span></td>' +
-        '<td><span class="status-pill ' + r.status + '">' + r.status + '</span></td>' +
+        '<td><span class="status-pill ' + r.status + '">' + statusLabel + '</span></td>' +
         '<td>' + deadline + '</td>' +
-        '<td>' +
-          '<button type="button" style="width:auto; margin:0 4px 4px 0; padding:6px 12px; font-size:12px; background:var(--ph-blue);" ' +
-            'onclick="openEditRecordModal(\'' + r.gatn_no + '\')">Edit</button>' +
-          '<button type="button" style="width:auto; margin:0; padding:6px 12px; font-size:12px; background:#dc2626; color:#fff;" ' +
-            'onclick="deleteDeficiencyRecord(\'' + r.gatn_no + '\')">Delete</button>' +
-        '</td>' +
+        '<td>' + actions + '</td>' +
         '</tr>';
     }).join('');
 
@@ -3651,6 +3853,40 @@
   }
   window.deleteDeficiencyRecord = deleteDeficiencyRecord;
 
+  // ---------- MR / APPEAL: REOPEN NG DENIED (ADMIN lang; ang server din ang nagche-check) ----------
+  async function reopenDeniedRecord(gatnNo) {
+    const { value: reason } = await Swal.fire({
+      title: 'Reopen denied claim?',
+      html: 'GATN <strong>' + gatnNo + '</strong> will go back to <strong>FOR MR / APPEAL</strong> with a new 60-day MR deadline, ' +
+            'and a notice will be emailed to all accounts of the facility.',
+      input: 'textarea',
+      inputLabel: 'Reason for reopening (required, recorded in the Trail)',
+      inputValidator: function(value) {
+        if (!value || !value.trim()) return 'A reason is required.';
+      },
+      showCancelButton: true,
+      confirmButtonText: 'Reopen',
+      cancelButtonText: 'Cancel',
+      confirmButtonColor: '#6d28d9'
+    });
+
+    if (!reason) return;
+
+    const { data, error } = await sb.rpc('reopen_denied_record', {
+      p_gatn_no: gatnNo,
+      p_reason: reason.trim()
+    });
+
+    if (error || !data.success) {
+      Swal.fire('Error', error ? error.message : data.message, 'error');
+      return;
+    }
+
+    Swal.fire('Reopened', 'GATN ' + gatnNo + ' is now FOR MR / APPEAL until ' + new Date(data.mr_deadline).toLocaleDateString() + '.', 'success');
+    searchAdminHistory();
+  }
+  window.reopenDeniedRecord = reopenDeniedRecord;
+
   document.getElementById('adminHistSearchBtn').addEventListener('click', searchAdminHistory);
 
   function downloadAdminHistoryCSV() {
@@ -3672,7 +3908,7 @@
         created, r.facility_accreditation_no || '', r.gatn_no || '', r.gacn_no || '',
         (r.issue_category || '').replace(/_/g, ' '), r.specific_issue || '',
         r.required_resolution || '', claimantName || '', r.claimant_contact || '',
-        r.status || '', rtf, deadline, refiled
+        statusDisplayLabel(r), rtf, deadline, refiled
       ];
     });
 
@@ -4330,7 +4566,9 @@
     const actionColors = {
       ENCODE: 'RESOLVED', EDIT: 'REFILED', DELETE: 'RTF',
       RESOLVE: 'RESOLVED', RETURN_FOR_CORRECTION: 'REFILED', TRACKER_UPDATE: 'PENDING',
-      PAID_STATUS_CHANGE: 'RESOLVED'
+      PAID_STATUS_CHANGE: 'RESOLVED', REFILE: 'REFILED',
+      MOVED_TO_MR: 'FOR_MR', MR_NOTICE_SENT: 'FOR_MR', MR_NOTICE_NOT_SENT: 'RTF', MR_FILED: 'FOR_MR',
+      AUTO_DENIED: 'DENIED', REOPENED: 'FOR_MR'
     };
 
     let rows = pageData.map(function(t) {
@@ -4522,7 +4760,7 @@
       const additionalRemarks = (r.tracker_remarks !== null && r.tracker_remarks !== undefined && r.tracker_remarks !== '')
         ? r.tracker_remarks
         : (r.review_remarks || '');
-      const displayRemarks = r.status + (additionalRemarks ? (' — ' + additionalRemarks) : '');
+      const displayRemarks = statusDisplayLabel(r) + (additionalRemarks ? (' — ' + additionalRemarks) : '');
       const displayActionTaken = (r.tracker_action_taken !== null && r.tracker_action_taken !== undefined && r.tracker_action_taken !== '') ? r.tracker_action_taken : (r.required_resolution || '—');
       const isPaid = r.paid === true;
       const overdueClass = isRecordOverdue(r) ? 'urgency-row OVERDUE' : '';
@@ -4566,6 +4804,13 @@
     renderGamotTrackerList(currentGamotTrackerFiltered);
   }
   window.goToGamotTrackerPage = goToGamotTrackerPage;
+
+  // MR / APPEAL: label ng status na ipinapakita (hindi binabago ang status sa database)
+  function statusDisplayLabel(r) {
+    if (r.status === 'FOR_MR') return 'FOR MR / APPEAL';
+    if (r.status === 'REFILED' && r.is_mr_filing) return 'REFILED (MR)';
+    return r.status || '';
+  }
 
   function isRecordOverdue(r) {
     return r.status === 'RTF' && r.compliance_deadline && new Date(r.compliance_deadline) < new Date();
@@ -4700,7 +4945,7 @@
       const additionalRemarks = (r.tracker_remarks !== null && r.tracker_remarks !== undefined && r.tracker_remarks !== '')
         ? r.tracker_remarks
         : (r.review_remarks || '');
-      const displayRemarks = r.status + (additionalRemarks ? (' - ' + additionalRemarks) : '');
+      const displayRemarks = statusDisplayLabel(r) + (additionalRemarks ? (' - ' + additionalRemarks) : '');
       const displayActionTaken = (r.tracker_action_taken !== null && r.tracker_action_taken !== undefined && r.tracker_action_taken !== '') ? r.tracker_action_taken : (r.required_resolution || '');
 
       return [
@@ -4746,6 +4991,8 @@
       '<div class="analytics-stat-card"><div class="stat-value">' + (s.total_refiled || 0) + '</div><div class="stat-label">Refiled</div></div>' +
       '<div class="analytics-stat-card"><div class="stat-value">' + (s.total_resolved || 0) + '</div><div class="stat-label">Resolved</div></div>' +
       '<div class="analytics-stat-card"><div class="stat-value">' + (s.total_processing || 0) + '</div><div class="stat-label">Processing</div></div>' +
+      '<div class="analytics-stat-card"><div class="stat-value" style="color:#6d28d9;">' + (s.total_for_mr || 0) + '</div><div class="stat-label">For MR / Appeal</div></div>' +
+      '<div class="analytics-stat-card"><div class="stat-value" style="color:#1f2937;">' + (s.total_denied || 0) + '</div><div class="stat-label">Denied</div></div>' +
       '<div class="analytics-stat-card"><div class="stat-value" style="color:#dc2626;">' + (s.total_late || 0) + '</div><div class="stat-label">Late Submissions</div></div>' +
       '<div class="analytics-stat-card"><div class="stat-value" style="font-size:1.15rem;">' + fmtMoney(s.total_claim_amount) + '</div><div class="stat-label">Total Claim Amount</div></div>' +
       '<div class="analytics-stat-card"><div class="stat-value" style="font-size:1.15rem; color:var(--ok);">' + fmtMoney(s.total_paid_amount) + '</div><div class="stat-label">Paid Amount</div></div>' +
@@ -4932,16 +5179,25 @@
       const lateBadge = r.is_late_submission
         ? ' <span class="status-pill RTF" style="background:#dc2626; color:#fff;">⚠ LATE</span>'
         : '';
+      const mrBadge = r.is_mr_filing
+        ? ' <span class="status-pill FOR_MR">MR / APPEAL</span>'
+        : '';
+      const mrLetterLink = r.is_mr_filing
+        ? '<br>' + (r.mr_letter_link
+            ? '<a href="' + r.mr_letter_link + '" target="_blank" style="color:#6d28d9; font-weight:700;">View MR / Appeal Letter</a>'
+            : '<span style="color:var(--muted);">No MR letter attached</span>') +
+          (r.mr_deadline ? ' <span style="color:var(--muted); font-size:12px;">(MR deadline: ' + new Date(r.mr_deadline).toLocaleDateString() + ')</span>' : '')
+        : '';
 
       return '<div class="card" style="margin-bottom:12px; padding:18px;">' +
         '<div class="review-card-body">' +
           '<div class="review-card-text">' +
-            '<strong>GATN:</strong> ' + r.gatn_no + ' &nbsp; <strong>GACN:</strong> ' + r.gacn_no + lateBadge + '<br>' +
+            '<strong>GATN:</strong> ' + r.gatn_no + ' &nbsp; <strong>GACN:</strong> ' + r.gacn_no + lateBadge + mrBadge + '<br>' +
             '<strong>Facility Accred.:</strong> ' + (r.facility_accreditation_no || '') + '<br>' +
             '<strong>Issue:</strong> ' + (r.issue_category || '').replace(/_/g, ' ') + ' — ' + r.specific_issue + '<br>' +
             '<strong>Refiled:</strong> ' + refiled + '<br>' +
             '<strong>Notes from Facility:</strong> ' + (r.refile_notes || '—') + '<br>' +
-            fileLink +
+            fileLink + mrLetterLink +
           '</div>' +
           '<div class="review-card-actions">' +
             '<button type="button" style="background:var(--ok);" onclick="resolveSubmission(\'' + r.gatn_no + '\', \'RESOLVED\')">✓ Mark Resolved</button>' +

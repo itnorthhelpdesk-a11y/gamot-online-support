@@ -784,6 +784,10 @@
     .login-tab { font-size: 13px; padding: 9px 4px; gap: 5px; }
   }
 
+  /* Itago ang sariling "show password" icon ng Microsoft Edge (may sariling 👁 button ang EGOS) */
+  input[type="password"]::-ms-reveal,
+  input[type="password"]::-ms-clear { display: none; }
+
   /* ========================================================================
      RESPONSIVE: maayos sa desktop, tablet at cellphone
      ======================================================================== */

@@ -6,7 +6,7 @@
 <title>Easy Online GAMOT Support - Deficiency Tracking System</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700;800&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700;800&family=Nunito:wght@400;600;700;800&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
   :root {
     --ph-blue: #0054a6;
@@ -416,11 +416,372 @@
     white-space: nowrap !important;
   }
   .swal2-popup { overflow-wrap: break-word !important; }
+
+  /* ========================================================================
+     LEVEL-UP DESIGN — parehong kulay at itsura ng EGOS, mas pinakinis lang.
+     Nasa dulo ito para ma-override ang mga naunang style. Para ibalik ang
+     dating itsura, burahin lang ang buong block na ito (at ang Nunito font).
+     ======================================================================== */
+
+  /* Font: Nunito (bilugan, bagay sa Fredoka) para sa mas madaling basahin na teksto;
+     Roboto Mono pa rin sa mga input para malinaw ang GATN / GACN / numero */
+  body { font-family: 'Nunito', 'Segoe UI', sans-serif; font-size: 15px; -webkit-font-smoothing: antialiased; }
+  input, select, textarea { font-family: 'Roboto Mono', monospace; }
+  table.data-table td { font-variant-numeric: tabular-nums; }
+
+  /* Watermark: mas malabo pagka-login para hindi makaistorbo sa datos */
+  body.logged-in .wm-item .wm-blue { color: rgba(30, 58, 138, 0.03); }
+  body.logged-in .wm-item .wm-gold { color: rgba(253, 185, 19, 0.05); }
+
+  /* Header: gold na guhit sa ilalim (kulay ng GAMOT) */
+  header { position: relative; overflow: hidden; }
+  header::after {
+    content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 4px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    opacity: .85;
+  }
+
+  /* Cards: makinis na paglabas kapag lumipat ng tab */
+  @keyframes egosFadeUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .card { animation: egosFadeUp .35s ease-out; transition: box-shadow .25s ease, transform .25s ease; }
+  .card:hover { box-shadow: 0 14px 40px 0 rgba(31, 38, 135, 0.12); }
+  .card h2 { letter-spacing: .3px; }
+
+  /* Sidebar: gold na indicator sa aktibong tab + makinis na hover */
+  .sidebar button {
+    position: relative; text-transform: none; letter-spacing: .2px; font-size: 14px;
+    transition: background .2s ease, color .2s ease, padding-left .2s ease, transform .1s ease;
+  }
+  .sidebar button:hover { background: #eef2fb; padding-left: 18px; transform: none; box-shadow: none; }
+  .sidebar button.active {
+    background: linear-gradient(90deg, var(--ph-blue), var(--navy-light));
+    box-shadow: 0 6px 14px rgba(0, 84, 166, 0.25);
+  }
+  .sidebar button.active::before {
+    content: ''; position: absolute; left: 0; top: 8px; bottom: 8px; width: 4px;
+    border-radius: 0 4px 4px 0; background: var(--gold);
+  }
+
+  /* Buttons: pindot na pakiramdam + malinaw na focus para sa keyboard */
+  button { transition: transform .12s ease, box-shadow .2s ease, filter .2s ease, background .2s ease; }
+  button:hover:not(:disabled) { filter: brightness(1.06); }
+  button:active:not(:disabled) { transform: translateY(0) scale(.98); }
+  button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+    outline: 3px solid rgba(253, 185, 19, 0.7); outline-offset: 2px;
+  }
+
+  /* Inputs: malambot na asul na glow kapag naka-focus */
+  input, select, textarea { transition: border-color .2s ease, box-shadow .2s ease, background .2s ease; }
+  input:focus, select:focus, textarea:focus { box-shadow: 0 0 0 4px rgba(0, 84, 166, 0.12); }
+
+  /* Tables: rounded na lalagyan, sticky header, salitan na kulay, highlight sa hover */
+  .data-table-wrap { border: 1px solid var(--line); border-radius: 14px; background: #fff; max-height: 70vh; overflow: auto; }
+  table.data-table th { position: sticky; top: 0; z-index: 1; background: #eef2f8; color: var(--ph-blue-dark); }
+  table.data-table tbody tr { transition: background .15s ease; }
+  table.data-table tbody tr:nth-child(even) { background: #fafbfd; }
+  table.data-table tbody tr:hover { background: #eef5ff; }
+  table.data-table tbody tr:last-child td { border-bottom: none; }
+
+  /* Status pills: may maliit na tuldok sa unahan para mas madaling makita */
+  .status-pill { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; letter-spacing: .3px; }
+  .status-pill::before {
+    content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; opacity: .85; flex-shrink: 0;
+  }
+
+  /* Stat cards (Analytics): gumagalaw nang bahagya kapag tinapatan */
+  .analytics-stat-card {
+    background: #fff; border-top: 4px solid var(--ph-blue);
+    transition: transform .2s ease, box-shadow .2s ease;
+  }
+  .analytics-stat-card:hover { transform: translateY(-3px); box-shadow: 0 10px 22px rgba(31, 38, 135, 0.10); }
+
+  /* Mensahe at resolution box: mas malambot ang anyo */
+  .msg { border-left: 4px solid currentColor; }
+  .resolution-box { border-radius: 10px; }
+
+  /* SweetAlert popups: kapareho ng font at kurba ng EGOS */
+  .swal2-popup { border-radius: 20px !important; font-family: 'Nunito', 'Segoe UI', sans-serif !important; }
+  .swal2-title { font-family: 'Fredoka', sans-serif !important; color: var(--ph-blue-dark) !important; }
+
+  /* Mas maayos na scrollbar */
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-thumb { background: #c3cfe2; border-radius: 10px; border: 2px solid transparent; background-clip: padding-box; }
+  ::-webkit-scrollbar-thumb:hover { background: #94a3c4; background-clip: padding-box; }
+
+  /* Right panel: PhilHealth YAKAP banner (nakadikit habang nag-i-scroll; malalaking screen lang) */
+  .promo-panel { display: none; }
+  @media (min-width: 1280px) {
+    main.wide { max-width: 1340px; }
+    .promo-panel { display: block; width: 220px; flex-shrink: 0; position: sticky; top: 20px; }
+  }
+  .promo-banner-btn {
+    display: block; width: 100%; margin: 0; padding: 0; background: #fff; border-radius: 18px;
+    overflow: hidden; position: relative; text-transform: none; letter-spacing: 0;
+    box-shadow: 0 8px 24px rgba(31, 38, 135, 0.10); border: 1px solid rgba(255,255,255,0.6);
+  }
+  .promo-banner-btn:hover:not(:disabled) {
+    background: #fff; filter: none; transform: translateY(-3px);
+    box-shadow: 0 16px 34px rgba(31, 38, 135, 0.18);
+  }
+  .promo-banner-btn img { display: block; width: 100%; height: auto; max-height: calc(100vh - 60px); object-fit: cover; object-position: top; }
+  .promo-banner-hint {
+    position: absolute; left: 0; right: 0; bottom: 0; padding: 10px 8px;
+    font-size: 12px; font-weight: 700; color: #fff; text-align: center;
+    background: linear-gradient(transparent, rgba(30, 58, 138, 0.85));
+    opacity: 0; transition: opacity .2s ease;
+  }
+  .promo-banner-btn:hover .promo-banner-hint, .promo-banner-btn:focus-visible .promo-banner-hint { opacity: 1; }
+
+  /* ========================================================================
+     GLASS DESIGN: modernong salamin (glassmorphism) sa login at dashboard,
+     parehong kulay ng EGOS (asul, dilaw, indigo)
+     ======================================================================== */
+
+  /* Gumagalaw na malalambot na ilaw sa likod (aurora), nasa likod ng watermark */
+  body::before, body::after {
+    content: ''; position: fixed; z-index: 0; pointer-events: none; border-radius: 50%;
+    filter: blur(80px); opacity: .55;
+  }
+  body::before {
+    width: 520px; height: 520px; top: -120px; left: -120px;
+    background: radial-gradient(circle, rgba(59, 130, 246, 0.75), rgba(79, 70, 229, 0.35) 60%, transparent 70%);
+    animation: egosFloatA 18s ease-in-out infinite alternate;
+  }
+  body::after {
+    width: 460px; height: 460px; bottom: -140px; right: -100px;
+    background: radial-gradient(circle, rgba(253, 185, 19, 0.65), rgba(253, 185, 19, 0.2) 60%, transparent 70%);
+    animation: egosFloatB 22s ease-in-out infinite alternate;
+  }
+  @keyframes egosFloatA { from { transform: translate(0, 0); } to { transform: translate(160px, 120px); } }
+  @keyframes egosFloatB { from { transform: translate(0, 0); } to { transform: translate(-140px, -160px); } }
+
+  /* Pinag-isang anyo ng salamin */
+  .card, .sidebar, #loginSection, #registerSection, #forgotPasswordSection, #resetPasswordSection {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.52)) !important;
+    backdrop-filter: blur(22px) saturate(160%);
+    -webkit-backdrop-filter: blur(22px) saturate(160%);
+    border: 1px solid rgba(255, 255, 255, 0.75) !important;
+    box-shadow: 0 10px 40px rgba(30, 58, 138, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  }
+
+  /* LOGIN / REGISTER / FORGOT: salaming card na may gold na ilaw sa itaas */
+  #loginSection, #registerSection, #forgotPasswordSection, #resetPasswordSection {
+    position: relative; overflow: hidden; border-radius: 28px;
+    box-shadow: 0 30px 60px -15px rgba(30, 58, 138, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.95);
+  }
+  #loginSection::before, #registerSection::before, #forgotPasswordSection::before, #resetPasswordSection::before {
+    content: ''; position: absolute; left: 12%; right: 12%; top: 0; height: 4px; border-radius: 0 0 6px 6px;
+    background: linear-gradient(90deg, transparent, var(--gold), var(--navy-light), transparent);
+  }
+  #loginSection .logo-text-group { filter: drop-shadow(0 4px 10px rgba(0, 84, 166, 0.18)); }
+  #loginSection .gamot-tagline { box-shadow: 0 6px 16px rgba(253, 185, 19, 0.4); }
+
+  /* Mga input sa loob ng salamin: semi-transparent na puti */
+  #loginSection input, #registerSection input, #registerSection select,
+  #forgotPasswordSection input, #resetPasswordSection input {
+    background: rgba(255, 255, 255, 0.7); border-color: rgba(148, 163, 184, 0.35);
+  }
+  #loginSection input:focus, #registerSection input:focus, #registerSection select:focus,
+  #forgotPasswordSection input:focus, #resetPasswordSection input:focus { background: #fff; }
+
+  /* Sign In button: asul-indigo na gradient na may kumikislap na ilaw kapag tinapatan */
+  #loginBtn {
+    position: relative; overflow: hidden;
+    background: linear-gradient(90deg, var(--ph-blue), var(--navy-light), #4f46e5);
+    box-shadow: 0 10px 24px rgba(0, 84, 166, 0.35);
+  }
+  #loginBtn::after {
+    content: ''; position: absolute; top: 0; left: -60%; width: 40%; height: 100%;
+    background: linear-gradient(120deg, transparent, rgba(255, 255, 255, 0.45), transparent);
+    transform: skewX(-20deg); transition: left .6s ease;
+  }
+  #loginBtn:hover:not(:disabled)::after { left: 120%; }
+
+  /* DASHBOARD: salaming header session, sidebar at cards */
+  header {
+    background: linear-gradient(90deg, rgba(30, 58, 138, 0.94) 0%, rgba(59, 130, 246, 0.92) 50%, rgba(79, 70, 229, 0.94) 100%);
+    backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  }
+  .sidebar { border-radius: 18px; }
+  .card { border-radius: 22px; }
+  .card h2 { text-shadow: 0 1px 0 rgba(255, 255, 255, 0.8); }
+  .data-table-wrap { background: rgba(255, 255, 255, 0.82); }
+  table.data-table th { background: rgba(238, 242, 248, 0.95); }
+  .analytics-stat-card, .analytics-chart-box, .urgency-legend {
+    background: rgba(255, 255, 255, 0.7) !important;
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  }
+  .analytics-chart-box, .urgency-legend { border-color: rgba(255, 255, 255, 0.8) !important; }
+  .analytics-stat-card { border-left-color: rgba(255, 255, 255, 0.8); border-right-color: rgba(255, 255, 255, 0.8); border-bottom-color: rgba(255, 255, 255, 0.8); }
+  .footer-gamot { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
+  .footer-left { gap: 16px; }
+  .footer-logo-main { height: 46px; width: auto; }
+  .footer-logo-bp { height: 50px; }
+
+  /* ========================================================================
+     ANIMATIONS NA MAY SILBI (mabilis, banayad; titigil kapag naka-off ang
+     animation sa computer ng user)
+     ======================================================================== */
+
+  /* 1. Spinner sa button habang naghihintay (hal. "Saving...", "Verifying...") */
+  @keyframes egosSpin { to { transform: rotate(360deg); } }
+  button:disabled:not(.page-btn)::before {
+    content: ''; display: inline-block; width: 13px; height: 13px; margin-right: 8px; vertical-align: -2px;
+    border: 2px solid rgba(255, 255, 255, 0.5); border-top-color: #fff; border-radius: 50%;
+    animation: egosSpin .7s linear infinite;
+  }
+
+  /* 2. Saglit na dilaw na kislap sa row na kakabago lang (edit, paid, tracker, atbp.) */
+  @keyframes egosRowFlash {
+    0%   { background: rgba(253, 185, 19, 0.45); }
+    100% { background: transparent; }
+  }
+  table.data-table tbody tr.egos-row-flash, table.data-table tbody tr.egos-row-flash td { animation: egosRowFlash 1.6s ease-out; }
+
+  /* 5. Kumikinang na "Loading..." habang naglo-load ang datos */
+  @keyframes egosShimmer { from { background-position: -200px 0; } to { background-position: 200px 0; } }
+  .egos-loading {
+    display: inline-block; color: transparent !important; border-radius: 8px; min-width: 160px;
+    background: linear-gradient(90deg, #e2e8f0 0px, #f8fafc 80px, #e2e8f0 160px);
+    background-size: 400px 100%; animation: egosShimmer 1.1s linear infinite;
+  }
+
+  /* 6. Banayad na kinang sa mga kailangang unahin: OVERDUE at FOR MR */
+  @keyframes egosGlowRed { 0%, 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); } 50% { box-shadow: 0 0 0 5px rgba(220, 38, 38, 0.18); } }
+  @keyframes egosGlowPurple { 0%, 100% { box-shadow: 0 0 0 0 rgba(109, 40, 217, 0); } 50% { box-shadow: 0 0 0 5px rgba(109, 40, 217, 0.18); } }
+  .urgency-badge.OVERDUE { animation: egosGlowRed 2.4s ease-in-out infinite; }
+  .status-pill.FOR_MR { animation: egosGlowPurple 2.4s ease-in-out infinite; }
+
+  /* 7. Malambot na paglipat mula login papunta sa dashboard (at pabalik) */
+  #mainSection, #loginSection, #registerSection, #forgotPasswordSection, #resetPasswordSection {
+    animation: egosFadeUp .4s ease-out;
+  }
+
+  /* ========================================================================
+     LOGIN LOADING SCREEN: kapsula ng gamot (asul = PhilHealth, dilaw = GAMOT)
+     ======================================================================== */
+  .egos-loader {
+    position: fixed; inset: 0; z-index: 9999; display: flex; align-items: center; justify-content: center;
+    background: rgba(245, 247, 250, 0.55);
+    backdrop-filter: blur(16px) saturate(140%); -webkit-backdrop-filter: blur(16px) saturate(140%);
+    opacity: 0; visibility: hidden; transition: opacity .3s ease, visibility .3s ease;
+  }
+  .egos-loader.show { opacity: 1; visibility: visible; }
+  .egos-loader-box {
+    text-align: center; padding: 36px 48px 30px; border-radius: 28px; min-width: 300px;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.6));
+    border: 1px solid rgba(255, 255, 255, 0.85);
+    box-shadow: 0 30px 60px -15px rgba(30, 58, 138, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.95);
+    transform: scale(.96); transition: transform .3s ease;
+  }
+  .egos-loader.show .egos-loader-box { transform: scale(1); }
+
+  .egos-capsule {
+    width: 78px; height: 32px; margin: 4px auto 0; display: flex; border-radius: 20px; overflow: hidden;
+    box-shadow: 0 8px 18px rgba(0, 84, 166, 0.3), inset 0 2px 0 rgba(255, 255, 255, 0.4);
+    animation: egosCapsule 1.6s ease-in-out infinite;
+  }
+  .egos-capsule span:first-child { flex: 1; background: linear-gradient(180deg, var(--navy-light), var(--ph-blue)); }
+  .egos-capsule span:last-child  { flex: 1; background: linear-gradient(180deg, #ffd25a, var(--gold)); }
+  @keyframes egosCapsule {
+    0%, 100% { transform: translateY(0) rotate(-30deg); }
+    50%      { transform: translateY(-16px) rotate(150deg); }
+  }
+  .egos-capsule-shadow {
+    width: 56px; height: 8px; margin: 10px auto 0; border-radius: 50%;
+    background: rgba(30, 58, 138, 0.18); animation: egosCapsuleShadow 1.6s ease-in-out infinite;
+  }
+  @keyframes egosCapsuleShadow { 0%, 100% { transform: scaleX(1); opacity: .9; } 50% { transform: scaleX(.6); opacity: .4; } }
+
+  .egos-loader .logo-text-group { justify-content: center; font-size: 2rem; margin-top: 18px; }
+  .egos-loader .gamot-tagline { display: inline-block; font-size: 0.8rem; padding: 4px 20px; }
+
+  .egos-loader-bar {
+    width: 220px; height: 6px; margin: 22px auto 0; border-radius: 6px; overflow: hidden;
+    background: rgba(148, 163, 184, 0.25); position: relative;
+  }
+  .egos-loader-bar span {
+    position: absolute; top: 0; bottom: 0; width: 40%; border-radius: 6px;
+    background: linear-gradient(90deg, var(--ph-blue), var(--navy-light), var(--gold));
+    animation: egosBar 1.2s ease-in-out infinite;
+  }
+  @keyframes egosBar { 0% { left: -40%; } 100% { left: 100%; } }
+  .egos-loader-text { margin-top: 12px; font-size: 13px; font-weight: 700; color: var(--ph-blue-dark); letter-spacing: .2px; }
+
+  /* ========================================================================
+     RESPONSIVE: maayos sa desktop, tablet at cellphone
+     ======================================================================== */
+
+  /* Popups: hindi lalampas sa lapad ng screen kahit may nakatakdang width */
+  .swal2-popup { max-width: 94vw !important; }
+
+  /* Tablet: mas makitid na sidebar para may espasyo ang content */
+  @media (min-width: 769px) and (max-width: 1024px) {
+    .sidebar { width: 168px; }
+    .sidebar button { font-size: 13px; padding: 10px 12px; }
+    .card { padding: 22px; }
+  }
+
+  /* Cellphone: bawat row ng tabla ay nagiging card (label sa kaliwa, laman sa kanan) */
+  @media (max-width: 640px) {
+    .data-table-wrap { border: none; background: transparent; overflow: visible; max-height: none; }
+    table.data-table, table.data-table tbody, table.data-table tr, table.data-table td { display: block; width: 100%; }
+    table.data-table thead { display: none; }
+    table.data-table tbody tr {
+      background: #fff !important; border: 1px solid var(--line); border-radius: 14px;
+      padding: 6px 14px; margin-bottom: 12px; box-shadow: 0 4px 14px rgba(31, 38, 135, 0.06);
+    }
+    table.data-table tbody tr.urgency-row { padding-left: 14px !important; }
+    table.data-table td {
+      position: relative; padding: 8px 0 8px 40%; min-height: 34px;
+      border-bottom: 1px dashed var(--line); text-align: left; overflow-wrap: anywhere;
+    }
+    table.data-table td:last-child { border-bottom: none; }
+    table.data-table td::before {
+      content: attr(data-label); position: absolute; left: 0; top: 9px; width: 36%;
+      font-size: 11px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: .3px;
+    }
+    table.data-table td[data-label=""] { padding-left: 0; }
+    table.data-table td button { width: auto; }
+
+    /* Iwas zoom sa iPhone kapag nagta-type (kailangan ng 16px pataas) */
+    input, select, textarea { font-size: 16px; }
+  }
+
+  @media (max-width: 480px) {
+    #loginSection, #registerSection { padding: 30px 20px; margin: 20px auto; border-radius: 22px; }
+    .gamot-tagline { font-size: 0.8rem; padding: 4px 18px; }
+  }
+
+  /* Para sa mga user na naka-off ang animation sa computer nila */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+  }
+
+  @media (max-width: 768px) {
+    .sidebar button:hover { padding-left: 14px; }
+    .data-table-wrap { max-height: none; }
+  }
 </style>
 </head>
 <body>
 
 <div class="watermark-wrap" id="watermarkWrap"></div>
+
+<!-- LOGIN LOADING SCREEN: lumalabas pagka-click ng Sign In -->
+<div id="egosLoader" class="egos-loader" aria-hidden="true">
+  <div class="egos-loader-box" role="status" aria-live="polite">
+    <div class="egos-capsule"><span></span><span></span></div>
+    <div class="egos-capsule-shadow"></div>
+    <div class="logo-text-group"><span class="text-philhealth">PhilHealth</span><span class="text-gamot">GAMOT</span></div>
+    <div class="gamot-tagline">Online Support</div>
+    <div class="egos-loader-bar"><span></span></div>
+    <div class="egos-loader-text" id="egosLoaderText">Verifying credentials…</div>
+  </div>
+</div>
 
 <header>
   <div>
@@ -1014,6 +1375,14 @@
     </div>
 
       </div>
+
+      <!-- RIGHT PANEL: PhilHealth YAKAP banner (malalaking screen lang; i-click para makita ang buong poster) -->
+      <aside class="promo-panel" aria-label="PhilHealth YAKAP">
+        <button type="button" class="promo-banner-btn" onclick="openYakapPoster()" title="Click to view the full PhilHealth YAKAP poster">
+          <img src="assets/philhealth-yakap-strip.jpg" alt="PhilHealth YAKAP: Mga Dapat Malaman" loading="lazy">
+          <span class="promo-banner-hint">🔍 Click to view full poster</span>
+        </button>
+      </aside>
     </div>
   </div>
 
@@ -1052,6 +1421,49 @@
   const SUPABASE_URL = "https://ukdiibumagfqngqkqmom.supabase.co";
   const SUPABASE_KEY = "sb_publishable_kTDrhXTzmYq2yvXPgrdfiw_QmhoKXwQ";
   const sbPublic = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  // ---------- LOGIN LOADING SCREEN (kapsula ng gamot + progress) ----------
+  let loginLoaderShownAt = 0;
+  let loginLoaderTimer = null;
+  function showLoginLoader(text) {
+    const el = document.getElementById('egosLoader');
+    if (loginLoaderTimer) { clearTimeout(loginLoaderTimer); loginLoaderTimer = null; }
+    document.getElementById('egosLoaderText').textContent = text || '';
+    el.classList.add('show');
+    el.setAttribute('aria-hidden', 'false');
+    loginLoaderShownAt = Date.now();
+  }
+  function setLoginLoaderText(text) {
+    document.getElementById('egosLoaderText').textContent = text;
+  }
+  // Itinatago pagkatapos ng hindi bababa sa minMs mula nang lumabas (para hindi kumurap)
+  function hideLoginLoader(minMs) {
+    const el = document.getElementById('egosLoader');
+    const wait = Math.max(0, (minMs || 0) - (Date.now() - loginLoaderShownAt));
+    loginLoaderTimer = setTimeout(function() {
+      el.classList.remove('show');
+      el.setAttribute('aria-hidden', 'true');
+      loginLoaderTimer = null;
+    }, wait);
+  }
+
+  // ---------- TOAST: ang simpleng "success" na popup ay nagiging maliit na mensahe sa sulok ----------
+  // Para lang sa Swal.fire('Pamagat', 'Mensahe', 'success'). Popup pa rin ang mga kumpirmasyon at error.
+  const egosToast = Swal.mixin({
+    toast: true, position: 'top-end', showConfirmButton: false, timer: 4000, timerProgressBar: true,
+    didOpen: function(t) {
+      t.addEventListener('mouseenter', Swal.stopTimer);
+      t.addEventListener('mouseleave', Swal.resumeTimer);
+    }
+  });
+  const originalSwalFire = Swal.fire;
+  Swal.fire = function() {
+    const a = arguments;
+    if (this === Swal && a.length === 3 && typeof a[0] === 'string' && typeof a[1] === 'string' && a[2] === 'success') {
+      return egosToast.fire({ icon: 'success', title: a[0], text: a[1] });
+    }
+    return originalSwalFire.apply(this, a);
+  };
   // Bago mag-login: sbPublic. Pagkatapos mag-login: client na may session token (tingnan ang createSessionClient).
   let sb = sbPublic;
 
@@ -1065,6 +1477,10 @@
     const originalRpc = client.rpc.bind(client);
     client.rpc = function(fn, args, options) {
       return originalRpc(fn, args, options).then(function(res) {
+        // ANIMATION: tandaan ang GATN na kakabago lang, para kumislap ang row nito sa listahan
+        if (!res.error && args && args.p_gatn_no && !/^(get_|find_)/.test(fn)) {
+          window.egosLastChanged = { gatn: String(args.p_gatn_no).toUpperCase(), at: Date.now() };
+        }
         const errMsg = (res.error && res.error.message) || '';
         if (errMsg.indexOf('SESSION_EXPIRED') !== -1) {
           res.error.message = 'Your session has expired. Please log in again.';
@@ -1464,6 +1880,7 @@
 
     loginBtn.disabled = true;
     loginBtn.innerText = "Verifying...";
+    showLoginLoader('Verifying credentials…');
 
     const username = document.getElementById('loginUser').value.trim();
     const password = document.getElementById('loginPass').value.trim();
@@ -1477,6 +1894,7 @@
     loginBtn.innerText = "Sign In";
 
     if (error || !data.success) {
+      hideLoginLoader(0);
       msg.className = "msg error";
       msg.innerText = error ? error.message : data.message;
       msg.style.display = 'block';
@@ -1497,6 +1915,8 @@
     if (currentUser.token) {
       sb = createSessionClient(currentUser.token);
     }
+    document.body.classList.add('logged-in');
+    setLoginLoaderText('Securing your session…');
 
     resetInactivityTimers();
     document.getElementById('askAiFab').style.display = 'flex';
@@ -1597,6 +2017,10 @@
       loadIssueCategories();
       document.getElementById('proRegion').value = currentUser.branch;
     }
+
+    // LOADING SCREEN: handa na ang dashboard
+    setLoginLoaderText('Loading your dashboard…');
+    hideLoginLoader(1200);
   });
 
   // ---------- LOGOUT ----------
@@ -1606,6 +2030,7 @@
       sb.rpc('logout', { p_token: currentUser.token }).then(function() {}, function() {});
     }
     sb = sbPublic;
+    document.body.classList.remove('logged-in');
 
     sessionStorage.removeItem('draft_searchGatn');
     sessionStorage.removeItem('draft_refileNotes');
@@ -2802,6 +3227,83 @@
 
     doc.save('MR_Letter_' + currentRefileGatn.toUpperCase() + '.pdf');
   });
+
+  // ---------- RESPONSIVE + ANIMATIONS: inaayos ang bawat bagong laman ng dashboard ----------
+  // Awtomatiko para sa lahat ng tabla at listahan (hindi na kailangang baguhin ang bawat render function).
+  let tableLabelPending = false;
+  const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // Bilang na umaakyat mula 0 (hal. sa Analytics); buong numero lang
+  function countUp(el) {
+    const target = parseInt(el.textContent.trim(), 10);
+    el.setAttribute('data-counted', '1');
+    if (reduceMotion || !(target > 0) || String(target) !== el.textContent.trim()) return;
+    const start = performance.now();
+    const step = function(now) {
+      const p = Math.min(1, (now - start) / 600);
+      el.textContent = String(Math.round(target * (1 - Math.pow(1 - p, 3))));
+      if (p < 1) requestAnimationFrame(step);
+    };
+    el.textContent = '0';
+    requestAnimationFrame(step);
+  }
+
+  function labelTableCells() {
+    tableLabelPending = false;
+
+    // Responsive: label ng column para sa card view sa cellphone
+    document.querySelectorAll('#mainSection table.data-table').forEach(function(table) {
+      const heads = Array.from(table.querySelectorAll('thead th')).map(function(th) { return th.textContent.trim(); });
+      table.querySelectorAll('tbody tr').forEach(function(tr) {
+        Array.from(tr.children).forEach(function(td, i) {
+          if (!td.hasAttribute('data-label')) td.setAttribute('data-label', heads[i] || '');
+        });
+      });
+    });
+
+    // Kumikinang na "Loading..." / "Checking..."
+    document.querySelectorAll('#mainSection p').forEach(function(p) {
+      const text = p.textContent.trim();
+      p.classList.toggle('egos-loading', text === 'Loading...' || text === 'Checking...');
+    });
+
+    // Bilang na umaakyat sa mga stat card
+    document.querySelectorAll('#mainSection .stat-value:not([data-counted])').forEach(countUp);
+
+    // Kislap sa row ng GATN na kakabago lang (sa loob ng 8 segundo)
+    const changed = window.egosLastChanged;
+    if (changed && Date.now() - changed.at < 8000) {
+      let flashed = false;
+      document.querySelectorAll('#mainSection table.data-table tbody td').forEach(function(td) {
+        if (td.textContent.trim().toUpperCase() === changed.gatn) {
+          const tr = td.closest('tr');
+          tr.classList.remove('egos-row-flash');
+          void tr.offsetWidth;
+          tr.classList.add('egos-row-flash');
+          flashed = true;
+        }
+      });
+      if (flashed) window.egosLastChanged = null;
+    }
+  }
+  new MutationObserver(function() {
+    if (tableLabelPending) return;
+    tableLabelPending = true;
+    requestAnimationFrame(labelTableCells);
+  }).observe(document.getElementById('mainSection'), { childList: true, subtree: true });
+
+  // ---------- PHILHEALTH YAKAP: buong poster kapag na-click ang banner sa kanan ----------
+  function openYakapPoster() {
+    Swal.fire({
+      imageUrl: 'assets/philhealth-yakap.jpg',
+      imageAlt: 'PhilHealth YAKAP: Mga Dapat Malaman',
+      width: 760,
+      padding: '12px',
+      showConfirmButton: false,
+      showCloseButton: true
+    });
+  }
+  window.openYakapPoster = openYakapPoster;
 
   // ---------- MR / APPEAL: ELECTRONIC APPEAL NOTICE (PDF, opisyal na header/footer ng branch; walang pirma) ----------
   async function downloadAppealNotice(gatnNo) {
@@ -5511,7 +6013,8 @@
 
 <footer class="footer-gamot">
   <div class="footer-left">
-    <img src="data:image/png;base64,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" alt="PhilHealth Logo" class="footer-logo-main">
+    <img src="assets/philhealth-logo.png" alt="PhilHealth" class="footer-logo-main">
+    <img src="assets/bagong-pilipinas.png" alt="Bagong Pilipinas" class="footer-logo-main footer-logo-bp">
   </div>
   <div class="footer-right">
     <div class="footer-brand">

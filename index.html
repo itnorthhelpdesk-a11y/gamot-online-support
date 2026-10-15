@@ -752,6 +752,43 @@
   .egos-loader-text { margin-top: 12px; font-size: 13px; font-weight: 700; color: var(--ph-blue-dark); letter-spacing: .2px; }
 
   /* ========================================================================
+     LOGIN TAB: PhilHealth Staff / GAMOT Pharmacy sa loob ng iisang login card
+     ======================================================================== */
+  .login-tabs {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; margin: 0 0 18px;
+    border-radius: 14px; background: rgba(148, 163, 184, 0.18); border: 1px solid rgba(255, 255, 255, 0.7);
+  }
+  .login-tab {
+    margin: 0; padding: 10px 8px; border-radius: 11px; background: transparent; color: var(--muted);
+    font-family: 'Fredoka', 'Nunito', sans-serif; font-size: 15px; font-weight: 600; letter-spacing: .3px;
+    text-transform: none; box-shadow: none; white-space: nowrap;
+    display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+    transition: background .2s ease, color .2s ease, box-shadow .2s ease;
+  }
+  .login-tab:hover:not(.active) { background: rgba(255, 255, 255, 0.6); color: var(--ph-blue-dark); transform: none; box-shadow: none; }
+  .login-tab.active {
+    background: #fff; color: var(--ph-blue-dark);
+    box-shadow: 0 4px 12px rgba(30, 58, 138, 0.15), inset 0 -3px 0 var(--ph-blue);
+  }
+  #loginSection.login-pharmacy .login-tab.active { color: #92400e; box-shadow: 0 4px 12px rgba(245, 158, 11, 0.2), inset 0 -3px 0 #f59e0b; }
+
+  /* Pharmacy tab: dilaw ang Sign In button at ang focus ng input */
+  #loginSection.login-pharmacy #loginBtn {
+    background: linear-gradient(90deg, #f59e0b, var(--gold), #ffcf4d); color: #4a2c00;
+    box-shadow: 0 10px 24px rgba(245, 158, 11, 0.35);
+  }
+  #loginSection.login-pharmacy input:focus { border-color: #f59e0b; box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.15); }
+  #loginSection.login-pharmacy::before { background: linear-gradient(90deg, transparent, #f59e0b, var(--gold), transparent); }
+
+  @media (max-width: 420px) {
+    .login-tab { font-size: 13px; padding: 9px 4px; gap: 5px; }
+  }
+
+  /* Itago ang sariling "show password" icon ng Microsoft Edge (may sariling 👁 button ang EGOS) */
+  input[type="password"]::-ms-reveal,
+  input[type="password"]::-ms-clear { display: none; }
+
+  /* ========================================================================
      RESPONSIVE: maayos sa desktop, tablet at cellphone
      ======================================================================== */
 
@@ -911,9 +948,14 @@
       </div>
       <div class="gamot-tagline">Online Support</div>
     </div>
-    <h2>Staff Sign In</h2>
+    <!-- TAB: pumili ng uri ng account (iisang login card pa rin) -->
+    <div class="login-tabs" role="tablist" aria-label="Account type">
+      <button type="button" class="login-tab active" data-kind="staff" role="tab" aria-selected="true">👩‍⚕️ PhilHealth Staff</button>
+      <button type="button" class="login-tab" data-kind="pharmacy" role="tab" aria-selected="false">💊 GAMOT Pharmacy</button>
+    </div>
+    <h2 id="loginTitle">Staff Sign In</h2>
     <form id="loginForm">
-      <label for="loginUser">Username (PhilHealth PIN or Employee ID No.)</label>
+      <label for="loginUser" id="loginUserLabel">Employee ID No.</label>
       <input type="text" id="loginUser" required>
       <label for="loginPass">Password</label>
       <div style="position:relative;">
@@ -1978,6 +2020,29 @@
 
   let pendingPollInterval = null;
 
+  // ---------- LOGIN TAB: PhilHealth Staff o GAMOT Pharmacy (iisang form) ----------
+  // Gabay lang ito sa user; ang server pa rin ang nagpapasya ng role at karapatan.
+  let currentLoginKind = 'staff';
+  const LOGIN_TAB_TEXT = {
+    staff:    { title: 'Staff Sign In',    label: 'Employee ID No.' },
+    pharmacy: { title: 'Pharmacy Sign In', label: 'PhilHealth PIN' }
+  };
+  function setLoginTab(kind) {
+    currentLoginKind = kind;
+    document.querySelectorAll('.login-tab').forEach(function(tab) {
+      const active = tab.getAttribute('data-kind') === kind;
+      tab.classList.toggle('active', active);
+      tab.setAttribute('aria-selected', active ? 'true' : 'false');
+    });
+    document.getElementById('loginSection').classList.toggle('login-pharmacy', kind === 'pharmacy');
+    document.getElementById('loginTitle').textContent = LOGIN_TAB_TEXT[kind].title;
+    document.getElementById('loginUserLabel').textContent = LOGIN_TAB_TEXT[kind].label;
+    document.getElementById('loginMsg').style.display = 'none';
+  }
+  document.querySelectorAll('.login-tab').forEach(function(tab) {
+    tab.addEventListener('click', function() { setLoginTab(tab.getAttribute('data-kind')); });
+  });
+
   // ---------- LOGIN ----------
   document.getElementById('loginForm').addEventListener('submit', async function(e) {
     e.preventDefault();
@@ -2004,6 +2069,18 @@
       hideLoginLoader(0);
       msg.className = "msg error";
       msg.innerText = error ? error.message : data.message;
+      msg.style.display = 'block';
+      return;
+    }
+
+    // Maling tab (hal. pharmacy account sa Staff tab): huwag ituloy, at patayin ang session
+    const isPharmacyAccount = data.account_type === 'PHARMACY';
+    if ((currentLoginKind === 'pharmacy') !== isPharmacyAccount) {
+      hideLoginLoader(0);
+      if (data.token) sb.rpc('logout', { p_token: data.token }).then(function() {}, function() {});
+      const rightTab = isPharmacyAccount ? 'GAMOT Pharmacy' : 'PhilHealth Staff';
+      msg.className = "msg error";
+      msg.innerText = 'This is a ' + rightTab + ' account. Please select the "' + rightTab + '" tab above.';
       msg.style.display = 'block';
       return;
     }

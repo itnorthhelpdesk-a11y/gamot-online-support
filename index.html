@@ -752,6 +752,78 @@
   .egos-loader-text { margin-top: 12px; font-size: 13px; font-weight: 700; color: var(--ph-blue-dark); letter-spacing: .2px; }
 
   /* ========================================================================
+     LOGIN: dalawang salaming card (PhilHealth Staff = asul, GAMOT Pharmacy = dilaw)
+     ======================================================================== */
+  /* Ang #loginSection ay lalagyan na lang (hindi na card) */
+  #loginSection.login-split {
+    max-width: 920px !important; margin: 26px auto 40px !important; padding: 0 !important;
+    background: transparent !important; border: none !important; box-shadow: none !important;
+    backdrop-filter: none !important; -webkit-backdrop-filter: none !important;
+    overflow: visible !important; text-align: center;
+  }
+  #loginSection.login-split::before { display: none; }
+  .login-split .brand-container { margin-bottom: 22px; }
+  .login-subtitle { margin: 12px 0 0; font-size: 14px; font-weight: 700; color: var(--ph-blue-dark); opacity: .8; }
+
+  .login-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: stretch; }
+  .login-card {
+    position: relative; overflow: hidden; text-align: left; border-radius: 26px; padding: 30px 30px 26px;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.78), rgba(255, 255, 255, 0.56));
+    backdrop-filter: blur(22px) saturate(160%); -webkit-backdrop-filter: blur(22px) saturate(160%);
+    border: 1px solid rgba(255, 255, 255, 0.8);
+    box-shadow: 0 24px 50px -18px rgba(30, 58, 138, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.95);
+    transition: transform .25s ease, box-shadow .25s ease;
+    animation: egosFadeUp .45s ease-out both;
+  }
+  .login-card-pharmacy { animation-delay: .08s; }
+  .login-card:hover { transform: translateY(-4px); box-shadow: 0 30px 60px -18px rgba(30, 58, 138, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.95); }
+  /* Ilaw sa itaas ng bawat card (kulay ng card) */
+  .login-card::before {
+    content: ''; position: absolute; left: 0; right: 0; top: 0; height: 5px;
+  }
+  .login-card-staff::before    { background: linear-gradient(90deg, var(--ph-blue), var(--navy-light), #4f46e5); }
+  .login-card-pharmacy::before { background: linear-gradient(90deg, #f59e0b, var(--gold), #ffd25a); }
+
+  .login-card-icon {
+    width: 58px; height: 58px; border-radius: 18px; display: flex; align-items: center; justify-content: center;
+    font-size: 28px; margin-bottom: 14px;
+  }
+  .login-card-staff .login-card-icon    { background: linear-gradient(135deg, #e0ecff, #c7dbff); box-shadow: 0 8px 18px rgba(0, 84, 166, 0.2); }
+  .login-card-pharmacy .login-card-icon { background: linear-gradient(135deg, #fff4d1, #ffe39a); box-shadow: 0 8px 18px rgba(245, 158, 11, 0.25); }
+  .login-card h2 {
+    font-family: 'Fredoka', sans-serif; font-size: 1.45rem; margin: 0 0 4px; padding: 0; border: none;
+    display: block; color: var(--ph-blue-dark);
+  }
+  .login-card-pharmacy h2 { color: #92400e; }
+  .login-card-desc { margin: 0 0 6px; font-size: 13px; color: var(--muted); }
+  .login-card input { background: rgba(255, 255, 255, 0.75); border-color: rgba(148, 163, 184, 0.35); }
+  .login-card input:focus { background: #fff; }
+  .login-card-pharmacy input:focus { border-color: #f59e0b; box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.15); }
+
+  /* Sign In buttons: gradient na may kumikislap na ilaw */
+  .login-submit { position: relative; overflow: hidden; }
+  .login-submit::after {
+    content: ''; position: absolute; top: 0; left: -60%; width: 40%; height: 100%;
+    background: linear-gradient(120deg, transparent, rgba(255, 255, 255, 0.45), transparent);
+    transform: skewX(-20deg); transition: left .6s ease;
+  }
+  .login-submit:hover:not(:disabled)::after { left: 120%; }
+  #pharmaLoginBtn {
+    background: linear-gradient(90deg, #f59e0b, var(--gold), #ffcf4d); color: #4a2c00;
+    box-shadow: 0 10px 24px rgba(245, 158, 11, 0.35);
+  }
+  #pharmaLoginBtn:disabled { background: #e5d3a3; color: #7a6a45; }
+
+  .login-links { margin: 22px 0 0; font-size: 13px; text-align: center; }
+  .login-links-sep { margin: 0 10px; color: var(--muted); }
+
+  @media (max-width: 768px) {
+    .login-cards { grid-template-columns: 1fr; gap: 18px; }
+    .login-card { padding: 24px 20px 20px; }
+    #loginSection.login-split { margin: 14px auto 30px !important; }
+  }
+
+  /* ========================================================================
      RESPONSIVE: maayos sa desktop, tablet at cellphone
      ======================================================================== */
 
@@ -857,6 +929,13 @@
     /* Watermark: hiwalay na layer para hindi i-repaint habang nag-i-scroll */
     .watermark-wrap { will-change: transform; contain: strict; }
 
+    /* Login cards: walang blur sa cellphone/tablet */
+    .login-card {
+      backdrop-filter: none !important; -webkit-backdrop-filter: none !important;
+      background: rgba(255, 255, 255, 0.95) !important;
+    }
+    .login-card:hover { transform: none; }
+
     /* Walang paulit-ulit na animation habang nag-i-scroll */
     .urgency-badge.OVERDUE, .status-pill.FOR_MR { animation: none !important; }
     .card { animation-duration: .2s; }
@@ -904,30 +983,57 @@
 <main>
 
   <!-- LOGIN SECTION -->
-  <div class="card" id="loginSection">
+  <div id="loginSection" class="login-split">
     <div class="brand-container">
       <div class="logo-text-group">
         <span class="text-philhealth">PhilHealth</span><span class="text-gamot">GAMOT</span>
       </div>
       <div class="gamot-tagline">Online Support</div>
+      <p class="login-subtitle">Choose your account to sign in</p>
     </div>
-    <h2>Staff Sign In</h2>
+
+    <div class="login-cards">
+    <!-- STAFF LOGIN CARD -->
+    <div class="login-card login-card-staff">
+    <div class="login-card-icon">👩‍⚕️</div>
+    <h2>PhilHealth Staff</h2>
+    <p class="login-card-desc">Sign in with your Employee ID No.</p>
     <form id="loginForm">
-      <label for="loginUser">Username (PhilHealth PIN or Employee ID No.)</label>
-      <input type="text" id="loginUser" required>
+      <label for="loginUser">Employee ID No.</label>
+      <input type="text" id="loginUser" required autocomplete="username">
       <label for="loginPass">Password</label>
       <div style="position:relative;">
-        <input type="password" id="loginPass" required style="padding-right:64px;">
+        <input type="password" id="loginPass" required style="padding-right:64px;" autocomplete="current-password">
         <button type="button" onclick="togglePwd('loginPass', this)" style="position:absolute; right:8px; top:50%; transform:translateY(-50%); background:transparent; box-shadow:none; width:auto; margin:0; padding:4px; color:var(--ph-blue); border:none; display:flex; align-items:center; cursor:pointer;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg></button>
       </div>
-      <button type="submit" id="loginBtn">Sign In</button>
+      <button type="submit" id="loginBtn" class="login-submit">Sign In as Staff</button>
       <div class="msg" id="loginMsg"></div>
     </form>
-    <p style="text-align:center; margin-top:16px; font-size:13px;">
-      No account yet? <a href="#" id="showRegisterLink" style="color:var(--teal); font-weight:600;">Register here</a>
-    </p>
-    <p style="text-align:center; margin-top:8px; font-size:13px;">
-      <a href="#" id="showForgotPasswordLink" style="color:var(--muted); font-weight:600;">Forgot Password?</a>
+    </div>
+
+    <!-- PHARMACY LOGIN CARD -->
+    <div class="login-card login-card-pharmacy">
+    <div class="login-card-icon">💊</div>
+    <h2>GAMOT Pharmacy</h2>
+    <p class="login-card-desc">Sign in with your PhilHealth PIN</p>
+    <form id="pharmaLoginForm">
+      <label for="pharmaLoginUser">PhilHealth PIN</label>
+      <input type="text" id="pharmaLoginUser" required autocomplete="username">
+      <label for="pharmaLoginPass">Password</label>
+      <div style="position:relative;">
+        <input type="password" id="pharmaLoginPass" required style="padding-right:64px;" autocomplete="current-password">
+        <button type="button" onclick="togglePwd('pharmaLoginPass', this)" style="position:absolute; right:8px; top:50%; transform:translateY(-50%); background:transparent; box-shadow:none; width:auto; margin:0; padding:4px; color:var(--ph-blue); border:none; display:flex; align-items:center; cursor:pointer;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg></button>
+      </div>
+      <button type="submit" id="pharmaLoginBtn" class="login-submit">Sign In as Pharmacy</button>
+      <div class="msg" id="pharmaLoginMsg"></div>
+    </form>
+    </div>
+    </div>
+
+    <p class="login-links">
+      No account yet? <a href="#" id="showRegisterLink" style="color:var(--teal); font-weight:700;">Register here</a>
+      <span class="login-links-sep">·</span>
+      <a href="#" id="showForgotPasswordLink" style="color:var(--muted); font-weight:700;">Forgot Password?</a>
     </p>
   </div>
 
@@ -1978,19 +2084,32 @@
 
   let pendingPollInterval = null;
 
-  // ---------- LOGIN ----------
-  document.getElementById('loginForm').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    const loginBtn = document.getElementById('loginBtn');
-    const msg = document.getElementById('loginMsg');
-    msg.style.display = 'none';
+  // ---------- LOGIN (dalawang card: PhilHealth Staff at GAMOT Pharmacy) ----------
+  // Iisang server login pa rin; ang card lang ang nagsasabi kung anong uri ng account ang inaasahan.
+  // (Gabay lang ito sa user; ang server pa rin ang nagpapasya ng role at karapatan.)
+  const LOGIN_FORMS = {
+    staff:    { form: 'loginForm',       user: 'loginUser',       pass: 'loginPass',       btn: 'loginBtn',       msg: 'loginMsg',       label: 'Sign In as Staff' },
+    pharmacy: { form: 'pharmaLoginForm', user: 'pharmaLoginUser', pass: 'pharmaLoginPass', btn: 'pharmaLoginBtn', msg: 'pharmaLoginMsg', label: 'Sign In as Pharmacy' }
+  };
+  Object.keys(LOGIN_FORMS).forEach(function(kind) {
+    document.getElementById(LOGIN_FORMS[kind].form).addEventListener('submit', function(e) {
+      e.preventDefault();
+      handleLogin(kind);
+    });
+  });
+
+  async function handleLogin(kind) {
+    const f = LOGIN_FORMS[kind];
+    const loginBtn = document.getElementById(f.btn);
+    const msg = document.getElementById(f.msg);
+    Object.keys(LOGIN_FORMS).forEach(function(k) { document.getElementById(LOGIN_FORMS[k].msg).style.display = 'none'; });
 
     loginBtn.disabled = true;
     loginBtn.innerText = "Verifying...";
     showLoginLoader('Verifying credentials…');
 
-    const username = document.getElementById('loginUser').value.trim();
-    const password = document.getElementById('loginPass').value.trim();
+    const username = document.getElementById(f.user).value.trim();
+    const password = document.getElementById(f.pass).value.trim();
 
     const { data, error } = await sb.rpc('check_staff_login', {
       input_username: username,
@@ -1998,12 +2117,24 @@
     });
 
     loginBtn.disabled = false;
-    loginBtn.innerText = "Sign In";
+    loginBtn.innerText = f.label;
 
     if (error || !data.success) {
       hideLoginLoader(0);
       msg.className = "msg error";
       msg.innerText = error ? error.message : data.message;
+      msg.style.display = 'block';
+      return;
+    }
+
+    // Maling card (hal. pharmacy account sa Staff card): huwag ituloy, at patayin ang session
+    const isPharmacyAccount = data.account_type === 'PHARMACY';
+    if ((kind === 'pharmacy') !== isPharmacyAccount) {
+      hideLoginLoader(0);
+      if (data.token) sb.rpc('logout', { p_token: data.token }).then(function() {}, function() {});
+      const rightCard = isPharmacyAccount ? 'GAMOT Pharmacy' : 'PhilHealth Staff';
+      msg.className = "msg error";
+      msg.innerText = 'This is a ' + rightCard + ' account. Please use the ' + rightCard + ' sign-in.';
       msg.style.display = 'block';
       return;
     }
@@ -2128,7 +2259,7 @@
     // LOADING SCREEN: handa na ang dashboard
     setLoginLoaderText('Loading your dashboard…');
     hideLoginLoader(1200);
-  });
+  }
 
   // ---------- LOGOUT ----------
   function performLogout() {
@@ -2161,6 +2292,7 @@
     document.getElementById('adminApprovalSection').style.display = 'none';
     document.getElementById('loginSection').style.display = 'block';
     document.getElementById('loginForm').reset();
+    document.getElementById('pharmaLoginForm').reset();
     document.querySelector('main').classList.remove('wide');
 
     // I-reset ang lahat ng cards pabalik sa default state, para walang "naiwang" tab

@@ -113,6 +113,7 @@ Deno.serve(async (req) => {
       `(already filled in with this claim's details), print it, write your reason and corrective action, sign it, and upload it.\n\n` +
       `IF NO MOTION FOR RECONSIDERATION / APPEAL IS FILED ON OR BEFORE ${formatDate(rec.mr_deadline).toUpperCase()}, ` +
       `THE CLAIM WILL BE DENIED WITH FINALITY AND CAN NO LONGER BE REFILED.\n\n` +
+      `A formal electronic Notice for this claim can be downloaded in Easy GAMOT Online Support > My Deficiencies ("Appeal Notice" button).\n\n` +
       `This notice was sent to all registered accounts of your facility.\n\n` +
       `PhilHealth Regional Office – ${rec.pro_region || ""}\n` +
       `Easy GAMOT Online Support`;

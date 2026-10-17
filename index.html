@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Easy Online GAMOT Support - Deficiency Tracking System</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.26.25"></script>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700;800&family=Nunito:wght@400;600;700;800&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -1748,7 +1748,7 @@
 
   async function ensureExcelLibLoaded() {
     if (!window.XLSX) {
-      await loadScriptOnce('https://cdn.jsdelivr.net/npm/xlsx-js-style/dist/xlsx.bundle.js');
+      await loadScriptOnce('https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js');
     }
   }
 
@@ -1771,7 +1771,7 @@
 
   async function ensureChartLibLoaded() {
     if (!window.Chart) {
-      await loadScriptOnce('https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js');
+      await loadScriptOnce('https://cdn.jsdelivr.net/npm/chart.js@4.5.1/dist/chart.umd.min.js');
     }
   }
 

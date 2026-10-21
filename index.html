@@ -4582,6 +4582,11 @@
         ? '<br><button type="button" style="width:auto; margin:4px 0 0; padding:6px 12px; font-size:12px; background:#6d28d9;" ' +
             'onclick="downloadAppealNotice(\'' + r.gatn_no + '\')">📄 Notice</button>'
         : '';
+      // AUDIT: lahat ng attachment na na-submit para sa GATN na ito (kahit RESOLVED na)
+      const filesBtn = r.refile_timestamp
+        ? '<br><button type="button" style="width:auto; margin:4px 0 0; padding:6px 12px; font-size:12px; background:#0f766e;" ' +
+            'onclick="viewRefileSubmissions(\'' + r.gatn_no + '\')">📎 Files</button>'
+        : '';
       return '<tr>' +
         '<td>' + created + '</td>' +
         '<td>' + (r.facility_accreditation_no || '') + '</td>' +
@@ -4590,7 +4595,7 @@
         '<td>' + (r.issue_category || '').replace(/_/g, ' ') + '<br><span style="color:var(--muted); font-size:11px;">' + r.specific_issue + '</span></td>' +
         '<td><span class="status-pill ' + r.status + '">' + statusLabel + '</span></td>' +
         '<td>' + deadline + '</td>' +
-        '<td>' + actions + noticeBtn + '</td>' +
+        '<td>' + actions + noticeBtn + filesBtn + '</td>' +
         '</tr>';
     }).join('');
 
@@ -4715,6 +4720,56 @@
   window.deleteDeficiencyRecord = deleteDeficiencyRecord;
 
   // ---------- MR / APPEAL: REOPEN NG DENIED (ADMIN lang; ang server din ang nagche-check) ----------
+  // ---------- AUDIT: kasaysayan ng lahat ng refile / MR attachments ng isang GATN ----------
+  async function viewRefileSubmissions(gatnNo) {
+    Swal.fire({ title: 'Loading files…', allowOutsideClick: false, didOpen: function() { Swal.showLoading(); } });
+
+    const { data, error } = await sb.rpc('get_refile_submissions', { p_gatn_no: gatnNo });
+    if (error) {
+      Swal.fire('Error', error.message, 'error');
+      return;
+    }
+
+    const esc = function(s) {
+      return String(s == null ? '' : s).replace(/[&<>"']/g, function(c) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+      });
+    };
+    const fmt = function(d) { return d ? new Date(d).toLocaleString() : '—'; };
+
+    const items = (data || []).map(function(s, i) {
+      const result = s.review_result === 'RESOLVED'
+        ? '<span style="color:var(--ok); font-weight:700;">✓ Resolved</span>'
+        : s.review_result === 'RETURNED'
+        ? '<span style="color:var(--amber); font-weight:700;">↺ Returned for re-correction</span>'
+        : '<span style="color:var(--muted); font-weight:700;">⏳ Awaiting review</span>';
+      return '<div style="border:1px solid #e2e8f0; border-radius:10px; padding:10px 12px; margin-bottom:10px;">' +
+        '<div style="font-weight:800; color:var(--ph-blue); margin-bottom:4px;">Submission ' + (i + 1) +
+          (s.is_mr_filing ? ' <span style="color:#6d28d9;">(MR / Appeal)</span>' : '') +
+          (s.is_late_submission ? ' <span style="color:#dc2626;">(Late)</span>' : '') + '</div>' +
+        '<div><strong>Submitted:</strong> ' + fmt(s.submitted_at) + (s.submitted_by ? ' by ' + esc(s.submitted_by) : '') + '</div>' +
+        '<div><strong>Notes from Facility:</strong> ' + (s.refile_notes ? esc(s.refile_notes) : '—') + '</div>' +
+        '<div style="margin:6px 0;">' +
+          (s.refile_file_link ? '📎 ' + secureFileLink(s.refile_file_link, 'Corrected Document', 'var(--ph-blue)') : '') +
+          (s.mr_letter_link ? '&nbsp;&nbsp;📎 ' + secureFileLink(s.mr_letter_link, 'MR / Appeal Letter', '#6d28d9') : '') +
+        '</div>' +
+        '<div><strong>Review:</strong> ' + result +
+          (s.review_result ? ' — ' + fmt(s.reviewed_at) + (s.reviewed_by ? ' by ' + esc(s.reviewed_by) : '') : '') + '</div>' +
+        (s.review_remarks ? '<div><strong>Reason:</strong> ' + esc(s.review_remarks) + '</div>' : '') +
+      '</div>';
+    }).join('');
+
+    Swal.fire({
+      title: 'Attachments — GATN ' + esc(gatnNo),
+      html: '<div style="text-align:left; font-size:13px; max-height:60vh; overflow-y:auto;">' +
+        (items || '<p style="color:var(--muted);">No attachments on record.</p>') + '</div>',
+      width: 640,
+      confirmButtonText: 'Close',
+      confirmButtonColor: '#0054a6'
+    });
+  }
+  window.viewRefileSubmissions = viewRefileSubmissions;
+
   async function reopenDeniedRecord(gatnNo) {
     const { value: reason } = await Swal.fire({
       title: 'Reopen denied claim?',

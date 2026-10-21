@@ -12,6 +12,8 @@
 SELECT 'users' AS tbl, count(*) FROM users WHERE username ILIKE 'TESTEGOS%'
 UNION ALL SELECT 'deficiency_records', count(*) FROM deficiency_records
   WHERE gatn_no ILIKE 'TESTEGOS%' OR facility_accreditation_no = 'P91999999'
+UNION ALL SELECT 'refile_submissions', count(*) FROM refile_submissions
+  WHERE gatn_no ILIKE 'TESTEGOS%' OR facility_accreditation_no = 'P91999999'
 UNION ALL SELECT 'audit_trail', count(*) FROM audit_trail
   WHERE gatn_no ILIKE 'TESTEGOS%' OR performed_by_username ILIKE 'TESTEGOS%'
 UNION ALL SELECT 'account_audit_trail', count(*) FROM account_audit_trail
@@ -39,6 +41,8 @@ BEGIN;
 SELECT set_config('egos.allow_denied_change', 'on', true);
 
 DELETE FROM mr_notice_queue WHERE gatn_no ILIKE 'TESTEGOS%';
+DELETE FROM refile_submissions
+  WHERE gatn_no ILIKE 'TESTEGOS%' OR facility_accreditation_no = 'P91999999';
 
 DELETE FROM audit_trail
   WHERE gatn_no ILIKE 'TESTEGOS%' OR performed_by_username ILIKE 'TESTEGOS%';

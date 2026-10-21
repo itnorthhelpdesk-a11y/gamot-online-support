@@ -3,7 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 // Nagbibigay ng PANSAMANTALANG link (10 minuto) sa attachment, pero
 // pagkatapos lang i-check na may karapatan ang naka-login na user.
 //
-//   refile-attachments  (corrected documents, MR letter)
+//   refile-attachments  (corrected documents, MR letter; kasama ang mga naunang submission)
 //     - Pharmacy na may-ari (parehong accreditation no.)
 //     - PhilHealth staff ng parehong branch; global ADMIN = lahat
 //   registration-attachments  (dokumento sa pag-register)
@@ -98,14 +98,18 @@ Deno.serve(async (req) => {
     let allowed = false;
 
     if (parsed.bucket === "refile-attachments") {
-      // Hanapin ang record na may-ari ng file (corrected document o MR letter)
-      const findBy = async (column: string) => (await supabaseAdmin
-        .from("deficiency_records")
+      // Hanapin ang record na may-ari ng file (corrected document o MR letter),
+      // pati ang mga naunang submission na nasa refile_submissions
+      const findBy = async (table: string, column: string) => (await supabaseAdmin
+        .from(table)
         .select("gatn_no, pro_region, facility_accreditation_no")
         .eq(column, url)
         .limit(1)
         .maybeSingle()).data;
-      const rec = (await findBy("refile_file_link")) || (await findBy("mr_letter_link"));
+      const rec = (await findBy("deficiency_records", "refile_file_link"))
+        || (await findBy("deficiency_records", "mr_letter_link"))
+        || (await findBy("refile_submissions", "refile_file_link"))
+        || (await findBy("refile_submissions", "mr_letter_link"));
 
       if (rec) {
         if (user.account_type === "PHARMACY") {

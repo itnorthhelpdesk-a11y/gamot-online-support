@@ -3648,6 +3648,26 @@
       'style="color:' + color + '; font-weight:700;">' + label + '</a>';
   }
 
+  async function getSignedFileUrl(link) {
+    const res = await fetch(SUPABASE_URL + "/functions/v1/get-file-url", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer " + SUPABASE_KEY,
+        "apikey": SUPABASE_KEY,
+        "x-egos-session": currentUser.token
+      },
+      body: JSON.stringify({ url: link })
+    });
+    const result = await res.json();
+    if (!result.success) {
+      throw new Error(result.error === 'SESSION_EXPIRED'
+        ? 'Your session has expired. Please log in again.'
+        : (result.error || 'Could not open the file.'));
+    }
+    return result.url;
+  }
+
   async function openSecureFile(link) {
     // Viewer sa gitna ng screen: "Opening file…" habang kinukuha ang pansamantalang link
     Swal.fire({
@@ -3658,23 +3678,8 @@
     });
 
     try {
-      const res = await fetch(SUPABASE_URL + "/functions/v1/get-file-url", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": "Bearer " + SUPABASE_KEY,
-          "apikey": SUPABASE_KEY,
-          "x-egos-session": currentUser.token
-        },
-        body: JSON.stringify({ url: link })
-      });
-      const result = await res.json();
-      if (!result.success) {
-        throw new Error(result.error === 'SESSION_EXPIRED'
-          ? 'Your session has expired. Please log in again.'
-          : (result.error || 'Could not open the file.'));
-      }
-      const safeUrl = String(result.url).replace(/"/g, '&quot;');
+      const signedUrl = await getSignedFileUrl(link);
+      const safeUrl = String(signedUrl).replace(/"/g, '&quot;');
       Swal.fire({
         width: '92vw',
         padding: '10px',
@@ -5307,6 +5312,7 @@
           '<td><span class="status-pill ' + (isActive ? 'RESOLVED' : 'RTF') + '">' + u.status + '</span></td>' +
           '<td><span class="status-pill ' + (isBranchAdmin ? 'RESOLVED' : 'PENDING') + '">' + u.role + '</span></td>' +
           '<td>' +
+            accountAttachmentButtons(u) +
             adminActionBtn +
             '<button type="button" style="width:auto; margin:0 4px 4px 0; padding:6px 12px; font-size:12px; background:var(--ph-blue);" ' +
               'onclick="editAdminStaffEmail(\'' + u.username + '\', \'' + (u.email || '').replace(/'/g, "\\'") + '\')">Edit Email</button>' +
@@ -5342,6 +5348,7 @@
           '<td><span class="status-pill ' + (isActive ? 'RESOLVED' : 'RTF') + '">' + u.status + '</span></td>' +
           '<td><span class="status-pill ' + (isPharmacyAdmin ? 'RESOLVED' : 'PENDING') + '">' + u.role + '</span></td>' +
           '<td>' +
+            accountAttachmentButtons(u) +
             '<button type="button" style="width:auto; margin:0 4px 4px 0; padding:6px 12px; font-size:12px; background:var(--ph-blue);" ' +
               'onclick="editAdminStaffEmail(\'' + u.username + '\', \'' + (u.email || '').replace(/'/g, "\\'") + '\')">Edit Email</button>' +
             '<button type="button" style="width:auto; margin:0 4px 4px 0; padding:6px 12px; font-size:12px; background:#6366f1;" ' +
@@ -5359,6 +5366,82 @@
         buildPaginationBar(data.length, manageAdminsPageNum, 'goToManageAdminsPage');
     }
   }
+
+  // ---------- ATTACHMENT NG APPROVED NA ACCOUNT: tingnan (audit) at dagdagan (ang server ang nagche-check) ----------
+  function accountAttachmentButtons(u) {
+    const viewBtn = u.attachment_link
+      ? '<button type="button" data-file="' + String(u.attachment_link).replace(/"/g, '&quot;') + '" style="width:auto; margin:0 4px 4px 0; padding:6px 12px; font-size:12px; background:#0f766e;" ' +
+          'onclick="openSecureFile(this.dataset.file)">📎 View Attachment</button>'
+      : '<span style="display:inline-block; margin:0 4px 4px 0; padding:6px 10px; font-size:12px; font-weight:700; color:#b91c1c; background:#fee2e2; border-radius:8px;">⚠ No attachment</span>';
+    return viewBtn +
+      '<button type="button" style="width:auto; margin:0 4px 4px 0; padding:6px 12px; font-size:12px; background:#475569;" ' +
+        'onclick="addAccountAttachment(\'' + u.username + '\')">📤 Add Attachment</button>';
+  }
+
+  async function addAccountAttachment(username) {
+    const account = lastManageAdminsData.find(function(u) { return u.username === username; });
+    if (!account) return;
+
+    const { value: formValues } = await Swal.fire({
+      title: 'Add Attachment — ' + escHtml(username),
+      html:
+        '<p style="font-size:13px; margin:0 0 12px;">' +
+          (account.attachment_link
+            ? 'The new files will be combined with the current attachment into one PDF. The previous file is kept for audit.'
+            : 'This account has no attachment yet.') +
+        '</p>' +
+        '<label style="display:block; text-align:left; font-size:13px; font-weight:700;">Files — Up to 5 files, Max 10 MB each (JPG, PNG, or PDF)</label>' +
+        '<input type="file" id="addAttachmentFiles" accept="image/jpeg,image/png,.pdf" multiple style="width:100%; margin:6px 0 14px;">' +
+        '<label style="display:block; text-align:left; font-size:13px; font-weight:700;">Reason (required)</label>' +
+        '<textarea id="addAttachmentReason" class="swal2-textarea" placeholder="e.g. Valid ID submitted directly to the Branch Admin" style="margin:6px 0 0; width:100%;"></textarea>',
+      showCancelButton: true,
+      confirmButtonText: 'Upload',
+      cancelButtonText: 'Cancel',
+      confirmButtonColor: '#0054a6',
+      showLoaderOnConfirm: true,
+      allowOutsideClick: function() { return !Swal.isLoading(); },
+      preConfirm: async function() {
+        const files = document.getElementById('addAttachmentFiles').files;
+        const reason = document.getElementById('addAttachmentReason').value.trim();
+        if (!files || files.length === 0) return Swal.showValidationMessage('Please choose at least one file.');
+        if (!reason) return Swal.showValidationMessage('A reason is required.');
+        const fileCheck = checkMultipleFiles(files, MAX_ATTACHMENT_MB);
+        if (!fileCheck.ok) return Swal.showValidationMessage(fileCheck.message);
+
+        try {
+          const toMerge = [];
+          if (account.attachment_link) {
+            const fileRes = await fetch(await getSignedFileUrl(account.attachment_link));
+            if (!fileRes.ok) throw new Error('Could not read the current attachment.');
+            const blob = await fileRes.blob();
+            toMerge.push(new File([blob], 'current-attachment.pdf', { type: blob.type.indexOf('image/') === 0 ? blob.type : 'application/pdf' }));
+          }
+          toMerge.push.apply(toMerge, Array.from(files));
+          const mergedFile = await mergeFilesToPdf(toMerge);
+
+          const filePath = 'admin_' + Date.now() + '_' + Math.random().toString(36).slice(2, 10) + '_merged.pdf';
+          const { error: uploadError } = await sb.storage.from('registration-attachments').upload(filePath, mergedFile);
+          if (uploadError) throw new Error('Upload failed: ' + uploadError.message);
+
+          const { data: urlData } = sb.storage.from('registration-attachments').getPublicUrl(filePath);
+          const { data, error } = await sb.rpc('add_account_attachment', {
+            p_username: username,
+            p_attachment_link: urlData.publicUrl,
+            p_reason: reason
+          });
+          if (error || !data.success) throw new Error(error ? error.message : data.message);
+          return true;
+        } catch (err) {
+          return Swal.showValidationMessage(err.message || 'Could not add the attachment.');
+        }
+      }
+    });
+
+    if (!formValues) return;
+    Swal.fire('Attachment Added', 'The attachment of ' + username + ' was updated and logged in the audit trail.', 'success');
+    loadManageAdmins();
+  }
+  window.addAccountAttachment = addAccountAttachment;
 
   function goToManageAdminsPage(p) {
     manageAdminsPageNum = p;

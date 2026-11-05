@@ -1151,7 +1151,7 @@
         <div style="background:#fffbeb; border:1px solid #fde68a; border-radius:12px; padding:14px 16px; margin-bottom:18px;">
           <p style="font-size:13px; font-weight:700; color:var(--ph-blue-dark); margin:0 0 6px;">📋 Required: Pharmacy Admin Registration Form &amp; NDA</p>
           <p style="font-size:12px; color:var(--muted); margin:0 0 10px;">
-            Download, print, fill out, and sign this form. Upload the signed copy as your Supporting Document below.
+            Download, print, fill out, and sign this form. The Pharmacy Admin of each pharmacy must also have it notarized. Upload the signed or notarized copy as your Supporting Document below.
           </p>
           <a href="https://ukdiibumagfqngqkqmom.supabase.co/storage/v1/object/public/document-templates/Pharmacy_Admin_Registration_NDA.pdf" target="_blank" style="display:inline-block; font-size:12px; font-weight:700; color:#fff; background:var(--ph-blue); padding:8px 14px; border-radius:8px; text-decoration:none;">
             📥 Download Form
@@ -1177,7 +1177,7 @@
           </a>
         </div>
       </div>
-      <label for="regAttachment">Supporting Documents (ID, Accreditation Certificate, Signed NDA, etc.) — Up to 5 files, Max 10 MB each</label>
+      <label for="regAttachment">Supporting Documents (ID, Accreditation Certificate, Signed or Notarized NDA, etc.) — Up to 5 files, Max 10 MB each</label>
       <input type="file" id="regAttachment" accept="image/jpeg,image/png,.pdf" multiple required>
       <p style="font-size:11px; color:var(--muted); margin:6px 0 16px; line-height:1.5;">JPG, PNG, or PDF only. All files you select will be combined into a single PDF automatically.</p>
       <button type="submit" id="registerBtn">Submit Registration</button>
@@ -3485,7 +3485,7 @@
       "<strong>GACN:</strong> " + data.gacn_no + "<br>" +
       "<strong>Issue Category:</strong> " + (data.issue_category || "").replace(/_/g, ' ') + "<br>" +
       "<strong>Specific Issue:</strong> " + data.specific_issue + "<br>" +
-      "<strong>Required Action:</strong> " + data.required_resolution + "<br>" +
+      "<strong>Required Action:</strong> " + (data.required_resolution || "No specific action indicated. Please coordinate with PhilHealth.") + "<br>" +
       "<strong>Compliance Deadline:</strong> " + deadline +
       (currentRefileIsMr ? "<br><strong>MR / Appeal Deadline:</strong> " + mrDeadline : "");
 

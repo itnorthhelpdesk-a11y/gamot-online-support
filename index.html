@@ -623,6 +623,51 @@
     background: radial-gradient(circle, rgba(253, 185, 19, 0.65), rgba(253, 185, 19, 0.2) 60%, transparent 70%);
     animation: egosFloatB 22s ease-in-out infinite alternate;
   }
+  /* Registered Pharmacies banner: transform lang ang ina-animate para magaan sa mobile */
+  .pharm-strip {
+    display: flex; align-items: center; gap: 18px; margin-bottom: 18px; padding: 12px 16px;
+    border-radius: 18px; color: #fff; box-shadow: 0 10px 24px rgba(0, 84, 166, 0.22);
+    background: linear-gradient(90deg, var(--ph-blue), var(--ph-blue-dark));
+    animation: egosFadeUp .45s ease-out;
+  }
+  .pharm-strip-count { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+  .pharm-strip-count strong { font-family: 'Fredoka', sans-serif; font-size: 2rem; line-height: 1; color: var(--gold); }
+  .pharm-strip-label { font-size: 11px; font-weight: 700; line-height: 1.25; letter-spacing: .3px; }
+  .pharm-strip-dot { width: 10px; height: 10px; border-radius: 50%; background: #4ade80; animation: pharmDotPulse 1.8s ease-out infinite; }
+  .pharm-strip-viewport {
+    flex: 1; min-width: 0; overflow: hidden;
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
+    mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
+  }
+  .pharm-strip-track { display: flex; gap: 10px; width: max-content; animation: pharmMarquee 40s linear infinite; }
+  .pharm-strip:hover .pharm-strip-track { animation-play-state: paused; }
+  .pharm-chip {
+    display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 20px;
+    background: rgba(255, 255, 255, 0.14); font-size: 12px; font-weight: 600; white-space: nowrap;
+  }
+  .pharm-chip small { color: var(--gold); font-size: 11px; }
+  .pharm-strip button {
+    width: auto; margin: 0; padding: 8px 14px; flex-shrink: 0; font-size: 12px; white-space: nowrap;
+    background: var(--gold); color: var(--ph-blue-dark);
+  }
+  .pharm-strip button:hover { background: #fff; color: var(--ph-blue-dark); }
+  .pharm-name { display: inline-flex; align-items: center; gap: 10px; }
+  .pharm-avatar {
+    display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
+    width: 30px; height: 30px; border-radius: 50%; font-weight: 800; font-size: 13px;
+    background: #eef5ff; color: var(--ph-blue);
+  }
+  .pharm-row-in { animation: egosFadeUp .35s ease-out both; }
+  @keyframes pharmMarquee { to { transform: translateX(calc(-50% - 5px)); } }
+  @keyframes pharmDotPulse {
+    0% { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.7); }
+    100% { box-shadow: 0 0 0 10px rgba(74, 222, 128, 0); }
+  }
+  @media (max-width: 768px) {
+    .pharm-strip { flex-wrap: wrap; gap: 10px; justify-content: space-between; }
+    .pharm-strip-viewport { order: 3; flex-basis: 100%; }
+  }
+
   @keyframes egosFloatA { from { transform: translate(0, 0); } to { transform: translate(160px, 120px); } }
   @keyframes egosFloatB { from { transform: translate(0, 0); } to { transform: translate(-140px, -160px); } }
 
@@ -1185,6 +1230,19 @@
 
   <!-- MAIN SYSTEM (after login) -->
   <div id="mainSection">
+    <!-- REGISTERED PHARMACIES BANNER: gumagalaw na listahan para sa PhilHealth staff lang -->
+    <div class="pharm-strip" id="pharmacyStrip" style="display:none;">
+      <div class="pharm-strip-count">
+        <span class="pharm-strip-dot"></span>
+        <strong id="pharmacyStripCount">0</strong>
+        <span class="pharm-strip-label">Registered<br>Pharmacies</span>
+      </div>
+      <div class="pharm-strip-viewport" aria-hidden="true">
+        <div class="pharm-strip-track" id="pharmacyStripTrack"></div>
+      </div>
+      <button type="button" id="pharmacyStripBtn">View all ›</button>
+    </div>
+
     <div class="dashboard-layout">
 
       <!-- LEFT SIDEBAR (visible for PHARMACY accounts) -->
@@ -1202,6 +1260,7 @@
         <button type="button" id="tabAdminHistoryBtn">🕘 History</button>
         <button type="button" id="tabReviewBtn">📥 Review Refiled Submissions</button>
         <button type="button" id="tabComplianceBtn">📊 Compliance Monitoring</button>
+        <button type="button" id="tabPharmacyListBtn">🏥 Registered Pharmacies</button>
         <button type="button" id="tabManageAdminsBtn" style="display:none;">👑 Manage Admins</button>
         <button type="button" id="tabTrailBtn">🔍 Trail</button>
         <button type="button" id="tabDeleteHistoryBtn">🗑️ Delete History</button>
@@ -1535,6 +1594,16 @@
       </p>
       <input type="text" id="deleteHistorySearch" placeholder="Search by GATN No. or PhilHealth Employee ID No..." style="margin-bottom:16px;">
       <div id="deleteHistoryList"><p style="font-size:13px; color:var(--muted);">Loading...</p></div>
+    </div>
+
+    <!-- REGISTERED PHARMACIES: listahan ng mga pharmacy na may approved account (walang user details) -->
+    <div class="card" id="pharmacyListCard" style="display:none;">
+      <h2>Registered Pharmacies</h2>
+      <p style="font-size:12px; color:var(--muted); margin-bottom:12px;">
+        These pharmacies have an approved EGOS account and can receive and refile returned claims. A pharmacy not on this list has no account yet, so no one can refile for it.
+      </p>
+      <input type="text" id="pharmacyListSearch" placeholder="Search by pharmacy name or accreditation no..." style="margin-bottom:16px;">
+      <div id="pharmacyList"></div>
     </div>
 
     <!-- GAMOT TRACKER: consolidated view para sa reporting, ready-to-copy-paste -->
@@ -2236,6 +2305,7 @@
       document.getElementById('manageAdminsCard').style.display = 'none';
       document.getElementById('trailCard').style.display = 'none';
       document.getElementById('deleteHistoryCard').style.display = 'none';
+      document.getElementById('pharmacyListCard').style.display = 'none';
       document.getElementById('gamotTrackerCard').style.display = 'none';
       document.getElementById('analyticsCard').style.display = 'none';
       document.getElementById('pharmacySidebar').style.display = 'none';
@@ -2253,6 +2323,7 @@
       document.getElementById('tabReviewBtn').style.display = isAccounting ? 'none' : 'block';
       document.getElementById('tabComplianceBtn').style.display = 'block';
 
+      loadPharmacyList();
       loadIssueCategories();
       document.getElementById('proRegion').value = currentUser.branch;
       setAdminTab('home');
@@ -2267,6 +2338,7 @@
       document.getElementById('manageAdminsCard').style.display = 'none';
       document.getElementById('trailCard').style.display = 'none';
       document.getElementById('deleteHistoryCard').style.display = 'none';
+      document.getElementById('pharmacyListCard').style.display = 'none';
       document.getElementById('gamotTrackerCard').style.display = 'none';
       document.getElementById('analyticsCard').style.display = 'none';
       document.getElementById('pharmacySidebar').style.display = 'none';
@@ -2325,6 +2397,9 @@
     document.getElementById('manageAdminsCard').style.display = 'none';
     document.getElementById('trailCard').style.display = 'none';
     document.getElementById('deleteHistoryCard').style.display = 'none';
+    document.getElementById('pharmacyListCard').style.display = 'none';
+    document.getElementById('pharmacyStrip').style.display = 'none';
+    document.getElementById('pharmacyStripTrack').innerHTML = '';
     document.getElementById('gamotTrackerCard').style.display = 'none';
     document.getElementById('analyticsCard').style.display = 'none';
     document.getElementById('pendingStaffCard').style.display = 'none';
@@ -3971,6 +4046,7 @@
     const reviewBtn = document.getElementById('tabReviewBtn');
     const complianceBtn = document.getElementById('tabComplianceBtn');
     const manageAdminsBtn = document.getElementById('tabManageAdminsBtn');
+    const pharmacyListBtn = document.getElementById('tabPharmacyListBtn');
     const trailBtn = document.getElementById('tabTrailBtn');
     const deleteHistoryBtn = document.getElementById('tabDeleteHistoryBtn');
     const gamotTrackerBtn = document.getElementById('tabGamotTrackerBtn');
@@ -3983,6 +4059,7 @@
     document.getElementById('manageAdminsCard').style.display = 'none';
     document.getElementById('trailCard').style.display = 'none';
     document.getElementById('deleteHistoryCard').style.display = 'none';
+    document.getElementById('pharmacyListCard').style.display = 'none';
     document.getElementById('gamotTrackerCard').style.display = 'none';
     document.getElementById('analyticsCard').style.display = 'none';
     homeBtn.classList.remove('active');
@@ -3990,6 +4067,7 @@
     reviewBtn.classList.remove('active');
     complianceBtn.classList.remove('active');
     manageAdminsBtn.classList.remove('active');
+    pharmacyListBtn.classList.remove('active');
     trailBtn.classList.remove('active');
     deleteHistoryBtn.classList.remove('active');
     gamotTrackerBtn.classList.remove('active');
@@ -4014,6 +4092,10 @@
       document.getElementById('manageAdminsCard').style.display = 'block';
       manageAdminsBtn.classList.add('active');
       loadManageAdmins();
+    } else if (tab === 'pharmacyList') {
+      document.getElementById('pharmacyListCard').style.display = 'block';
+      pharmacyListBtn.classList.add('active');
+      loadPharmacyList();
     } else if (tab === 'trail') {
       document.getElementById('trailCard').style.display = 'block';
       trailBtn.classList.add('active');
@@ -4038,6 +4120,7 @@
   document.getElementById('tabReviewBtn').addEventListener('click', function() { setAdminTab('review'); });
   document.getElementById('tabComplianceBtn').addEventListener('click', function() { setAdminTab('compliance'); });
   document.getElementById('tabManageAdminsBtn').addEventListener('click', function() { setAdminTab('manageAdmins'); });
+  document.getElementById('tabPharmacyListBtn').addEventListener('click', function() { setAdminTab('pharmacyList'); });
   document.getElementById('tabTrailBtn').addEventListener('click', function() { setAdminTab('trail'); });
   document.getElementById('tabDeleteHistoryBtn').addEventListener('click', function() { setAdminTab('deleteHistory'); });
   document.getElementById('tabGamotTrackerBtn').addEventListener('click', function() { setAdminTab('gamotTracker'); });
@@ -5051,6 +5134,94 @@
              (r.gacn_no || '').toUpperCase().includes(term);
     });
     renderComplianceList(filtered);
+  });
+
+  // ---------- REGISTERED PHARMACIES (PhilHealth staff; pharmacy lang, walang user details) ----------
+  let lastPharmacyListData = [];
+  let currentPharmacyListFiltered = [];
+  let pharmacyListPageNum = 1;
+
+  async function loadPharmacyList() {
+    const container = document.getElementById('pharmacyList');
+    container.innerHTML = '<p style="font-size:13px; color:var(--muted);">Loading...</p>';
+
+    const { data, error } = await sb.rpc('get_registered_pharmacies');
+
+    if (error) {
+      container.innerHTML = '<p style="font-size:13px; color:#a02b1f;">Error loading pharmacies.</p>';
+      lastPharmacyListData = [];
+      return;
+    }
+
+    lastPharmacyListData = data || [];
+    pharmacyListPageNum = 1;
+    document.getElementById('pharmacyListSearch').value = '';
+    renderPharmacyList(lastPharmacyListData, true);
+    updatePharmacyStrip(lastPharmacyListData);
+  }
+
+  function updatePharmacyStrip(list) {
+    // Baka nag-logout habang naglo-load: huwag ipakita sa susunod na naka-login, lalo na sa pharmacy
+    if (!currentUser.username || currentUser.account_type === 'PHARMACY') return;
+
+    const strip = document.getElementById('pharmacyStrip');
+    const track = document.getElementById('pharmacyStripTrack');
+    const countEl = document.getElementById('pharmacyStripCount');
+
+    let chips = list.slice(0, 30).map(function(p) {
+      return '<span class="pharm-chip">🏥 ' + escHtml(p.facility || '—') + ' <small>' + escHtml(p.accreditation_no) + '</small></span>';
+    });
+    // Ulitin para mapuno ang banner, at dalawang magkaparehong kalahati para tuloy-tuloy ang ikot
+    while (chips.length > 0 && chips.length < 12) chips = chips.concat(chips);
+    track.innerHTML = chips.join('') + chips.join('');
+    track.style.animationDuration = Math.max(25, chips.length * 4) + 's';
+    strip.style.display = 'flex';
+
+    countEl.textContent = list.length;
+    countUp(countEl);
+  }
+
+  document.getElementById('pharmacyStripBtn').addEventListener('click', function() { setAdminTab('pharmacyList'); });
+
+  function renderPharmacyList(data, animateRows) {
+    const container = document.getElementById('pharmacyList');
+    currentPharmacyListFiltered = data;
+
+    if (!data || data.length === 0) {
+      container.innerHTML = '<p style="font-size:13px; color:var(--muted);">No registered pharmacies found.</p>';
+      return;
+    }
+
+    const rows = pageSlice(data, pharmacyListPageNum).map(function(p, i) {
+      const rowAttr = animateRows ? ' class="pharm-row-in" style="animation-delay:' + (i * 30) + 'ms;"' : '';
+      return '<tr' + rowAttr + '>' +
+        '<td><span class="pharm-name"><span class="pharm-avatar">' + escHtml((p.facility || '?').charAt(0)) + '</span><strong>' + escHtml(p.facility || '—') + '</strong></span></td>' +
+        '<td>' + escHtml(p.accreditation_no) + '</td>' +
+        '<td>' + escHtml(p.branch || '—') + '</td>' +
+        '<td><span class="status-pill RESOLVED">REGISTERED</span></td>' +
+        '</tr>';
+    }).join('');
+
+    container.innerHTML =
+      '<div class="data-table-wrap"><table class="data-table"><thead><tr>' +
+      '<th>Pharmacy</th><th>Accreditation No.</th><th>Branch</th><th>Status</th>' +
+      '</tr></thead><tbody>' + rows + '</tbody></table></div>' +
+      buildPaginationBar(data.length, pharmacyListPageNum, 'goToPharmacyListPage');
+  }
+
+  function goToPharmacyListPage(p) {
+    pharmacyListPageNum = p;
+    renderPharmacyList(currentPharmacyListFiltered, true);
+  }
+  window.goToPharmacyListPage = goToPharmacyListPage;
+
+  document.getElementById('pharmacyListSearch').addEventListener('input', function() {
+    pharmacyListPageNum = 1;
+    const term = this.value.trim().toUpperCase();
+    renderPharmacyList(lastPharmacyListData.filter(function(p) {
+      return (p.facility || '').toUpperCase().includes(term) ||
+             (p.accreditation_no || '').toUpperCase().includes(term);
+    }));
   });
 
   // ---------- SUPER ADMIN ONLY: MANAGE BRANCH ADMINS ----------

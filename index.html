@@ -1603,6 +1603,12 @@
         These pharmacies have an approved EGOS account and can receive and refile returned claims. A pharmacy not on this list has no account yet, so no one can refile for it.
       </p>
       <input type="text" id="pharmacyListSearch" placeholder="Search by pharmacy name or accreditation no..." style="margin-bottom:16px;">
+      <select id="pharmacyListBranchFilter" aria-label="Filter by branch" style="display:none; margin-bottom:16px;">
+        <option value="">All Branches</option>
+        <option value="PRONCR NORTH">PRONCR NORTH</option>
+        <option value="PRONCR SOUTH">PRONCR SOUTH</option>
+        <option value="PRONCR CENTRAL">PRONCR CENTRAL</option>
+      </select>
       <div id="pharmacyList"></div>
     </div>
 
@@ -5156,6 +5162,10 @@
     lastPharmacyListData = data || [];
     pharmacyListPageNum = 1;
     document.getElementById('pharmacyListSearch').value = '';
+    // Global ADMIN lang ang may branch filter; sa server pa rin nakatakda kung aling branch ang nakukuha ng iba
+    const branchFilter = document.getElementById('pharmacyListBranchFilter');
+    branchFilter.value = '';
+    branchFilter.style.display = currentUser.role === 'ADMIN' ? 'block' : 'none';
     renderPharmacyList(lastPharmacyListData, true);
     updatePharmacyStrip(lastPharmacyListData);
   }
@@ -5215,14 +5225,19 @@
   }
   window.goToPharmacyListPage = goToPharmacyListPage;
 
-  document.getElementById('pharmacyListSearch').addEventListener('input', function() {
+  function filterPharmacyList() {
     pharmacyListPageNum = 1;
-    const term = this.value.trim().toUpperCase();
+    const term = document.getElementById('pharmacyListSearch').value.trim().toUpperCase();
+    const branch = document.getElementById('pharmacyListBranchFilter').value;
     renderPharmacyList(lastPharmacyListData.filter(function(p) {
-      return (p.facility || '').toUpperCase().includes(term) ||
-             (p.accreditation_no || '').toUpperCase().includes(term);
+      const matchesTerm = (p.facility || '').toUpperCase().includes(term) ||
+                          (p.accreditation_no || '').toUpperCase().includes(term);
+      return matchesTerm && (!branch || p.branch === branch);
     }));
-  });
+  }
+
+  document.getElementById('pharmacyListSearch').addEventListener('input', filterPharmacyList);
+  document.getElementById('pharmacyListBranchFilter').addEventListener('change', filterPharmacyList);
 
   // ---------- SUPER ADMIN ONLY: MANAGE BRANCH ADMINS ----------
   let lastManageAdminsData = [];

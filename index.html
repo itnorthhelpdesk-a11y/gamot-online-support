@@ -1086,8 +1086,10 @@
           <select id="regDepartment">
             <option value="">-- Select Position --</option>
             <option value="GAMOT Processor">GAMOT Processor</option>
+            <option value="YAKAP Point Person">YAKAP Point Person</option>
             <option value="Accounting">Accounting</option>
             <option value="YAKAP IT">YAKAP IT</option>
+            <option value="Branch IT">Branch IT</option>
           </select>
         </div>
         <div>
@@ -5095,7 +5097,7 @@
     if (viewingType === 'STAFF') {
       let rows = pageData.map(function(u) {
         const isBranchAdmin = u.role === 'BRANCH_ADMIN';
-        const isYakapIT = (u.facility || '').toUpperCase() === 'YAKAP IT';
+        const isYakapIT = ['YAKAP IT', 'BRANCH IT'].includes((u.facility || '').toUpperCase());
         const btnLabel = isBranchAdmin ? 'Revoke Branch Admin' : 'Make Branch Admin';
         const btnColor = isBranchAdmin ? 'var(--amber)' : 'var(--ok)';
         const isActive = u.status !== 'DEACTIVATED';
@@ -5103,8 +5105,8 @@
         const activeBtnColor = isActive ? '#dc2626' : 'var(--ok)';
 
         // Ang promote/revoke ay EKSKLUSIBO lang sa global ADMIN, hindi BRANCH_ADMIN.
-        // Ang "Make Branch Admin" ay makikita lang kung YAKAP IT ang department (napagkasunduan sa PhilHealth).
-        // Ang "Revoke" ay palaging makikita kung existing Branch Admin na (kahit legacy, di-YAKAP IT na naitalaga bago ang patakarang ito).
+        // Ang "Make Branch Admin" ay makikita lang kung YAKAP IT o Branch IT ang department (napagkasunduan sa PhilHealth).
+        // Ang "Revoke" ay palaging makikita kung existing Branch Admin na (kahit legacy, di-YAKAP IT/Branch IT na naitalaga bago ang patakarang ito).
         const adminActionBtn = (currentUser.role === 'ADMIN' && (isBranchAdmin || isYakapIT))
           ? '<button type="button" style="width:auto; margin:0 4px 4px 0; padding:6px 12px; font-size:12px; background:' + btnColor + ';" ' +
               'onclick="toggleBranchAdmin(\'' + u.username + '\', ' + !isBranchAdmin + ')">' + btnLabel + '</button>'

@@ -671,6 +671,11 @@
     background: #eef5ff; color: var(--ph-blue);
   }
   .pharm-row-in { animation: egosFadeUp .35s ease-out both; }
+  .pharm-acct-btn {
+    width: auto; margin: 0; padding: 4px 14px; border-radius: 999px; font-size: 13px; font-weight: 800;
+    background: #eef5ff; color: var(--ph-blue); border: 1px solid #cfe0ff; cursor: pointer;
+  }
+  .pharm-acct-btn:hover { background: var(--ph-blue); color: #fff; }
   @keyframes pharmMarquee { to { transform: translateX(calc(-50% - 5px)); } }
   @keyframes pharmDotPulse {
     0% { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.7); }
@@ -1610,13 +1615,13 @@
       <div id="deleteHistoryList"><p style="font-size:13px; color:var(--muted);">Loading...</p></div>
     </div>
 
-    <!-- REGISTERED PHARMACIES: listahan ng mga pharmacy na may approved account (walang user details) -->
+    <!-- REGISTERED PHARMACIES: listahan ng mga pharmacy na may approved account + bilang/username ng mga account -->
     <div class="card" id="pharmacyListCard" style="display:none;">
       <h2>Registered Pharmacies</h2>
       <p style="font-size:12px; color:var(--muted); margin-bottom:12px;">
         These pharmacies have an approved EGOS account and can receive and refile returned claims. A pharmacy not on this list has no account yet, so no one can refile for it.
       </p>
-      <input type="text" id="pharmacyListSearch" placeholder="Search by pharmacy name or accreditation no..." style="margin-bottom:16px;">
+      <input type="text" id="pharmacyListSearch" placeholder="Search by pharmacy name, accreditation no. or username..." style="margin-bottom:16px;">
       <select id="pharmacyListBranchFilter" aria-label="Filter by branch" style="display:none; margin-bottom:16px;">
         <option value="">All Branches</option>
         <option value="PRONCR NORTH">PRONCR NORTH</option>
@@ -5208,7 +5213,7 @@
     renderComplianceList(filtered);
   });
 
-  // ---------- REGISTERED PHARMACIES (PhilHealth staff; pharmacy lang, walang user details) ----------
+  // ---------- REGISTERED PHARMACIES (PhilHealth staff; may bilang at username ng mga account) ----------
   let lastPharmacyListData = [];
   let currentPharmacyListFiltered = [];
   let pharmacyListPageNum = 1;
@@ -5274,13 +5279,16 @@
         '<td><span class="pharm-name"><span class="pharm-avatar">' + escHtml((p.facility || '?').charAt(0)) + '</span><strong>' + escHtml(p.facility || '—') + '</strong></span></td>' +
         '<td>' + escHtml(p.accreditation_no) + '</td>' +
         '<td>' + escHtml(p.branch || '—') + '</td>' +
+        '<td>' + (p.accounts
+          ? '<button type="button" class="pharm-acct-btn" data-accred="' + escHtml(p.accreditation_no) + '" title="View registered accounts">' + Number(p.account_count || 0) + '</button>'
+          : '—') + '</td>' +
         '<td><span class="status-pill RESOLVED">REGISTERED</span></td>' +
         '</tr>';
     }).join('');
 
     container.innerHTML =
       '<div class="data-table-wrap"><table class="data-table"><thead><tr>' +
-      '<th>Pharmacy</th><th>Accreditation No.</th><th>Branch</th><th>Status</th>' +
+      '<th>Pharmacy</th><th>Accreditation No.</th><th>Branch</th><th>Accounts</th><th>Status</th>' +
       '</tr></thead><tbody>' + rows + '</tbody></table></div>' +
       buildPaginationBar(data.length, pharmacyListPageNum, 'goToPharmacyListPage');
   }
@@ -5297,10 +5305,39 @@
     const branch = document.getElementById('pharmacyListBranchFilter').value;
     renderPharmacyList(lastPharmacyListData.filter(function(p) {
       const matchesTerm = (p.facility || '').toUpperCase().includes(term) ||
-                          (p.accreditation_no || '').toUpperCase().includes(term);
+                          (p.accreditation_no || '').toUpperCase().includes(term) ||
+                          (p.accounts || []).some(function(a) { return (a.username || '').toUpperCase().includes(term); });
       return matchesTerm && (!branch || p.branch === branch);
     }));
   }
+
+  // Pag-click sa bilang ng Accounts: listahan ng mga registered account ng pharmacy na iyon
+  function showPharmacyAccounts(accred) {
+    const p = lastPharmacyListData.find(function(x) { return x.accreditation_no === accred; });
+    if (!p) return;
+    const rows = (p.accounts || []).map(function(a, i) {
+      return '<tr><td>' + (i + 1) + '</td>' +
+        '<td><strong>' + escHtml(a.username || '—') + '</strong></td>' +
+        '<td>' + (a.role === 'PHARMACY_ADMIN' ? 'Pharmacy Admin' : 'Pharmacy Staff') + '</td>' +
+        '<td>' + escHtml(sysDate(a.created_at)) + '</td>' +
+        '<td>' + escHtml(sysAgo(a.last_login)) + '</td></tr>';
+    }).join('');
+    Swal.fire({
+      title: escHtml(p.facility || p.accreditation_no),
+      html: '<p style="font-size:13px; color:var(--muted); margin:0 0 12px;">' + escHtml(p.accreditation_no) + ' · ' +
+        escHtml(p.branch || '—') + ' · ' + Number(p.account_count || 0) + ' registered account(s)</p>' +
+        '<div class="data-table-wrap" style="text-align:left;"><table class="data-table"><thead><tr>' +
+        '<th>#</th><th>Username</th><th>Role</th><th>Registered</th><th>Last Login</th>' +
+        '</tr></thead><tbody>' + rows + '</tbody></table></div>',
+      width: 760,
+      confirmButtonText: 'Close'
+    });
+  }
+
+  document.getElementById('pharmacyList').addEventListener('click', function(e) {
+    const btn = e.target.closest('.pharm-acct-btn');
+    if (btn) showPharmacyAccounts(btn.getAttribute('data-accred'));
+  });
 
   document.getElementById('pharmacyListSearch').addEventListener('input', filterPharmacyList);
   document.getElementById('pharmacyListBranchFilter').addEventListener('change', filterPharmacyList);

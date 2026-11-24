@@ -676,6 +676,18 @@
     background: #eef5ff; color: var(--ph-blue); border: 1px solid #cfe0ff; cursor: pointer;
   }
   .pharm-acct-btn:hover { background: var(--ph-blue); color: #fff; }
+  /* Login: pagpili ng pharmacy kapag iisang PIN sa higit sa isang pharmacy */
+  .pick-pharm-list { display: grid; gap: 10px; text-align: left; }
+  .pick-pharm-btn {
+    display: flex; align-items: center; gap: 12px; width: 100%; margin: 0; padding: 12px 14px;
+    background: #fff; color: var(--ph-blue-dark); border: 1px solid #cfe0ff; border-radius: 12px;
+    text-align: left; cursor: pointer; transition: border-color .15s, background .15s, transform .15s;
+  }
+  .pick-pharm-btn:hover, .pick-pharm-btn:focus-visible { background: #eef5ff; border-color: var(--ph-blue); transform: translateY(-1px); }
+  .pick-pharm-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+  .pick-pharm-text strong { font-size: 14px; overflow-wrap: anywhere; }
+  .pick-pharm-text small { font-size: 12px; font-weight: 500; color: var(--muted); }
+  .pick-pharm-arrow { font-size: 22px; color: var(--ph-blue); line-height: 1; }
   @keyframes pharmMarquee { to { transform: translateX(calc(-50% - 5px)); } }
   @keyframes pharmDotPulse {
     0% { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.7); }
@@ -1180,6 +1192,7 @@
         <label for="regPhilhealthPin">PhilHealth Identification Number (PIN)</label>
         <input type="text" id="regPhilhealthPin" placeholder="Enter your 12-digit PIN (numbers only)" inputmode="numeric" pattern="[0-9]*" maxlength="12">
         <p style="font-size:11px; color:var(--muted); margin:6px 0 16px; line-height:1.5;">⚠ This PIN will also be your login username. Please double-check it before submitting.</p>
+        <p style="font-size:11px; color:var(--muted); margin:-10px 0 16px; line-height:1.5;">ℹ Already have an EGOS account for another pharmacy? Use the same PIN, a different email, and your <strong>current EGOS password</strong>. You will still sign in with your PIN and choose the pharmacy. Your Branch Admin will review this request.</p>
       </div>
       <div id="regEmployeeIdWrap" style="display:none;">
         <label for="regEmployeeIdNo">PhilHealth Employee I.D. No.</label>
@@ -2238,10 +2251,51 @@
     const username = document.getElementById('loginUser').value.trim();
     const password = document.getElementById('loginPass').value.trim();
 
-    const { data, error } = await sb.rpc('check_staff_login', {
+    let { data, error } = await sb.rpc('check_staff_login', {
       input_username: username,
       input_password: password
     });
+
+    // Iisang PIN na may account sa higit sa isang pharmacy: papiliin kung alin ang bubuksan
+    if (!error && data && data.choose_pharmacy) {
+      hideLoginLoader(0);
+      let chosenAccred = null;
+      const pharmacyCards = (data.pharmacies || []).map(function(p) {
+        return '<button type="button" class="pick-pharm-btn" data-accred="' + escHtml(p.accreditation_no) + '">' +
+          '<span class="pharm-avatar">' + escHtml((p.facility || '?').charAt(0)) + '</span>' +
+          '<span class="pick-pharm-text"><strong>' + escHtml(p.facility || '—') + '</strong>' +
+          '<small>' + escHtml(p.accreditation_no) + ' · ' + escHtml(p.branch || '—') + ' · ' +
+          (p.role === 'PHARMACY_ADMIN' ? 'Pharmacy Admin' : 'Pharmacy Staff') + '</small></span>' +
+          '<span class="pick-pharm-arrow">›</span></button>';
+      }).join('');
+      await Swal.fire({
+        title: 'Select Pharmacy',
+        html: '<p style="margin:0 0 14px; font-size:14px;">Your PIN has an account in more than one pharmacy. Which pharmacy do you want to open?</p>' +
+          '<div class="pick-pharm-list">' + pharmacyCards + '</div>',
+        showConfirmButton: false,
+        showCancelButton: true,
+        cancelButtonText: 'Cancel',
+        didOpen: function(popup) {
+          popup.querySelectorAll('.pick-pharm-btn').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+              chosenAccred = btn.getAttribute('data-accred');
+              Swal.close();
+            });
+          });
+        }
+      });
+      if (!chosenAccred) {
+        loginBtn.disabled = false;
+        loginBtn.innerText = "Sign In";
+        return;
+      }
+      showLoginLoader('Verifying credentials…');
+      ({ data, error } = await sb.rpc('check_staff_login', {
+        input_username: username,
+        input_password: password,
+        input_accreditation: chosenAccred
+      }));
+    }
 
     loginBtn.disabled = false;
     loginBtn.innerText = "Sign In";
@@ -2267,7 +2321,7 @@
     }
 
     currentUser = {
-      username: username.toUpperCase(),
+      username: (data.username || username).toUpperCase(),
       token: data.token || "",
       role: data.role,
       facility: data.facility,
@@ -2291,7 +2345,8 @@
     document.getElementById('sessionText').innerHTML =
       '<div class="session-segment"><span class="seg-label">Branch</span><span class="seg-value">' + (currentUser.branch || '—') + '</span></div>' +
       '<span class="session-divider">|</span>' +
-      '<div class="session-segment"><span class="seg-label">User</span><span class="seg-value">' + (currentUser.username || '—') + '</span></div>' +
+      // PIN lang ang ipinapakita (walang "@ACCREDITATION" ng dagdag na pharmacy account)
+      '<div class="session-segment"><span class="seg-label">User</span><span class="seg-value">' + escHtml(currentUser.username.split('@')[0] || '—') + '</span></div>' +
       '<span class="session-divider">|</span>' +
       '<div class="session-segment"><span class="seg-label">' + thirdSegmentLabel + '</span><span class="seg-value">' + (currentUser.facility || '—') + '</span></div>';
     document.getElementById('logoutBtn').style.display = 'inline-block';
@@ -3106,7 +3161,9 @@
     }
 
     msg.className = "msg ok";
-    msg.innerText = "Registration submitted. Please wait for admin approval before signing in.";
+    msg.innerText = data.additional_pharmacy
+      ? "Registration for this additional pharmacy was submitted. Your Branch Admin will review it. Once approved, sign in with your PIN and choose the pharmacy."
+      : "Registration submitted. Please wait for admin approval before signing in.";
     msg.style.display = 'block';
     document.getElementById('registerForm').reset();
     regEmailVerified = false;
@@ -3196,11 +3253,25 @@
            </select>`
         : '';
 
+      // Iisang PIN na may account na sa ibang pharmacy: ipakita kung saan-saan bago i-approve
+      const otherAccounts = u.other_accounts || [];
+      const otherAccountsHtml = otherAccounts.length === 0 ? '' :
+        '<div style="margin-top:8px; padding:8px 10px; border-radius:8px; background:#fff7e6; border:1px solid #fcd34d; font-size:12px;">' +
+        '<strong>⚠ Same PIN — also has ' + otherAccounts.length + ' other pharmacy account' + (otherAccounts.length > 1 ? 's' : '') + ':</strong>' +
+        '<ul style="margin:4px 0 0 18px; padding:0;">' +
+        otherAccounts.map(function(o) {
+          return '<li>' + escHtml(o.facility || '—') + ' (' + escHtml(o.accreditation_no || '—') + ') · ' + escHtml(o.branch || '—') +
+            ' · ' + (o.role === 'PHARMACY_ADMIN' ? 'Pharmacy Admin' : 'Staff') + ' · ' + escHtml(o.status || '—') +
+            ' — <span style="color:var(--muted);">' + escHtml(o.username) + '</span></li>';
+        }).join('') +
+        '</ul><span style="color:var(--muted);">Check the NDA for this pharmacy, and choose the role below.</span></div>';
+
       row.innerHTML = `
         <div>
           <strong>${u.username}</strong> — ${u.account_type || 'N/A'}<br>
-          <span style="font-size:12px; color:var(--muted);">${u.facility} · ${u.branch}</span><br>
+          <span style="font-size:12px; color:var(--muted);">${u.facility} · ${u.accreditation_no ? escHtml(u.accreditation_no) + ' · ' : ''}${u.branch}</span><br>
           ${attachmentHtml}
+          ${otherAccountsHtml}
           ${roleDropdownHtml ? '<br>' + roleDropdownHtml : ''}
         </div>
         <div>

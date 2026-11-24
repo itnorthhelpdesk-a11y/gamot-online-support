@@ -3098,6 +3098,27 @@
       return;
     }
 
+    // I-check muna sa server kung papasok ang registration, para walang maiwang
+    // na-upload na file kapag tinanggihan (hindi kayang burahin ng page ang file)
+    btn.innerText = "Checking...";
+    const { data: precheck, error: precheckError } = await sb.rpc('precheck_registration', {
+      p_username: usernameForFile,
+      p_password: document.getElementById('regPassword').value.trim(),
+      p_account_type: accountTypeForUsername,
+      p_accreditation_no: document.getElementById('regAccreditationNo').value.trim(),
+      p_email: document.getElementById('regEmail').value.trim()
+    });
+
+    if (precheckError || !precheck || !precheck.success) {
+      btn.disabled = false;
+      btn.innerText = "Submit Registration";
+      msg.className = "msg error";
+      msg.innerText = precheckError ? precheckError.message : (precheck ? precheck.message : "Something went wrong. Please try again.");
+      msg.style.display = 'block';
+      return;
+    }
+
+    btn.innerText = "Merging document(s)...";
     let mergedFile;
     try {
       mergedFile = await mergeFilesToPdf(Array.from(fileInput.files));

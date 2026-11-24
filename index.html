@@ -386,6 +386,19 @@
   .analytics-chart-box h3 { font-size: 13px; color: var(--ink); margin: 0 0 12px; }
   .analytics-chart-box canvas { max-height: 260px; }
 
+  /* SYSTEM MONITOR */
+  .sys-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
+  .sys-head h2 { margin-bottom: 4px; }
+  .sys-section-title { font-size: 14px; color: var(--ph-blue); margin: 26px 0 12px; padding-bottom: 6px; border-bottom: 2px solid var(--line); }
+  .sys-branch-table td.num, .sys-branch-table th.num { text-align: right; white-space: nowrap; }
+  .sys-branch-table tr.sys-group td { background: #f1f5f9; font-weight: 700; color: var(--ink); font-size: 12px; text-transform: uppercase; letter-spacing: 0.4px; }
+  .sys-branch-table td.sys-sub { padding-left: 24px; color: var(--muted); }
+  .sys-warn { color: #dc2626; font-weight: 700; }
+  .sys-amount { font-size: 14px; font-weight: 700; color: var(--ink); margin-top: 2px; }
+  .sys-amount-sm { font-size: 11px; color: var(--muted); }
+  .sys-rtf-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr)); gap: 18px; margin-top: 18px; }
+  .sys-branch-table tr.sys-total td { background: #eef4fb; border-top: 2px solid var(--line); }
+
   @media (max-width: 768px) {
     .analytics-chart-row { grid-template-columns: 1fr; }
     .analytics-stat-card .stat-value { font-size: 1.3rem; }
@@ -1266,6 +1279,7 @@
         <button type="button" id="tabDeleteHistoryBtn">🗑️ Delete History</button>
         <button type="button" id="tabGamotTrackerBtn">📋 GAMOT Tracker</button>
         <button type="button" id="tabAnalyticsBtn">📊 Analytics</button>
+        <button type="button" id="tabSysMonitorBtn" style="display:none;">🛰️ System Monitor</button>
       </div>
 
       <div class="dashboard-content">
@@ -1669,6 +1683,20 @@
           <canvas id="chartByBranch"></canvas>
         </div>
       </div>
+    </div>
+
+    <!-- SYSTEM MONITOR: System Admin (ADMIN) lang; tinitiyak din ng server -->
+    <div class="card" id="sysMonitorCard" style="display:none;">
+      <div class="sys-head">
+        <div>
+          <h2>System Monitor</h2>
+          <p style="font-size:12px; color:var(--muted); margin:0;">
+            Users, pharmacies, records, and security across all branches. <span id="sysMonitorUpdated"></span>
+          </p>
+        </div>
+        <button type="button" id="sysMonitorRefreshBtn" style="width:auto; padding:8px 16px;">↻ Refresh</button>
+      </div>
+      <div id="sysMonitorBody"><p style="font-size:13px; color:var(--muted);">Loading...</p></div>
     </div>
 
       </div>
@@ -2313,7 +2341,7 @@
       document.getElementById('deleteHistoryCard').style.display = 'none';
       document.getElementById('pharmacyListCard').style.display = 'none';
       document.getElementById('gamotTrackerCard').style.display = 'none';
-      document.getElementById('analyticsCard').style.display = 'none';
+      document.getElementById('analyticsCard').style.display = 'none'; document.getElementById('sysMonitorCard').style.display = 'none';
       document.getElementById('pharmacySidebar').style.display = 'none';
       document.getElementById('adminSidebar').style.display = 'block';
       document.querySelector('main').classList.add('wide');
@@ -2321,6 +2349,9 @@
       // "Manage Admins" tab: makikita ng global "ADMIN" (full features) at "BRANCH_ADMIN" (sariling branch lang, walang promote/revoke)
       document.getElementById('tabManageAdminsBtn').style.display =
         (currentUser.role === 'ADMIN' || currentUser.role === 'BRANCH_ADMIN') ? 'block' : 'none';
+
+      // "System Monitor" tab: System Admin (global ADMIN) lang
+      document.getElementById('tabSysMonitorBtn').style.display = (currentUser.role === 'ADMIN') ? 'block' : 'none';
 
       // "Accounting" department (STAFF): Home, History, Compliance Monitoring, Trail, Delete History, GAMOT Tracker.
       // "Review Refiled Submissions" lang ang itinatago sa kanila. "GAMOT Processor"/ibang roles: buong dashboard tulad ng dati.
@@ -2346,7 +2377,7 @@
       document.getElementById('deleteHistoryCard').style.display = 'none';
       document.getElementById('pharmacyListCard').style.display = 'none';
       document.getElementById('gamotTrackerCard').style.display = 'none';
-      document.getElementById('analyticsCard').style.display = 'none';
+      document.getElementById('analyticsCard').style.display = 'none'; document.getElementById('sysMonitorCard').style.display = 'none';
       document.getElementById('pharmacySidebar').style.display = 'none';
       document.getElementById('adminSidebar').style.display = 'none';
       loadIssueCategories();
@@ -2407,7 +2438,7 @@
     document.getElementById('pharmacyStrip').style.display = 'none';
     document.getElementById('pharmacyStripTrack').innerHTML = '';
     document.getElementById('gamotTrackerCard').style.display = 'none';
-    document.getElementById('analyticsCard').style.display = 'none';
+    document.getElementById('analyticsCard').style.display = 'none'; document.getElementById('sysMonitorCard').style.display = 'none';
     document.getElementById('pendingStaffCard').style.display = 'none';
     document.getElementById('myStaffCard').style.display = 'none';
     document.getElementById('pharmacySidebar').style.display = 'none';
@@ -3304,11 +3335,32 @@
     }
   });
 
+  // Facility = pangalan ng pharmacy. Hindi puwede ang GACN/GATN number o puro numero (hal. maling field ang na-type-an).
+  function facilityNameProblem(name) {
+    const compact = String(name || '').replace(/[\s\-_.#:]/g, '').toUpperCase();
+    if (/^(GACN|GATN)/.test(compact)) {
+      return 'Facility must be the pharmacy name, not the GACN/GATN number. Please put the number in its own field.';
+    }
+    if (compact && !/[A-Z]/.test(compact)) {
+      return 'Facility must be the pharmacy name (letters), not a number.';
+    }
+    return null;
+  }
+
   // ---------- ENCODE DEFICIENCY ----------
   document.getElementById('encodeForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     const msg = document.getElementById('encodeMsg');
     msg.style.display = 'none';
+
+    const facilityProblem = facilityNameProblem(document.getElementById('facility').value);
+    if (facilityProblem) {
+      msg.className = 'msg error';
+      msg.innerText = facilityProblem;
+      msg.style.display = 'block';
+      document.getElementById('facility').focus();
+      return;
+    }
 
     const payload = {
       p_pro_region: document.getElementById('proRegion').value.trim(),
@@ -4072,7 +4124,7 @@
     document.getElementById('deleteHistoryCard').style.display = 'none';
     document.getElementById('pharmacyListCard').style.display = 'none';
     document.getElementById('gamotTrackerCard').style.display = 'none';
-    document.getElementById('analyticsCard').style.display = 'none';
+    document.getElementById('analyticsCard').style.display = 'none'; document.getElementById('sysMonitorCard').style.display = 'none';
     homeBtn.classList.remove('active');
     historyBtn.classList.remove('active');
     reviewBtn.classList.remove('active');
@@ -4083,6 +4135,7 @@
     deleteHistoryBtn.classList.remove('active');
     gamotTrackerBtn.classList.remove('active');
     analyticsBtn.classList.remove('active');
+    document.getElementById('tabSysMonitorBtn').classList.remove('active');
 
     if (tab === 'home') {
       document.getElementById('encodeCard').style.display = 'block';
@@ -4123,6 +4176,10 @@
       document.getElementById('analyticsCard').style.display = 'block';
       analyticsBtn.classList.add('active');
       loadAnalytics();
+    } else if (tab === 'sysMonitor' && currentUser.role === 'ADMIN') {
+      document.getElementById('sysMonitorCard').style.display = 'block';
+      document.getElementById('tabSysMonitorBtn').classList.add('active');
+      loadSystemMonitor();
     }
   }
 
@@ -4136,6 +4193,8 @@
   document.getElementById('tabDeleteHistoryBtn').addEventListener('click', function() { setAdminTab('deleteHistory'); });
   document.getElementById('tabGamotTrackerBtn').addEventListener('click', function() { setAdminTab('gamotTracker'); });
   document.getElementById('tabAnalyticsBtn').addEventListener('click', function() { setAdminTab('analytics'); });
+  document.getElementById('tabSysMonitorBtn').addEventListener('click', function() { setAdminTab('sysMonitor'); });
+  document.getElementById('sysMonitorRefreshBtn').addEventListener('click', function() { loadSystemMonitor(); });
 
   // ---------- PERSIST REFILE FORM STATE (survives tab switching & accidental refresh) ----------
   (function persistRefileState() {
@@ -4847,6 +4906,8 @@
       cancelButtonText: 'Cancel',
       confirmButtonColor: '#0054a6',
       preConfirm: function() {
+        const facilityProblem = facilityNameProblem(document.getElementById('editFacility').value);
+        if (facilityProblem) return Swal.showValidationMessage(facilityProblem);
         return {
           gacn: document.getElementById('editGacn').value.trim(),
           facility: document.getElementById('editFacility').value.trim(),
@@ -6348,6 +6409,423 @@
     } else {
       branchBox.style.display = 'none';
     }
+  }
+
+  // ---------- SYSTEM MONITOR (System Admin lang; ang server ang nagche-check ng role) ----------
+  let sysChartLogins = null;
+  let sysChartRegs = null;
+  let sysChartStatus = null;
+  let sysChartImpact = null;
+  const SYS_BRANCH_COLORS = { 'PRONCR NORTH': '#0054a6', 'PRONCR SOUTH': '#16a34a', 'PRONCR CENTRAL': '#fdb913' };
+
+  function sysNum(n) { return Number(n || 0).toLocaleString(); }
+  function sysMoney(n) { return '₱' + Number(n || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+  function sysDate(s) {
+    if (!s) return '—';
+    const d = new Date(s);
+    return isNaN(d) ? '—' : d.toLocaleString('en-PH', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' });
+  }
+  function sysAgo(s) {
+    if (!s) return 'Never';
+    const mins = Math.max(0, Math.floor((Date.now() - new Date(s).getTime()) / 60000));
+    if (mins < 60) return mins + ' min ago';
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 48) return hrs + ' hr ago';
+    return Math.floor(hrs / 24) + ' days ago';
+  }
+  function sysTile(value, label, color) {
+    return '<div class="analytics-stat-card"><div class="stat-value"' + (color ? ' style="color:' + color + ';"' : '') + '>' +
+      value + '</div><div class="stat-label">' + label + '</div></div>';
+  }
+  function sysTable(heads, rowsHtml, emptyText) {
+    if (!rowsHtml) return '<p style="font-size:13px; color:var(--muted);">' + emptyText + '</p>';
+    return '<div class="data-table-wrap"><table class="data-table"><thead><tr>' +
+      heads.map(function(h) { return '<th>' + h + '</th>'; }).join('') +
+      '</tr></thead><tbody>' + rowsHtml + '</tbody></table></div>';
+  }
+  function sysBranchColor(b) { return SYS_BRANCH_COLORS[b] || '#94a3b8'; }
+
+  async function loadSystemMonitor() {
+    const body = document.getElementById('sysMonitorBody');
+    const updated = document.getElementById('sysMonitorUpdated');
+    body.innerHTML = '<p style="font-size:13px; color:var(--muted);">Loading...</p>';
+    updated.textContent = '';
+
+    const { data, error } = await sb.rpc('get_system_analytics');
+    if (error || !data) {
+      const notAllowed = error && String(error.message || '').indexOf('NOT_AUTHORIZED') !== -1;
+      body.innerHTML = '<p style="font-size:13px; color:#a02b1f;">' +
+        (notAllowed ? 'The System Monitor is for the System Admin only.' : 'Error loading the System Monitor. Please try again.') + '</p>';
+      return;
+    }
+
+    updated.textContent = 'Updated ' + sysDate(data.generated_at) + '.';
+    const branches = data.branches || [];
+    const sum = function(key) { return branches.reduce(function(a, b) { return a + Number(b[key] || 0); }, 0); };
+    const sec = data.security || {};
+    const mail = data.email_queue || {};
+
+    // ---------- 0. EGOS IMPACT SUMMARY (para sa presentation) ----------
+    const pctOf = function(part, whole) { return Number(whole) > 0 ? Math.round(Number(part) * 100 / Number(whole)) : 0; };
+    const impactTile = function(count, amount, label, color, note) {
+      return '<div class="analytics-stat-card"><div class="stat-value"' + (color ? ' style="color:' + color + ';"' : '') + '>' + count + '</div>' +
+        '<div class="sys-amount">' + sysMoney(amount) + '</div>' +
+        '<div class="stat-label">' + label + (note ? '<br><span style="text-transform:none;">' + note + '</span>' : '') + '</div></div>';
+    };
+    const impactCell = function(count, amount, note) {
+      return '<td class="num"><strong>' + sysNum(count) + '</strong>' + (note ? ' <span style="color:var(--muted);">(' + note + ')</span>' : '') +
+        '<br><span class="sys-amount-sm">' + sysMoney(amount) + '</span></td>';
+    };
+    const impactRow = function(label, b, isTotal) {
+      const v = isTotal ? function(k) { return sum(k); } : function(k) { return Number(b[k] || 0); };
+      const days = isTotal ? null : b.avg_days_to_resolve;
+      return '<tr' + (isTotal ? ' class="sys-total"' : '') + '><td><strong>' + escHtml(label) + '</strong></td>' +
+        '<td class="num"><strong>' + sysNum(v('users_approved')) + '</strong><br><span class="sys-amount-sm">' +
+          sysNum(v('pharmacy_users')) + ' pharmacy · ' + sysNum(v('staff_users')) + ' staff</span></td>' +
+        '<td class="num"><strong>' + sysNum(v('pharmacies')) + '</strong></td>' +
+        impactCell(v('records_total'), v('claim_total')) +
+        impactCell(v('resolved'), v('claim_resolved'), pctOf(v('resolved'), v('records_total')) + '%') +
+        impactCell(v('paid_count'), v('claim_paid'), pctOf(v('paid_count'), v('records_total')) + '%') +
+        impactCell(v('records_open'), v('claim_open')) +
+        impactCell(v('denied'), v('claim_denied')) +
+        '<td class="num">' + (days == null ? '—' : days + ' days') + '</td></tr>';
+    };
+    let html = '<h3 class="sys-section-title" style="margin-top:0;">EGOS Impact Summary (All Time)</h3>' +
+      '<p style="font-size:12px; color:var(--muted); margin:-4px 0 12px;">How many people use EGOS, how many claims it has handled, and how much those claims are worth.</p>' +
+      '<div class="analytics-stat-grid">' +
+        sysTile(sum('users_approved'), 'People Using EGOS') +
+        sysTile(sum('pharmacies'), 'Registered Pharmacies') +
+        impactTile(sum('records_total'), sum('claim_total'), 'Claims Handled') +
+        impactTile(sum('resolved'), sum('claim_resolved'), 'Resolved', 'var(--ok)', pctOf(sum('resolved'), sum('records_total')) + '% of claims handled') +
+        impactTile(sum('paid_count'), sum('claim_paid'), 'Paid', 'var(--ok)', pctOf(sum('paid_count'), sum('records_total')) + '% of claims handled') +
+        impactTile(sum('records_open'), sum('claim_open'), 'Still Open', 'var(--amber)') +
+      '</div>' +
+      '<div class="data-table-wrap"><table class="data-table sys-branch-table"><thead><tr>' +
+        '<th>Branch</th><th class="num">Users</th><th class="num">Pharmacies</th><th class="num">Claims Handled</th>' +
+        '<th class="num">Resolved</th><th class="num">Paid</th><th class="num">Still Open</th><th class="num">Denied</th>' +
+        '<th class="num">Avg. Days to Resolve</th></tr></thead><tbody>' +
+        branches.map(function(b) { return impactRow(b.branch, b, false); }).join('') +
+        impactRow('TOTAL', null, true) +
+      '</tbody></table></div>' +
+      '<div class="analytics-chart-box" style="margin-top:18px;"><h3>Claim Amounts per Branch</h3><canvas id="sysChartImpact"></canvas></div>';
+
+    // ---------- 0b. TOP 10 RTF REASONS (may branch filter) ----------
+    html += '<h3 class="sys-section-title">Top 10 RTF Reasons (All Time)</h3>' +
+      '<p style="font-size:12px; color:var(--muted); margin:-4px 0 10px;">The deficiencies pharmacies get most often: first for all branches, then the top 10 of each branch.</p>' +
+      '<div id="sysRtfTable"></div>' +
+      '<div id="sysRtfPerBranch" class="sys-rtf-grid"></div>';
+
+    // ---------- 1. KABUUAN ----------
+    html += '<h3 class="sys-section-title">Right Now</h3><div class="analytics-stat-grid">' +
+      sysTile(sum('pharmacies'), 'Registered Pharmacies') +
+      sysTile(sum('users_approved'), 'Approved Accounts') +
+      sysTile(sum('online_now'), 'Online Now', 'var(--ok)') +
+      sysTile(sum('active_7d'), 'Active (Last 7 Days)') +
+      sysTile(sum('pending'), 'Pending Approval', sum('pending') ? 'var(--amber)' : '') +
+      sysTile(sum('records_open'), 'Open Deficiencies') +
+      sysTile(sum('rtf_overdue'), 'RTF Past Deadline', sum('rtf_overdue') ? '#dc2626' : '') +
+      sysTile(sum('refile_pending_review'), 'Refiles Awaiting Review', sum('refile_pending_review') ? 'var(--amber)' : '') +
+      '</div>';
+
+    // ---------- 1b. MOST ACTIVE BRANCH (huling 30 araw) ----------
+    // Bawat sukatan ay may rank 1-3; pinakamababang kabuuan ng rank = pinaka-aktibo (tie: mas maraming logins)
+    const rankBranches = branches.filter(function(b) { return ['PRONCR NORTH', 'PRONCR SOUTH', 'PRONCR CENTRAL'].indexOf(b.branch) !== -1; })
+      .map(function(b) {
+        const pct = Number(b.users_approved) > 0 ? Math.round(Number(b.active_30d) * 100 / Number(b.users_approved)) : 0;
+        return Object.assign({}, b, { active_pct: pct, score: 0 });
+      });
+    const rankKeys = ['logins_30d', 'active_30d', 'active_pct', 'actions_30d', 'refiles_30d'];
+    const leaders = {};
+    rankKeys.forEach(function(k) {
+      const sorted = rankBranches.slice().sort(function(a, b) { return Number(b[k]) - Number(a[k]); });
+      sorted.forEach(function(b) {
+        // magkapareho ang value = magkapareho ang rank
+        b.score += 1 + sorted.filter(function(o) { return Number(o[k]) > Number(b[k]); }).length;
+      });
+      leaders[k] = sorted.length && Number(sorted[0][k]) > 0 ? Number(sorted[0][k]) : null;
+    });
+    rankBranches.sort(function(a, b) { return a.score - b.score || Number(b.logins_30d) - Number(a.logins_30d); });
+    const medals = ['🥇', '🥈', '🥉'];
+    const lead = function(k, v, txt) { return (leaders[k] !== null && Number(v) === leaders[k]) ? '<strong style="color:var(--ok);">' + txt + '</strong>' : txt; };
+    const rankRows = rankBranches.map(function(b, i) {
+      return '<tr><td>' + (medals[i] || (i + 1)) + ' <strong>' + escHtml(b.branch) + '</strong></td>' +
+        '<td class="num">' + lead('logins_30d', b.logins_30d, sysNum(b.logins_30d)) + '</td>' +
+        '<td class="num">' + lead('active_30d', b.active_30d, sysNum(b.active_30d)) + ' <span style="color:var(--muted);">of ' + sysNum(b.users_approved) + '</span></td>' +
+        '<td class="num">' + lead('active_pct', b.active_pct, b.active_pct + '%') + '</td>' +
+        '<td class="num">' + lead('actions_30d', b.actions_30d, sysNum(b.actions_30d)) + '</td>' +
+        '<td class="num">' + lead('refiles_30d', b.refiles_30d, sysNum(b.refiles_30d)) + '</td></tr>';
+    }).join('');
+    html += '<h3 class="sys-section-title">Most Active Branch (Last 30 Days)</h3>' +
+      '<p style="font-size:12px; color:var(--muted); margin:-4px 0 10px;">Ranked across all five measures. Green = highest in that column.</p>' +
+      '<div class="data-table-wrap"><table class="data-table sys-branch-table"><thead><tr>' +
+      '<th>Branch</th><th class="num">Total Logins</th><th class="num">Active Users</th><th class="num">% Active</th>' +
+      '<th class="num">Actions in EGOS</th><th class="num">Refiles Submitted</th></tr></thead><tbody>' + rankRows + '</tbody></table></div>';
+
+    const topUserRows = (data.top_users || []).map(function(u, i) {
+      const type = u.account_type === 'PHARMACY' ? 'Pharmacy' : 'PhilHealth';
+      return '<tr><td>' + (i + 1) + '</td><td><strong>' + escHtml(u.username) + '</strong><br><span style="font-size:11px; color:var(--muted);">' + escHtml(u.facility || '') + '</span></td>' +
+        '<td>' + escHtml(u.branch) + '</td><td>' + type + '<br><span style="font-size:11px; color:var(--muted);">' + escHtml(u.role || '') + '</span></td>' +
+        '<td class="num">' + sysNum(u.logins) + '</td><td class="num">' + sysNum(u.actions) + '</td><td>' + sysAgo(u.last_login) + '</td></tr>';
+    }).join('');
+    html += '<h3 class="sys-section-title">Most Active Users (Last 30 Days)</h3>' +
+      sysTable(['#', 'User', 'Branch', 'Type', 'Logins', 'Actions', 'Last Login'], topUserRows, 'No activity in the last 30 days.');
+
+    // ---------- 2. PER BRANCH (metric x branch) ----------
+    const metricRows = [
+      ['Users & Accounts'],
+      ['users_approved', 'Approved accounts'],
+      ['pharmacy_users', 'Pharmacy accounts', 'sub'],
+      ['staff_users', 'PhilHealth staff accounts', 'sub'],
+      ['online_now', 'Online now (last 30 min)'],
+      ['active_7d', 'Logged in, last 7 days'],
+      ['active_30d', 'Logged in, last 30 days'],
+      ['never_logged_in', 'Approved but never logged in'],
+      ['new_30d', 'New registrations, last 30 days'],
+      ['pending', 'Pending approval', 'warn'],
+      ['rejected', 'Declined'],
+      ['deactivated', 'Deactivated'],
+      ['locked_now', 'Locked right now', 'warn'],
+      ['Pharmacies'],
+      ['pharmacies', 'Registered pharmacies'],
+      ['pharmacies_active_30d', 'Logged in, last 30 days', 'sub'],
+      ['pharmacies_inactive_30d', 'No login in 30 days', 'warn sub'],
+      ['pharmacies_with_open', 'With open deficiencies'],
+      ['Deficiency Records'],
+      ['records_total', 'Total records'],
+      ['records_30d', 'Encoded, last 30 days'],
+      ['records_open', 'Open'],
+      ['rtf', 'RTF', 'sub'],
+      ['rtf_overdue', 'RTF past deadline', 'warn sub'],
+      ['refiled', 'Refiled', 'sub'],
+      ['processing', 'Processing', 'sub'],
+      ['for_mr', 'For MR / Appeal', 'sub'],
+      ['resolved', 'Resolved'],
+      ['denied', 'Denied'],
+      ['late_submissions', 'Late submissions'],
+      ['Review & Claims'],
+      ['refile_pending_review', 'Refiles awaiting review', 'warn'],
+      ['refile_waiting_3d', 'Waiting more than 3 days', 'warn sub'],
+      ['avg_review_hours_30d', 'Average review time, last 30 days', 'hours'],
+      ['claim_total', 'Total claim amount', 'money'],
+      ['claim_unpaid', 'Unpaid claim amount', 'money']
+    ];
+    const cols = branches.length + 2;
+    let branchRows = '';
+    metricRows.forEach(function(m) {
+      if (m.length === 1) {
+        branchRows += '<tr class="sys-group"><td colspan="' + cols + '">' + m[0] + '</td></tr>';
+        return;
+      }
+      const key = m[0], flags = m[2] || '';
+      const fmt = function(v) {
+        if (flags.indexOf('money') !== -1) return sysMoney(v);
+        if (flags.indexOf('hours') !== -1) return (v == null) ? '—' : (Number(v) < 24 ? v + ' hr' : (Number(v) / 24).toFixed(1) + ' days');
+        const txt = sysNum(v);
+        return (flags.indexOf('warn') !== -1 && Number(v) > 0) ? '<span class="sys-warn">' + txt + '</span>' : txt;
+      };
+      branchRows += '<tr><td' + (flags.indexOf('sub') !== -1 ? ' class="sys-sub"' : '') + '>' + m[1] + '</td>' +
+        branches.map(function(b) { return '<td class="num">' + fmt(b[key]) + '</td>'; }).join('') +
+        '<td class="num"><strong>' + (flags.indexOf('hours') !== -1 ? '—' : fmt(sum(key))) + '</strong></td></tr>';
+    });
+    html += '<h3 class="sys-section-title">Branch Comparison</h3>' +
+      '<div class="data-table-wrap"><table class="data-table sys-branch-table"><thead><tr><th>Metric</th>' +
+      branches.map(function(b) { return '<th class="num">' + escHtml(b.branch) + '</th>'; }).join('') +
+      '<th class="num">Total</th></tr></thead><tbody>' + branchRows + '</tbody></table></div>';
+
+    // ---------- 3. CHARTS ----------
+    html += '<h3 class="sys-section-title">Usage Trends</h3>' +
+      '<div class="analytics-chart-row">' +
+        '<div class="analytics-chart-box"><h3>Users Logged In per Day (Last 30 Days)</h3><canvas id="sysChartLogins"></canvas></div>' +
+        '<div class="analytics-chart-box"><h3>New Registrations per Month</h3><canvas id="sysChartRegs"></canvas></div>' +
+      '</div>' +
+      '<div class="analytics-chart-row">' +
+        '<div class="analytics-chart-box"><h3>Deficiency Status per Branch</h3><canvas id="sysChartStatus"></canvas></div>' +
+        '<div class="analytics-chart-box"><h3>Approved Accounts per Role</h3><div id="sysRolesTable"></div></div>' +
+      '</div>';
+
+    // ---------- 4. TOP PHARMACIES ----------
+    const topRows = (data.top_pharmacies || []).map(function(p) {
+      return '<tr><td>' + escHtml(p.facility || '—') + '</td><td>' + escHtml(p.accreditation_no) + '</td><td>' + escHtml(p.branch || '—') + '</td>' +
+        '<td class="num">' + sysNum(p.open_records) + '</td>' +
+        '<td class="num">' + (p.overdue > 0 ? '<span class="sys-warn">' + sysNum(p.overdue) + '</span>' : '0') + '</td>' +
+        '<td>' + sysAgo(p.last_login) + '</td></tr>';
+    }).join('');
+    html += '<h3 class="sys-section-title">Pharmacies with the Most Open Deficiencies</h3>' +
+      sysTable(['Pharmacy', 'Accreditation No.', 'Branch', 'Open', 'RTF Past Deadline', 'Last Login'], topRows, 'No open deficiencies.');
+
+    // ---------- 5. SECURITY ----------
+    html += '<h3 class="sys-section-title">Security</h3><div class="analytics-stat-grid">' +
+      sysTile(sec.logins_24h || 0, 'Logins (24 Hours)') +
+      sysTile(sec.failed_24h || 0, 'Failed Logins (24 Hours)', sec.failed_24h ? 'var(--amber)' : '') +
+      sysTile(sec.failed_7d || 0, 'Failed Logins (7 Days)') +
+      sysTile(sec.lockouts_7d || 0, 'Lockouts (7 Days)', sec.lockouts_7d ? '#dc2626' : '') +
+      sysTile(sec.locked_now || 0, 'Locked Right Now', sec.locked_now ? '#dc2626' : '') +
+      sysTile(sec.blocked_7d || 0, 'Blocked Logins (7 Days)') +
+      '</div>';
+    const failedRows = (data.top_failed || []).map(function(f) {
+      return '<tr><td>' + escHtml(f.username || '—') + (f.unknown_user ? ' <span style="color:var(--muted); font-size:11px;">(no such account)</span>' : '') + '</td>' +
+        '<td>' + escHtml(f.branch || '—') + '</td><td class="num">' + sysNum(f.failed) + '</td><td>' + sysDate(f.last_attempt) + '</td></tr>';
+    }).join('');
+    html += sysTable(['Username', 'Branch', 'Failed (7 Days)', 'Last Attempt'], failedRows, 'No failed logins in the last 7 days.');
+
+    // ---------- 6. EMAIL + RECENT CHANGES ----------
+    html += '<h3 class="sys-section-title">MR / Appeal Email Notices</h3><div class="analytics-stat-grid">' +
+      sysTile(mail.pending || 0, 'Waiting to Send', mail.pending ? 'var(--amber)' : '') +
+      sysTile(mail.sent_30d || 0, 'Sent (30 Days)', 'var(--ok)') +
+      sysTile(mail.problem || 0, 'Failed / No Recipient', mail.problem ? '#dc2626' : '') +
+      '</div>';
+    const changeRows = (data.recent_changes || []).map(function(c) {
+      return '<tr><td>' + sysDate(c.performed_at) + '</td><td>' + escHtml(c.action) + '</td><td>' + escHtml(c.username_affected) + '</td>' +
+        '<td>' + escHtml(c.performed_by_username || '—') + '</td><td>' + escHtml(c.branch || '—') + '</td></tr>';
+    }).join('');
+    html += '<h3 class="sys-section-title">Latest Account Changes</h3>' +
+      sysTable(['When', 'Action', 'Account', 'Done By', 'Branch'], changeRows, 'No account changes yet.');
+
+    body.innerHTML = html;
+
+    // Top 10 RTF reasons: inaayos ulit tuwing papalitan ang branch
+    // Pagsamahin ang rows (reason x branch) para maging isang row bawat reason na may bilang bawat branch
+    const reasonMap = {};
+    (data.rtf_reasons || []).forEach(function(r) {
+      const k = r.issue_category + '|' + r.specific_issue;
+      if (!reasonMap[k]) reasonMap[k] = { issue_category: r.issue_category, specific_issue: r.specific_issue, by: {}, __ALL__: 0 };
+      reasonMap[k].by[r.branch] = (reasonMap[k].by[r.branch] || 0) + Number(r.total || 0);
+      reasonMap[k].__ALL__ += Number(r.total || 0);
+    });
+    const rtfReasons = Object.keys(reasonMap).map(function(k) { return reasonMap[k]; });
+    const branchNames = branches.map(function(b) { return b.branch; });
+    const topFor = function(key) {
+      const countOf = function(r) { return key === '__ALL__' ? r.__ALL__ : (r.by[key] || 0); };
+      const all = rtfReasons.reduce(function(a, r) { return a + countOf(r); }, 0);
+      const top = rtfReasons.filter(function(r) { return countOf(r) > 0; })
+        .sort(function(a, b) { return countOf(b) - countOf(a); }).slice(0, 10);
+      return { all: all, top: top, countOf: countOf };
+    };
+    const catLabel = function(r) { return escHtml(String(r.issue_category).replace(/_/g, ' ')); };
+    const rtfOutdated = !Array.isArray(data.rtf_reasons) ||
+      (data.rtf_reasons.length > 0 && data.rtf_reasons[0].branch === undefined);
+
+    if (rtfOutdated) {
+      document.getElementById('sysRtfTable').innerHTML =
+        '<p style="font-size:13px; color:#a02b1f;">The RTF reasons need the latest database update. Please re-run sql/2026-11-24_13_system_analytics.sql in Supabase, then refresh.</p>';
+    } else {
+      // (a) Top 10 ng lahat ng branch, may bilang bawat branch
+      const overall = topFor('__ALL__');
+      const overallRows = overall.top.map(function(r, i) {
+        return '<tr><td>' + (i + 1) + '</td><td>' + catLabel(r) + '</td><td>' + escHtml(r.specific_issue) + '</td>' +
+          branchNames.map(function(bn) { return '<td class="num">' + sysNum(r.by[bn] || 0) + '</td>'; }).join('') +
+          '<td class="num"><strong>' + sysNum(r.__ALL__) + '</strong></td>' +
+          '<td class="num">' + pctOf(r.__ALL__, overall.all) + '%</td></tr>';
+      }).join('');
+      document.getElementById('sysRtfTable').innerHTML =
+        '<h3 style="font-size:13px; margin:0 0 8px;">All Branches (' + sysNum(overall.all) + ' RTFs)</h3>' +
+        sysTable(['#', 'Issue Category', 'Specific Issue'].concat(branchNames, ['Total', '% of All RTFs']),
+          overallRows, 'No deficiency records yet.');
+
+      // (b) Top 10 ng bawat branch
+      document.getElementById('sysRtfPerBranch').innerHTML = branchNames.map(function(bn) {
+        const t = topFor(bn);
+        const rows = t.top.map(function(r, i) {
+          return '<tr><td>' + (i + 1) + '</td><td>' + escHtml(r.specific_issue) +
+            '<br><span class="sys-amount-sm">' + catLabel(r) + '</span></td>' +
+            '<td class="num"><strong>' + sysNum(t.countOf(r)) + '</strong></td>' +
+            '<td class="num">' + pctOf(t.countOf(r), t.all) + '%</td></tr>';
+        }).join('');
+        return '<div class="analytics-chart-box">' +
+          '<h3><span style="color:' + sysBranchColor(bn) + ';">●</span> ' + escHtml(bn) + ' (' + sysNum(t.all) + ' RTFs)</h3>' +
+          sysTable(['#', 'Reason', 'Count', '%'], rows, 'No deficiency records for this branch yet.') + '</div>';
+      }).join('');
+    }
+    labelTableCells();
+
+    // Roles table (nasa loob ng chart box)
+    const roleRows = (data.roles || []).map(function(r) {
+      return '<tr><td>' + escHtml(r.role) + '</td><td class="num">' + sysNum(r.north) + '</td><td class="num">' + sysNum(r.south) + '</td>' +
+        '<td class="num">' + sysNum(r.central) + '</td><td class="num"><strong>' + sysNum(r.total) + '</strong></td></tr>';
+    }).join('');
+    document.getElementById('sysRolesTable').innerHTML =
+      sysTable(['Role', 'North', 'South', 'Central', 'Total'], roleRows, 'No approved accounts.');
+
+    // ---------- CHART DATA ----------
+    await ensureChartLibLoaded();
+    const mainBranches = branches.map(function(b) { return b.branch; });
+    const manilaDay = function(d) { return d.toLocaleDateString('en-CA', { timeZone: 'Asia/Manila' }); };
+
+    // Logins per day: punan ang mga araw na walang login ng 0
+    const days = [];
+    for (let i = 29; i >= 0; i--) days.push(manilaDay(new Date(Date.now() - i * 86400000)));
+    const loginMap = {};
+    (data.logins_daily || []).forEach(function(r) { loginMap[r.branch + '|' + r.day] = r.users; });
+    if (sysChartLogins) sysChartLogins.destroy();
+    sysChartLogins = new Chart(document.getElementById('sysChartLogins'), {
+      type: 'line',
+      data: {
+        labels: days.map(function(d) { return d.slice(5); }),
+        datasets: mainBranches.map(function(b) {
+          return { label: b, data: days.map(function(d) { return loginMap[b + '|' + d] || 0; }),
+            borderColor: sysBranchColor(b), backgroundColor: sysBranchColor(b), tension: 0.3, pointRadius: 2 };
+        })
+      },
+      options: { responsive: true, interaction: { mode: 'index', intersect: false }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } }
+    });
+
+    // Registrations per month (huling 6 buwan)
+    const nowYm = manilaDay(new Date()).slice(0, 7).split('-').map(Number);
+    const months = [];
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(nowYm[0], nowYm[1] - 1 - i, 1);
+      months.push(d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'));
+    }
+    const regMap = {};
+    (data.registrations || []).forEach(function(r) { regMap[r.branch + '|' + r.month] = Number(r.pharmacy || 0) + Number(r.staff || 0); });
+    if (sysChartRegs) sysChartRegs.destroy();
+    sysChartRegs = new Chart(document.getElementById('sysChartRegs'), {
+      type: 'bar',
+      data: {
+        labels: months.map(function(m) { return new Date(m + '-01T00:00:00').toLocaleDateString('en-PH', { month: 'short', year: 'numeric' }); }),
+        datasets: mainBranches.map(function(b) {
+          return { label: b, data: months.map(function(m) { return regMap[b + '|' + m] || 0; }), backgroundColor: sysBranchColor(b) };
+        })
+      },
+      options: { responsive: true, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } }
+    });
+
+    // Impact: halaga bawat yugto, bawat branch
+    if (sysChartImpact) sysChartImpact.destroy();
+    sysChartImpact = new Chart(document.getElementById('sysChartImpact'), {
+      type: 'bar',
+      data: {
+        labels: mainBranches,
+        datasets: [
+          ['claim_total', 'Claims Handled', '#0054a6'], ['claim_resolved', 'Resolved', '#16a34a'],
+          ['claim_paid', 'Paid', '#0ea5e9'], ['claim_open', 'Still Open', '#fdb913'], ['claim_denied', 'Denied', '#1f2937']
+        ].map(function(s) {
+          return { label: s[1], data: branches.map(function(b) { return Number(b[s[0]] || 0); }), backgroundColor: s[2] };
+        })
+      },
+      options: {
+        responsive: true,
+        plugins: { tooltip: { callbacks: { label: function(c) { return c.dataset.label + ': ' + sysMoney(c.parsed.y); } } } },
+        scales: { y: { beginAtZero: true, ticks: { callback: function(v) { return '₱' + Number(v).toLocaleString(); } } } }
+      }
+    });
+
+    // Status per branch (stacked)
+    const statusDefs = [
+      ['rtf', 'RTF', '#dc2626'], ['refiled', 'Refiled', '#0054a6'], ['processing', 'Processing', '#0ea5e9'],
+      ['for_mr', 'For MR', '#6d28d9'], ['resolved', 'Resolved', '#16a34a'], ['denied', 'Denied', '#1f2937']
+    ];
+    if (sysChartStatus) sysChartStatus.destroy();
+    sysChartStatus = new Chart(document.getElementById('sysChartStatus'), {
+      type: 'bar',
+      data: {
+        labels: mainBranches,
+        datasets: statusDefs.map(function(s) {
+          return { label: s[1], data: branches.map(function(b) { return Number(b[s[0]] || 0); }), backgroundColor: s[2] };
+        })
+      },
+      options: { responsive: true, scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true, ticks: { precision: 0 } } } }
+    });
   }
 
 
